@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game App</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <div id="serverStatus" class="server-status">
+        <div class="status-message">
+            Server connection lost. Retrying...
+            <button onclick="window.location.reload()">Reload Now</button>
+        </div>
+    </div>  
+  
+  <div id="app">
+        <!-- Add hidden input for userId storage -->
+        <input type="hidden" id="globalUserId">
+        
+        <!-- Login screen remains mostly the same -->
+        <div id="loginScreen" class="screen">
+            <h2>Login To Game Server</h2>
+            <div class="form-group">
+                <label class="textBoxLabel" for="username">Username</label>
+                <div class="combinedTextBox" style="display: flex">
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <!-- <img src="./images/usericon.svg"> -->
+                    </div>
+                    <input type="text" id="username" placeholder="">
+                    <div class="textBoxIcon">.</div>
+                </div>
+
+                <label class="textBoxLabel" for="password">Password</label>
+                <div class="combinedTextBox" style="display: flex">
+
+                    <!-- Key Icon -->
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+
+                    </div>
+
+                    <!-- Text Field -->
+                    <input type="password" id="password" placeholder="">
+
+                    <!-- Eye Icon Container -->
+                    <div class="eyeBoxIcon">
+                        <!-- Open Eye -->
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <label class="textBoxLabel" for="loginButton">&nbsp;</label>
+                <button id="loginButton">Login</button>
+                <div id="loginError" class="error"></div>
+            </div>
+            <div class="form-group">
+                <p>Don't have an account?&nbsp;<button id="showRegisterButton">Register</button></p>
+                <p class="admin-link"><a href="#" id="adminLink">MongoDB Admin</a></p>
+                <p class="dashboard-link"><a href="/admin/dashboard" id="dashboardLink">Admin Dashboard</a></p>
+            </div>
+        </div>
+
+        <!-- Register screen remains the same -->
+        <div id="registerScreen" class="screen hidden">
+            <h2>Register</h2>
+            <div class="form-group">
+                <label class="textBoxLabel" for="password">Username</label>
+                <div class="combinedTextBox" style="display: flex">
+                    <div class="textBoxIcon">
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+
+                    </div>
+                    <input type="text" id="registerUsername" placeholder="">
+                    <!-- <input type="password" id="password" placeholder="Enter password"> -->
+                    <div class="textBoxIcon">.</div>
+                </div>
+                <label class="textBoxLabel" for="password">Nickname</label>
+                <div class="combinedTextBox" style="display: flex">
+                    <div class="textBoxIcon">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" version="1.1"  
+	 viewBox="0 0 297 297">
+	<path d="M249.001,0.455c-4.369,0-8.859,0.758-13.35,2.252c-0.209,0.068-0.426,0.149-0.629,0.233
+		c-0.387,0.155-39.152,15.603-89.872,15.603c-29.764,0-57.743-5.248-83.161-15.6C57.194,0.99,52.337,0,47.553,0
+		C28.422,0,13.996,15.845,13.996,36.856v120.418C13.996,233.014,75.591,297,148.499,297c72.909,0,134.505-63.986,134.505-139.726
+		V36.856C283.004,15.765,268.703,0.455,249.001,0.455z M262.152,157.274c0,64.437-52.046,118.874-113.653,118.874
+		c-61.605,0-113.651-54.438-113.651-118.874V36.856c0-9.573,5.105-16.005,12.705-16.005c2.075,0,4.286,0.472,6.572,1.403
+		c27.927,11.373,58.553,17.14,91.025,17.14c52.892,0,92.842-15.204,97.355-16.992c2.266-0.726,4.449-1.096,6.496-1.096
+		c8.111,0,13.151,5.959,13.151,15.55V157.274z"/>
+	<path d="M204.886,199.869c-3.442-3.063-8.714-2.754-11.774,0.689c-9.429,10.6-26.522,17.186-44.611,17.186
+		c-18.089,0-35.183-6.586-44.611-17.186c-3.06-3.442-8.332-3.75-11.774-0.689c-3.442,3.061-3.751,8.333-0.689,11.775
+		c12.687,14.265,34.022,22.781,57.075,22.781c23.053,0,44.39-8.517,57.075-22.781C208.637,208.202,208.328,202.93,204.886,199.869z"
+		/>
+	<path d="M239.494,121.283c-12.725-6.362-23.531-8.536-32.362-8.536c-18.463,0-28.256,9.506-28.848,10.099
+		c-3.313,3.202-3.374,8.336-0.168,11.67c3.205,3.333,8.505,3.434,11.816,0.236c0.559-0.521,14.049-12.573,42.101,1.451
+		c4.122,2.059,9.131,0.391,11.19-3.729C245.283,128.354,243.613,123.344,239.494,121.283z"/>
+	<path d="M108.319,133.752c3.312,3.197,8.611,3.097,11.816-0.236c3.206-3.334,3.145-8.468-0.168-11.67
+		c-0.592-0.593-10.385-10.099-28.848-10.099c-8.831,0-19.637,2.174-32.362,8.536c-4.119,2.061-5.789,7.07-3.729,11.19
+		c2.06,4.12,7.068,5.788,11.19,3.729C94.27,121.179,107.761,133.23,108.319,133.752z"/>
+</svg>
+                    </div>
+                    <input type="text" id="registerNickname" placeholder="">
+                    <!-- <input type="password" id="password" placeholder="Enter password"> -->
+                    <div class="textBoxIcon">.</div>
+                </div>
+                <label class="textBoxLabel" for="password">Password</label>
+                <div class="combinedTextBox" style="display: flex">
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+  </svg>
+                    </div>
+                    <input type="password" id="registerPassword" placeholder="">
+                  
+                    <!-- Eye Icon Container -->
+                    <div class="eyeBoxIcon">
+                        <!-- Open Eye -->
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <label class="textBoxLabel" for="password">Confirm Password</label>
+                <div class="combinedTextBox" style="display: flex">
+                    <div class="textBoxIcon">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+</svg>
+
+                    </div>
+                    <input type="password" id="confirmPassword" placeholder="" required>
+
+                  <!-- Eye Icon Container -->
+                    <div class="eyeBoxIcon">
+                        <!-- Open Eye -->
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <!-- Closed Eye -->
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+                <label class="textBoxLabel" for="loginButton">&nbsp;</label>
+                <button id="registerButton">Register</button>
+                <div id="registerError" class="error"></div>
+            </div>
+            <div class="form-group">
+                <p>Already have an account?&nbsp;<button id="showLoginButton">Login</button></p>
+            </div>
+        </div>
+
+        <!-- Lobby screen - update data attributes -->
+        <div id="lobbyScreen" class="screen hidden">
+            <div class="header">
+                <h2>Game Lobby</h2>
+                <div class="header-buttons">
+                    <button id="settingsButton" class="icon-btn" data-userid="">⚙️</button>
+                    <button id="logoutButton" class="logout-btn" data-userid="">Logout</button>
+                </div>
+            </div>
+            <div class="form-group" id="createGameForm">
+                <!-- <input type="text" id="gameName" placeholder="Enter game name"> -->
+                <button id="createGameButton" data-userid="">Create Game</button>
+                <div id="lobbyError" class="error"></div>
+            </div>
+            <div class="filter-group">
+            </div>
+            <!-- New wrapper div for games list -->
+            <div class="games-list-wrapper">
+                <div id="gamesList" data-userid=""></div>
+            </div>
+            <div class="miniStatusRow">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showMyGamesOnly" data-userid="">
+                    Only show my games
+                </label>
+                <div id="refreshTimer" class="refresh-timer"></div>
+            </div>
+            <div id="lobbyChatContainer" class="chat-container">
+                <div id="lobbyChatMessages" class="chat-messages" data-userid=""></div>
+                <div class="chat-input">
+                    <input type="text" id="lobbyChatInput" placeholder="Lobby chat..." data-userid="">
+                    <button id="sendLobbyChatMessage" data-userid="">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings screen - Updated with new styling -->
+<!-- Replace the settings screen div with: -->
+<div id="settingsScreen" class="screen hidden">
+    <div class="header">
+        <h2>Settings</h2>
+        <button id="backToLobbyFromSettings" class="back-btn">← Back</button>
+    </div>
+    
+    <div class="settings-container">
+        <div class="settings-tabs">
+            <button class="settings-tab active" data-tab="account">Account</button>
+            <button class="settings-tab" data-tab="profile">Profile</button>
+            <button class="settings-tab" data-tab="graphics">Graphics</button>
+            <button class="settings-tab" data-tab="sound">Sound</button>
+        </div>
+        
+        <div class="settings-content">
+            <!-- Account Panel -->
+            <div class="settings-panel active" data-panel="account">
+                <h3>Change Email</h3>
+                <div class="form-group">
+                    <label class="textBoxLabel" for="currentEmail">Email</label>
+                    <div class="combinedTextBox">
+                        <div class="textBoxIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20" width="60" fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" version="1.1" viewBox="0 0 600 500">
+<path class="st0" d="M510.746,110.361c-2.128-10.754-6.926-20.918-13.926-29.463c-1.422-1.794-2.909-3.39-4.535-5.009
+		c-12.454-12.52-29.778-19.701-47.531-19.701H67.244c-17.951,0-34.834,7-47.539,19.708c-1.608,1.604-3.099,3.216-4.575,5.067
+		c-6.97,8.509-11.747,18.659-13.824,29.428C0.438,114.62,0,119.002,0,123.435v265.137c0,9.224,1.874,18.206,5.589,26.745
+		c3.215,7.583,8.093,14.772,14.112,20.788c1.516,1.509,3.022,2.901,4.63,4.258c12.034,9.966,27.272,15.45,42.913,15.45h377.51
+		c15.742,0,30.965-5.505,42.967-15.56c1.604-1.298,3.091-2.661,4.578-4.148c5.818-5.812,10.442-12.49,13.766-19.854l0.438-1.05
+		c3.646-8.377,5.497-17.33,5.497-26.628V123.435C512,119.06,511.578,114.649,510.746,110.361z M34.823,99.104
+		c0.951-1.392,2.165-2.821,3.714-4.382c7.689-7.685,17.886-11.914,28.706-11.914h377.51c10.915,0,21.115,4.236,28.719,11.929
+		c1.313,1.327,2.567,2.8,3.661,4.272l2.887,3.88l-201.5,175.616c-6.212,5.446-14.21,8.443-22.523,8.443
+		c-8.231,0-16.222-2.99-22.508-8.436L32.19,102.939L34.823,99.104z M26.755,390.913c-0.109-0.722-0.134-1.524-0.134-2.341V128.925
+		l156.37,136.411L28.199,400.297L26.755,390.913z M464.899,423.84c-6.052,3.492-13.022,5.344-20.145,5.344H67.244
+		c-7.127,0-14.094-1.852-20.142-5.344l-6.328-3.668l159.936-139.379l17.528,15.246c10.514,9.128,23.922,14.16,37.761,14.16
+		c13.89,0,27.32-5.032,37.827-14.16l17.521-15.253L471.228,420.18L464.899,423.84z M485.372,388.572
+		c0,0.803-0.015,1.597-0.116,2.304l-1.386,9.472L329.012,265.409l156.36-136.418V388.572z"/>
+                              
+                              <!-- SVG path remains the same -->
+                                	<!-- <path d="M249.001,0.455c-4.369,0-8.859,0.758-13.35,2.252c-0.209,0.068-0.426,0.149-0.629,0.233
+		c-0.387,0.155-39.152,15.603-89.872,15.603c-29.764,0-57.743-5.248-83.161-15.6C57.194,0.99,52.337,0,47.553,0
+		C28.422,0,13.996,15.845,13.996,36.856v120.418C13.996,233.014,75.591,297,148.499,297c72.909,0,134.505-63.986,134.505-139.726
+		V36.856C283.004,15.765,268.703,0.455,249.001,0.455z M262.152,157.274c0,64.437-52.046,118.874-113.653,118.874
+		c-61.605,0-113.651-54.438-113.651-118.874V36.856c0-9.573,5.105-16.005,12.705-16.005c2.075,0,4.286,0.472,6.572,1.403
+		c27.927,11.373,58.553,17.14,91.025,17.14c52.892,0,92.842-15.204,97.355-16.992c2.266-0.726,4.449-1.096,6.496-1.096
+		c8.111,0,13.151,5.959,13.151,15.55V157.274z"/>
+	<path d="M204.886,199.869c-3.442-3.063-8.714-2.754-11.774,0.689c-9.429,10.6-26.522,17.186-44.611,17.186
+		c-18.089,0-35.183-6.586-44.611-17.186c-3.06-3.442-8.332-3.75-11.774-0.689c-3.442,3.061-3.751,8.333-0.689,11.775
+		c12.687,14.265,34.022,22.781,57.075,22.781c23.053,0,44.39-8.517,57.075-22.781C208.637,208.202,208.328,202.93,204.886,199.869z"
+		/>
+	<path d="M239.494,121.283c-12.725-6.362-23.531-8.536-32.362-8.536c-18.463,0-28.256,9.506-28.848,10.099
+		c-3.313,3.202-3.374,8.336-0.168,11.67c3.205,3.333,8.505,3.434,11.816,0.236c0.559-0.521,14.049-12.573,42.101,1.451
+		c4.122,2.059,9.131,0.391,11.19-3.729C245.283,128.354,243.613,123.344,239.494,121.283z"/>
+	<path d="M108.319,133.752c3.312,3.197,8.611,3.097,11.816-0.236c3.206-3.334,3.145-8.468-0.168-11.67
+		c-0.592-0.593-10.385-10.099-28.848-10.099c-8.831,0-19.637,2.174-32.362,8.536c-4.119,2.061-5.789,7.07-3.729,11.19
+		c2.06,4.12,7.068,5.788,11.19,3.729C94.27,121.179,107.761,133.23,108.319,133.752z"/>
+                            </svg> -->
+                        </div>
+                        <input type="text" id="currentEmail" placeholder="" data-userid="">
+                        <div class="textBoxIcon"></div>
+                    </div>
+                    <button id="changeEmailButton" data-userid="">Update Email</button>
+                </div>
+
+                <div class="form-group">
+                    <h3>Change Password</h3>
+<label class="textBoxLabel" for="currentPassword">Current Password</label>
+                <div class="combinedTextBox">
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                    </div>
+                    <input type="password" id="currentPassword" placeholder="">
+                    <div class="eyeBoxIcon">
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <label class="textBoxLabel" for="newPassword">New Password</label>
+                <div class="combinedTextBox">
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                    </div>
+                    <input type="password" id="newPassword" placeholder="">
+                    <div class="eyeBoxIcon">
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <label class="textBoxLabel" for="confirmNewPassword">Confirm New Password</label>
+                <div class="combinedTextBox">
+                    <div class="textBoxIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                    </div>
+                    <input type="password" id="confirmNewPassword" placeholder="">
+                    <div class="eyeBoxIcon">
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </div>
+                </div>
+                <button id="changePasswordButton" data-userid="">Change Password</button>
+                <div id="settingsError" class="error"></div>
+            </div>
+
+                <div class="form-group">
+                    <h3>Danger Zone</h3>
+                    <button id="deleteAccountButton" class="delete-btn" data-userid="">Delete Account</button>
+                </div>
+          </div>
+
+          <!-- Profile Panel -->
+            <div class="settings-panel" data-panel="profile">
+              <h3>Personalization</h3>
+              <div class="form-group">
+                    <label class="textBoxLabel" for="currentNickname">Nickname</label>
+                    <div class="combinedTextBox">
+                        <div class="textBoxIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" version="1.1" viewBox="0 0 297 297">
+                                <!-- SVG path remains the same -->
+                                	<path d="M249.001,0.455c-4.369,0-8.859,0.758-13.35,2.252c-0.209,0.068-0.426,0.149-0.629,0.233
+		c-0.387,0.155-39.152,15.603-89.872,15.603c-29.764,0-57.743-5.248-83.161-15.6C57.194,0.99,52.337,0,47.553,0
+		C28.422,0,13.996,15.845,13.996,36.856v120.418C13.996,233.014,75.591,297,148.499,297c72.909,0,134.505-63.986,134.505-139.726
+		V36.856C283.004,15.765,268.703,0.455,249.001,0.455z M262.152,157.274c0,64.437-52.046,118.874-113.653,118.874
+		c-61.605,0-113.651-54.438-113.651-118.874V36.856c0-9.573,5.105-16.005,12.705-16.005c2.075,0,4.286,0.472,6.572,1.403
+		c27.927,11.373,58.553,17.14,91.025,17.14c52.892,0,92.842-15.204,97.355-16.992c2.266-0.726,4.449-1.096,6.496-1.096
+		c8.111,0,13.151,5.959,13.151,15.55V157.274z"/>
+	<path d="M204.886,199.869c-3.442-3.063-8.714-2.754-11.774,0.689c-9.429,10.6-26.522,17.186-44.611,17.186
+		c-18.089,0-35.183-6.586-44.611-17.186c-3.06-3.442-8.332-3.75-11.774-0.689c-3.442,3.061-3.751,8.333-0.689,11.775
+		c12.687,14.265,34.022,22.781,57.075,22.781c23.053,0,44.39-8.517,57.075-22.781C208.637,208.202,208.328,202.93,204.886,199.869z"
+		/>
+	<path d="M239.494,121.283c-12.725-6.362-23.531-8.536-32.362-8.536c-18.463,0-28.256,9.506-28.848,10.099
+		c-3.313,3.202-3.374,8.336-0.168,11.67c3.205,3.333,8.505,3.434,11.816,0.236c0.559-0.521,14.049-12.573,42.101,1.451
+		c4.122,2.059,9.131,0.391,11.19-3.729C245.283,128.354,243.613,123.344,239.494,121.283z"/>
+	<path d="M108.319,133.752c3.312,3.197,8.611,3.097,11.816-0.236c3.206-3.334,3.145-8.468-0.168-11.67
+		c-0.592-0.593-10.385-10.099-28.848-10.099c-8.831,0-19.637,2.174-32.362,8.536c-4.119,2.061-5.789,7.07-3.729,11.19
+		c2.06,4.12,7.068,5.788,11.19,3.729C94.27,121.179,107.761,133.23,108.319,133.752z"/>
+                            </svg>
+                        </div>
+                        <input type="text" id="currentNickname" placeholder="" data-userid="">
+                        <div class="textBoxIcon"></div>
+                    </div>
+                    <button id="changeNicknameButton" data-userid="">Update Nickname</button>
+                </div>
+          </div>
+
+            <!-- Graphics Panel -->
+            <div class="settings-panel" data-panel="graphics">
+              <h3>Presentation</h3>
+              <div class="graphics-settings">
+                    <div class="graphics-setting">
+                        <label class="textBoxLabel" for="graphicsSetting1">Resolution</label>
+                        <div class="combinedTextBox">
+                            <div>hi</div>
+                            <select id="graphicsSetting1">
+                                <option value="default">800 x 600</option>
+                                <option value="option1">1024 x 768</option>
+                                <option value="option2">1600 x 900</option>
+                            </select>
+                            <div>bye</div>
+                        </div>
+                    </div>
+                    <div class="graphics-setting">
+                        <label class="textBoxLabel" for="graphicsSetting2">Scale</label>
+                        <div class="combinedTextBox">
+                            <div>hi</div>
+                            <select id="graphicsSetting2">
+                                <option value="default">100%</option>
+                                <option value="option1">80%</option>
+                                <option value="option2">120%</option>
+                            </select>
+                            <div>bye</div>
+                        </div>
+                    </div>
+                    <div>
+                      <br/><br/><br/><br/><br/>
+                        <h5> Note: Graphics and Sound settings are saved in your web browser, not on the server.</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sound Panel -->
+            <div class="settings-panel" data-panel="sound">
+              <h3>Volume Settings</h3>
+              <div class="sound-settings">
+                    <div class="volume-slider">
+                        <label class="sliderLabel" for="masterVolume">Master Volume</label>
+                        <input type="range" id="masterVolume" min="0" max="100" value="75">
+                    </div>
+                    <div class="volume-slider" for="musicVolume">
+                        <label class="sliderLabel">Music Volume</label>
+                        <input type="range" id="musicVolume" min="0" max="100" value="75">
+                    </div>
+                    <div class="volume-slider" for="sfxVolume">
+                        <label class="sliderLabel">SFX Volume</label>
+                        <input type="range" id="sfxVolume" min="0" max="100" value="75">
+                    </div>
+
+                    <div class="chime-settings">
+                        <h3>Chime Settings</h3>
+                        <div class="chime-option">
+                            <input type="checkbox" id="chimePlayerServer" checked>
+                            <label for="chimePlayerServer">Player joins/leaves server</label>
+                        </div>
+                        <div class="chime-option">
+                            <input type="checkbox" id="chimePlayerGame" checked>
+                            <label for="chimePlayerGame">Player joins/leaves game</label>
+                        </div>
+                        <div class="chime-option">
+                            <input type="checkbox" id="chimeLobbyMessage" checked>
+                            <label for="chimeLobbyMessage">New lobby message</label>
+                        </div>
+                        <div class="chime-option">
+                            <input type="checkbox" id="chimeGameMessage" checked>
+                            <label for="chimeGameMessage">New game message</label>
+                        </div>
+                    </div>
+                    <div>
+                        <br/><br/><br/><br/><br/>
+                        <h5> Note: Graphics and Sound settings are saved in your web browser, not on the server.</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div id="gameScreen" class="screen hidden">
+            <div class="header">
+                <h2>Game: <span id="currentGameName"></span></h2>
+                <button id="backToLobbyButton" data-userid="">Leave Game</button>
+            </div>
+            <div id="gameContent" data-userid=""></div>
+            <div id="gameChatContainer" class="chat-container">
+                <div id="gameChatMessages" class="chat-messages" data-userid=""></div>
+                <div class="chat-input">
+                    <input type="text" id="gameChatInput" placeholder="Game chat..." data-userid="">
+                    <button id="sendGameChatMessage" data-userid="">Send</button>
+                </div>
+            </div>
+            <div id="gameError" class="error"></div>
+        </div>
+    <!-- </div> -->
+  
+    <!-- Javascript -->
+    <script type="module" src="/js/api.js"></script>
+    <script type="module" src="/js/ui.js"></script>
+    <script type="module" src="/js/app.js"></script>
+    <script>
+        fetch('/utils/validation.js')
+            .then(response => console.log('validation.js loaded'))
+            .catch(err => console.error('Failed to load validation.js:', err));
+    </script>
+</body>
+</html>

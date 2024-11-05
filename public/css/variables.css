@@ -1,0 +1,107 @@
+/* Core theme variables and base styles */
+:root {
+  /* Set base font size for rem calculations */
+  /* This is one of few ties px is used in this CSS */
+  font-size: 13px;
+  
+  /* Theme variables */
+  /* --bg-dark: #0a0a0a; */
+  /* --bg-darker: #050505; */
+  /* --bg-lighter: #1a1a1a; */
+  /* --text-primary: #dfdfdf; */
+  /* --text-secondary: #bfbfbf; */
+  /* --accent: #00b853; */
+  /* --accent-hover: #00d676; */
+  /* --danger: #ff1744; */
+  /* --danger-hover: #ff4081; */
+  /* --glow: 0 0 2.5rem rgba(0, 200, 83, 0.8); */
+  /* --glow-danger: 0 0 2.5rem rgba(255, 23, 68, 0.8); */
+
+  /* Theme variables converted to HSL */
+  --bg-dark: hsl(0, 0%, 4%);
+  --bg-darker: hsl(0, 0%, 2%);
+  --bg-lighter: hsl(0, 0%, 10%);
+  --text-primary: hsl(0, 0%, 100%);
+  --text-secondary: hsl(0, 0%, 75%);
+  --accent: hsl(150, 70%, 40%);
+  --accent-dark: hsl(150, 70%, 10%);
+  --accent-hover: hsl(150, 70%, 80%);
+  --danger: hsl(0, 100%, 50%);
+  --danger-hover: hsl(0, 100%, 60%);
+  --glow: 0 0 2.5rem hsla(150, 100%, 40%, 0.8);
+  --glow-primary: 0 0 2.5rem hsla(150, 100%, 70%, 0.8);
+  --glow-danger: 0 0 2.5rem hsla(0, 100%, 50%, 0.8);
+  /* --standard-opacity: 0.70; */
+  /* --button-opacity: 0.60; */
+  /* --screen-opacity: 0.60; */
+
+  --heavy-opacity: 0.90;
+  --standard-opacity: 0.80;
+  --button-opacity: 0.70;
+  --screen-opacity: 0.70;
+
+  --input-padding: 0.7rem;
+
+
+  /* Animation timing */
+  --transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* Base styles */
+body {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* Selection styles */
+::selection, ::checked {
+  background: var(--accent);
+  color: var(--bg-darker);
+  text-shadow: none;
+}
+
+::-moz-selection {
+  background: var(--accent);
+  color: var(--bg-darker);
+  text-shadow: none;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Utility classes */
+.hidden {
+  display: none !important;
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  opacity: 1;
+  z-index: -1;
+  background-image: 
+    linear-gradient(45deg, var(--accent) 0.0625rem, transparent 0.0625rem),
+    linear-gradient(-45deg, var(--accent) 0.0625rem, transparent 0.0625rem);
+  background-size: 3.125rem 3.125rem;
+  animation: slideBackground 120s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes slideBackground {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

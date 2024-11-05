@@ -1,0 +1,326 @@
+/* Settings Tabs */
+.settings-container {
+  display: flex;
+  /* gap: 1.5rem; */
+  height: 44rem; /* Fixed height */
+}
+
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  /* gap: 0.5rem; */
+  min-width: 10rem;
+  margin-top: 2rem;
+}
+
+.settings-tab {
+  background: var(--bg-darker);
+  border: 0.125rem solid var(--accent);
+  color: var(--text-primary);
+  padding: var(--input-padding);
+  /* border-radius: 0.5rem; */
+  border-radius: 0.5rem 0rem 0rem 0.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  opacity: 0.8;
+}
+
+.settings-tab:hover {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+  opacity: 1;
+}
+
+.settings-tab.active {
+  background: var(--accent);
+  color: white;
+  opacity: 1;
+  box-shadow: var(--glow);
+}
+
+.settings-content {
+  flex: 1;
+  /* overflow-y: auto; */
+  overflow-y: none;
+  padding: 0rem;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  height: 40px; /* Adjust the height as needed */
+  /* background-color: #ccc; /* Adjust the color as needed */ */
+  border-radius: 5px;
+  margin: 0 5px; /* Add margin to center the thumb */
+}
+
+.settings-panel {
+  display: none;
+  height: 100%;
+}
+
+.settings-panel.active {
+  display: block;
+    box-shadow: var(--glow);
+}
+
+/* Panel Content Container */
+.panel-content, .settings-panel {
+  /* background: var(--bg-darker); */
+    background: linear-gradient(to bottom, var(--bg-dark), var(--bg-lighter), var(--accent-dark));
+
+  border: 0.125rem solid var(--accent);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  min-height: 24rem; /* Add this */
+  transition: var(--transition);
+  height: auto;
+  overflow-y: hidden;
+}
+
+
+.panel-content:hover, .settings-panel:hover {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.graphics-setting {
+  margi-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.0rem;
+}
+
+.graphics-setting .textBoxLabel {
+  margin-bottom: 0.2rem 
+  display: block;
+}
+
+.graphics-setting input {
+  border: none;
+}
+
+.graphics-setting select {
+  width: 100%;
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  padding: 0.7rem 0rem 0.7rem 0rem;
+  font-size: 1.2rem;
+  transition: var(--transition);
+  cursor: pointer;
+  appearance: none;
+  /* background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300b853' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem; */
+border: none;
+background: var(--bg-darker);
+}
+
+.graphics-setting select:hover {
+  /* border-color: var(--accent-hover); */
+  /* box-shadow: var(--glow); */
+}
+
+.graphics-setting select:focus {
+  /* outline: none; */
+  /* border-color: var(--accent-hover); */
+  /* box-shadow: var(--glow); */
+}
+
+/* Style the options */
+.graphics-setting select option {
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  padding: 0.875rem;
+}
+
+/* Sound Panel */
+.sound-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sliderLabel {
+  margin-bottom: -0.3rem;
+}
+
+.volume-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0.75rem 0rem 0.0rem 0rem;
+}
+
+/* Last volume slider shouldn't have big margin */
+.volume-slider:last-of-type {
+  margin-bottom: 1rem; /* Reduce space before Chime settings */
+}
+
+/* Slider styling */
+
+.volume-slider input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background-color: var(--bg-darker);
+  /* border: 1px solid var(--accent); */
+  border-radius: 4px;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.volume-slider input[type="range"]:focus {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+
+/* Around line 150, fix the volume slider thumb */
+.volume-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  margin-top: -0.375rem; /* Add this to center the thumb */
+}
+
+.volume-slider input[type="range"]::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  background: var(--accent);
+  border: none; /* Add this */
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+/* Fix track height */
+.volume-slider input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0.25rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--accent);
+  border-radius: 0.25rem;
+  transition: var(--transition);
+}
+
+.volume-slider input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 0.25rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--accent);
+  border-radius: 0.25rem;
+  transition: var(--transition);
+}
+
+/* Add new styles for track hover - after line 190 */
+.volume-slider input[type="range"]:hover::-webkit-slider-runnable-track {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.volume-slider input[type="range"]:hover::-moz-range-track {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.volume-slider input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.volume-slider input[type="range"]:hover::-moz-range-thumb {
+  background: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+/* Update thumb glow behavior */
+.volume-slider input[type="range"]:hover::-webkit-slider-thumb,
+.volume-slider input[type="range"]:focus::-webkit-slider-thumb {
+  background: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.volume-slider input[type="range"]:hover::-moz-range-thumb,
+.volume-slider input[type="range"]:focus::-moz-range-thumb {
+  background: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.chime-settings {
+}
+
+.chime-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  line-height: 1;
+}
+
+.chime-option label {
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Checkbox styling */
+.chime-option input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;  /* Ensure fixed size */
+  min-height: 1.25rem; /* Ensure fixed size */
+  max-width: 1.25rem;
+  max-height: 1.25rem;
+  border: 0.125rem solid var(--accent);
+  border-radius: 0.25rem;
+  background: var(--bg-darker);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+.chime-option input[type="checkbox"]:checked {
+  background: var(--accent);
+}
+
+.chime-option input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 0.875rem;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+.chime-option input[type="checkbox"]:hover {
+  border-color: var(--accent-hover);
+  box-shadow: var(--glow);
+}
+
+.chime-option input[type="checkbox"]:checked:hover {
+  background: var(--accent-hover);
+}
+
+/* Around line 85, add spacing for h3 elements */
+h3 {
+  margin: 0;
+  margin-top: 1.5rem; /* Add this */
+  margin-bottom: 1rem; /* Add this */
+}
+
+/* First h3 in each panel shouldn't have top margin */
+.settings-panel > h3:first-child {
+  margin-top: 0;
+}
