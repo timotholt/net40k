@@ -105,4 +105,4 @@ To add a new database engine:
 
 ## License
 
-MIT License# sba319
+MIT License

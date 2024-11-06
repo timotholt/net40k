@@ -274,14 +274,14 @@ async function testDateHandling(users, games) {
     }
 
     // Clean up test messages
-    console.log('\nCleaning up test messages...');
-    for (const message of messages) {
-        try {
-            await ChatDB.delete({ _id: message._id });
-        } catch (error) {
-            console.error(`Failed to delete message ${message._id}:`, error);
-        }
-    }
+    // console.log('\nCleaning up test messages...');
+    // for (const message of messages) {
+    //     try {
+    //         await ChatDB.delete({ _id: message._id });
+    //     } catch (error) {
+    //         console.error(`Failed to delete message ${message._id}:`, error);
+    //     }
+    // }
 }
 
 export async function testAllDatabaseFunctions() {
@@ -302,7 +302,7 @@ export async function testAllDatabaseFunctions() {
         await testDateHandling(users, games);
 
         // Clean up
-        await cleanup(users, games, messages);
+//        await cleanup(users, games, messages);
 
         console.log('\nDatabase tests completed successfully!');
     } catch (error) {

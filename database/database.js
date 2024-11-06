@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import { getDbEngine } from './selectDbEngine.js';
 
 dotenv.config();
@@ -27,15 +26,9 @@ class Database {
       console.log(`Connecting to database type: ${dbType}`);
       
       this.dbEngine = getDbEngine(dbType);
-      
-      if (dbType === 'mongodb') {
-        await this._connectMongoDB();
-      } else if (dbType === 'firestore') {
-        // Firestore connection is handled in the FirestoreDbEngine constructor
-        console.log('Connected to Firestore');
-      } else {
-        console.log('Using in-memory database');
-      }
+
+      console.log(this.dbEngine);
+      await this.dbEngine.connect();
       
       return this.dbEngine;
     } catch (error) {
@@ -43,30 +36,8 @@ class Database {
       // Fall back to in-memory database if connection fails
       console.log('Falling back to in-memory database');
       this.dbEngine = getDbEngine('memory');
+      await this.dbEngine.connect();
       return this.dbEngine;
-    }
-  }
-
-  async _connectMongoDB() {
-    try {
-      console.log('Attempting to connect to MongoDB...');
-      await mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      });
-      console.log('MongoDB Connected...');
-
-      mongoose.connection.on('error', err => {
-        console.error('MongoDB connection error:', err);
-      });
-
-      mongoose.connection.on('disconnected', () => {
-        console.log('MongoDB disconnected. Attempting to reconnect...');
-        setTimeout(() => this._connectMongoDB(), 5000);
-      });
-    } catch (error) {
-      console.error('MongoDB connection error:', error.message);
-      throw error;
     }
   }
 
@@ -76,3 +47,4 @@ class Database {
 }
 
 export const db = new Database();
+

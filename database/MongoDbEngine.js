@@ -1,78 +1,139 @@
-//=================================================
-// This is the mongo database engine.  I
-// broke this so many times over and over,
-// I had to ask Gemini and Bolt to help me fix it.
-//
-// AND I DONT EVEN KNOW IF IT WORKS.
-//
-// It's so fragile so don't change anything.
-//
-// I won't even format it or add white space.
-//=================================================
-
 import { BaseDbEngine } from './BaseDbEngine.js';
+import { MongoClient } from 'mongodb';
 
 export class MongoDbEngine extends BaseDbEngine {
-  async find(collection, query) {
-    // Support both simple queries and complex userId lookups
-    const result = await collection.find(query);
+  constructor() {
+    super();
+    this.client = null;
+    this.db = null;
+  }
 
-    // Add support for chaining and custom sorting
+  async connect() {
+    try {
+      console.log('Attempting to connect to MongoDB...');
+      this.client = new MongoClient(process.env.MONGODB_URI);
+      await this.client.connect();
+      this.db = this.client.db();
+
+      // Test connection
+      await this.db.command({ ping: 1 });
+      console.log('Connected to MongoDB');
+      
+      return this.client;
+    } catch (error) {
+      console.error('MongoDB connection error:', error.message);
+      throw error;
+    }
+  }
+
+  async isHealthy() {
+    try {
+      if (!this.client || !this.db) return false;
+      await this.db.command({ ping: 1 });
+      return true;
+    } catch (error) {
+      console.error('MongoDB health check failed:', error);
+      return false;
+    }
+  }
+
+  async find(collection, query) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    const result = await this.db.collection(collectionName).find(query).toArray();
+
     return {
       sort: (sortCriteria) => {
         if (typeof sortCriteria === 'function') {
-          // For custom sort functions, we need to get all results first
-          return result.toArray().then(docs => {
-            docs.sort(sortCriteria);
-            return {
-              limit: (n) => docs.slice(0, n)
-            };
-          });
+          result.sort(sortCriteria);
+        } else {
+          const [field, order] = Object.entries(sortCriteria)[0];
+          result.sort((a, b) => order * (a[field] > b[field] ? 1 : -1));
         }
-        // MongoDB native sorting
-        return result.sort(sortCriteria);
+        return {
+          limit: (n) => result.slice(0, n)
+        };
       },
-      limit: (n) => result.limit(n),
-      then: (resolve) => result.toArray().then(resolve)
+      limit: (n) => result.slice(0, n),
+      then: (resolve) => resolve(result)
     };
   }
 
   async findOne(collection, query) {
-    return await collection.findOne(query);
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    return await this.db.collection(collectionName).findOne(query);
   }
 
   async create(collection, data) {
-    const document = new collection(data);
-    return await document.save();
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    const result = await this.db.collection(collectionName).insertOne(data);
+    return { ...data, _id: result.insertedId };
   }
 
   async update(collection, query, data) {
-    // Support updating multiple documents
-    return await collection.updateMany(query, { $set: data });
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    const result = await this.db.collection(collectionName).updateMany(query, { $set: data });
+    return { modifiedCount: result.modifiedCount };
   }
 
   async delete(collection, query) {
-    return await collection.deleteOne(query);
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    const result = await this.db.collection(collectionName).deleteOne(query);
+    return { deletedCount: result.deletedCount };
   }
 
-  // Helper method to clear all data (useful for testing)
   async clear(collection) {
-    return await collection.deleteMany({});
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    return await this.db.collection(collectionName).deleteMany({});
   }
 
-  // Helper method to get collection size
   async count(collection, query = {}) {
-    return await collection.countDocuments(query);
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    return await this.db.collection(collectionName).countDocuments(query);
   }
 
-  // Helper method for complex aggregations
   async aggregate(collection, pipeline) {
-    return await collection.aggregate(pipeline).toArray();
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const collectionName = collection.modelName.toLowerCase();
+    return await this.db.collection(collectionName).aggregate(pipeline).toArray();
   }
 
-  // Helper method for transactions
   async withTransaction(callback) {
-    const session = await collection.startSession();
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const session = this.client.startSession();
     try {
       await session.withTransaction(callback);
     } finally {

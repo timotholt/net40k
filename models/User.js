@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 import { db } from '../database/database.js';
 import crypto from 'crypto';
 
-const userSchema = new mongoose.Schema({
+// Schema definition (but not initialization)
+const schemaDefinition = {
   userId: {
     type: String,
     required: true,
@@ -46,33 +46,49 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
-
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-});
-
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model('User', userSchema);
+// Firestore schema metadata
+const firestoreSchema = {
+  userId: { type: 'string', required: true },
+  username: { type: 'string', required: true },
+  nickname: { type: 'string', required: true },
+  password: { type: 'string', required: true },
+  deleted: { type: 'boolean', default: false },
+  deletedAt: { type: 'date', default: null },
+  createdAt: { type: 'date', default: () => new Date() }
+};
+
+let User;
 
 export const UserDB = {
+  async init() {
+    if (!User) {
+      const schema = new mongoose.Schema(schemaDefinition);
+      User = mongoose.model('User', schema);
+      User.schema = firestoreSchema;
+    }
+    return User;
+  },
+
   async findById(userId) {
-    return await db.getEngine().findOne(User, { userId });
+    const model = await this.init();
+    return await db.getEngine().findOne(model, { userId });
   },
 
   async findOne(query) {
-    return await db.getEngine().findOne(User, query);
+    const model = await this.init();
+    return await db.getEngine().findOne(model, query);
   },
 
   async findAll() {
-    return await db.getEngine().find(User, {});
+    const model = await this.init();
+    return await db.getEngine().find(model, {});
   },
 
   async create(userData) {
+    const model = await this.init();
+    
     // Ensure userId is generated if not provided
     if (!userData.userId) {
       userData.userId = crypto.randomUUID();
@@ -81,19 +97,22 @@ export const UserDB = {
     // Ensure deleted is set to false
     userData.deleted = false;
     
-    return await db.getEngine().create(User, userData);
+    return await db.getEngine().create(model, userData);
   },
 
   async update(query, data) {
-    return await db.getEngine().update(User, query, data);
+    const model = await this.init();
+    return await db.getEngine().update(model, query, data);
   },
 
   async updateById(userId, data) {
-    return await db.getEngine().update(User, { userId }, data);
+    const model = await this.init();
+    return await db.getEngine().update(model, { userId }, data);
   },
 
   async softDelete(userId) {
-    return await db.getEngine().update(User, 
+    const model = await this.init();
+    return await db.getEngine().update(model, 
       { userId }, 
       { 
         deleted: true,
@@ -104,28 +123,33 @@ export const UserDB = {
   },
 
   async delete(query) {
-    return await db.getEngine().delete(User, query);
+    const model = await this.init();
+    return await db.getEngine().delete(model, query);
   },
 
   async deleteById(userId) {
-    return await db.getEngine().delete(User, { userId });
+    const model = await this.init();
+    return await db.getEngine().delete(model, { userId });
   },
 
   async findActive(query) {
-    return await db.getEngine().find(User, {
+    const model = await this.init();
+    return await db.getEngine().find(model, {
       ...query,
       deleted: { $ne: true }
     });
   },
 
   async findOneActive(query) {
-    return await db.getEngine().findOne(User, {
+    const model = await this.init();
+    return await db.getEngine().findOne(model, {
       ...query,
       deleted: false
     });
   },
 
   async findByUsername(username) {
-    return await db.getEngine().findOne(User, { username });
+    const model = await this.init();
+    return await db.getEngine().findOne(model, { username });
   }
 };

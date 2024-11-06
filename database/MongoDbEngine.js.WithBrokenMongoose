@@ -1,0 +1,163 @@
+import mongoose from 'mongoose';
+import { BaseDbEngine } from './BaseDbEngine.js';
+
+// import { testMflix } from './testMflix.js'
+
+export class MongoDbEngine extends BaseDbEngine {
+  constructor() {
+    super();
+    this.connection = null;
+  }
+
+  async connect() {
+    // console.log('mongodbengine connect() line 13'); 
+    // console.log('mongodbengine connect() line 16');
+    // await testMflix();
+    // console.log('mongodbengine connect() line 18');
+    // process.exit(0);
+
+    try {
+      console.log('Attempting to connect to MongoDB at ...', process.env.MONGODB_URI);
+      this.connection = await mongoose.connect(process.env.MONGODB_URI);
+      // , {
+      //   useNewUrlParser: true,
+      //   useUnifiedTopology: true
+      // });
+
+      // Log detailed connection info
+      console.log(`MongoDB Connected to ${mongoose.connection.host}`);
+      console.log(`Database: ${mongoose.connection.name}`);
+      console.log(`Connection State: ${mongoose.connection.readyState}`);
+
+      mongoose.connection.on('error', err => {
+        console.error('MongoDB connection error:', err);
+      });
+
+      mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected. Attempting to reconnect...');
+        setTimeout(() => this.connect(), 5000);
+      });
+
+      // Add connected event listener
+      mongoose.connection.on('connected', () => {
+        console.log('MongoDB connection established');
+      });
+
+      // Add reconnected event listener
+      mongoose.connection.on('reconnected', () => {
+        console.log('MongoDB reconnected');
+      });
+
+      return this.connection;
+    } catch (error) {
+      console.error('MongoDB connection error:', error.message);
+      throw error;
+    }
+  }
+
+  async isHealthy() {
+    try {
+      if (mongoose.connection.readyState !== 1) {
+        return false;
+      }
+      await mongoose.connection.db.admin().ping();
+      return true;
+    } catch (error) {
+      console.error('MongoDB health check failed:', error);
+      return false;
+    }
+  }
+
+  async find(collection, query) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    const result = await collection.find(query);
+    return {
+      sort: (sortCriteria) => {
+        if (typeof sortCriteria === 'function') {
+          return result.toArray().then(docs => {
+            docs.sort(sortCriteria);
+            return {
+              limit: (n) => docs.slice(0, n)
+            };
+          });
+        }
+        return result.sort(sortCriteria);
+      },
+      limit: (n) => result.limit(n),
+      then: (resolve) => result.toArray().then(resolve)
+    };
+  }
+
+  async findOne(collection, query) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    return await collection.findOne(query);
+  }
+
+  async create(collection, data) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    console.log(`mdbcreate106`, collection, data);
+
+    return await collection.create(data);
+  }
+
+  async update(collection, query, data) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    return await collection.updateMany(query, { $set: data });
+  }
+
+  async delete(collection, query) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    return await collection.deleteOne(query);
+  }
+
+  async clear(collection) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+
+    // Ensure model is initialized
+    if (!collection || !collection.create) {
+        throw new Error('Invalid model or model not initialized');
+      }
+
+    return await collection.deleteMany({});
+  }
+
+  async count(collection, query = {}) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    return await collection.countDocuments(query);
+  }
+
+  async aggregate(collection, pipeline) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    return await collection.aggregate(pipeline).toArray();
+  }
+
+  async withTransaction(callback) {
+    if (!await this.isHealthy()) {
+      throw new Error('Database connection is not healthy');
+    }
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(callback);
+    } finally {
+      await session.endSession();
+    }
+  }
+}

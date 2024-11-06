@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { db } from '../database/database.js';
 
-const chatSchema = new mongoose.Schema({
+// Schema definition (but not initialization)
+const schemaDefinition = {
     type: {
         type: String,
         enum: ['lobby', 'game'],
@@ -16,7 +17,6 @@ const chatSchema = new mongoose.Schema({
         required: function() { 
             return this.type === 'game'; 
         },
-        // Add transform to handle undefined
         set: function(v) {
             return this.type === 'game' ? v : undefined;
         }
@@ -53,12 +53,10 @@ const chatSchema = new mongoose.Schema({
             return this.private === true; 
         }
     }
-});
+};
 
-export const Chat = mongoose.model('Chat', chatSchema);
-
-// Add schema metadata for Firestore
-Chat.schema = {
+// Firestore schema metadata
+const firestoreSchema = {
     type: { type: 'string', required: true },
     userId: { type: 'string', required: true },
     gameId: { type: 'string' },
@@ -71,16 +69,28 @@ Chat.schema = {
     recipientId: { type: 'string' }
 };
 
+let Chat;
+
 export const ChatDB = {
+    async init() {
+        if (!Chat) {
+            const schema = new mongoose.Schema(schemaDefinition);
+            Chat = mongoose.model('Chat', schema);
+            Chat.schema = firestoreSchema;
+        }
+        return Chat;
+    },
+
     async findByType(type) {
         console.log('Enter findByType with type:', type);
         try {
+            const model = await this.init();
             console.log('Getting database engine...');
             const engine = db.getEngine();
             console.log('Database engine obtained');
 
             console.log('Calling find with type:', type);
-            const messages = await engine.find(Chat, { type });
+            const messages = await engine.find(model, { type });
             console.log('Find completed, messages:', messages);
 
             console.log('Sorting messages...');
@@ -99,7 +109,8 @@ export const ChatDB = {
     async findByGame(gameId) {
         console.log('Enter findByGame with gameId:', gameId);
         try {
-            const messages = await db.getEngine().find(Chat, { 
+            const model = await this.init();
+            const messages = await db.getEngine().find(model, { 
                 type: 'game',
                 gameId: gameId 
             });
@@ -115,9 +126,21 @@ export const ChatDB = {
         }
     },
 
+    async findOne(query) {
+        console.log('Enter findOne with query:', query);
+        try {
+            const model = await this.init();
+            return await db.getEngine().findOne(model, query);
+        } catch (error) {
+            console.error('Error in findOne:', error);
+            throw error;
+        }
+    },
+
     async create(chatData) {
         console.log('Enter create with data:', chatData);
         try {
+            const model = await this.init();
             // Remove gameId if it's a lobby message
             const data = chatData.type === 'lobby' 
                 ? { ...chatData, gameId: undefined }
@@ -128,7 +151,7 @@ export const ChatDB = {
                 data[key] === undefined && delete data[key]
             );
 
-            return await db.getEngine().create(Chat, data);
+            return await db.getEngine().create(model, data);
         } catch (error) {
             console.error('Error in create:', error);
             throw error;
@@ -138,7 +161,8 @@ export const ChatDB = {
     async delete(query) {
         console.log('Enter delete with query:', query);
         try {
-            return await db.getEngine().delete(Chat, query);
+            const model = await this.init();
+            return await db.getEngine().delete(model, query);
         } catch (error) {
             console.error('Error in delete:', error);
             throw error;
@@ -148,6 +172,7 @@ export const ChatDB = {
     async deleteByGame(gameId) {
         console.log('Enter deleteByGame with gameId:', gameId);
         try {
+            const model = await this.init();
             return await this.delete({ 
                 type: 'game',
                 gameId: gameId
@@ -161,7 +186,8 @@ export const ChatDB = {
     async update(query, data) {
         console.log('Enter update with query:', query, 'and data:', data);
         try {
-            return await db.getEngine().update(Chat, query, data);
+            const model = await this.init();
+            return await db.getEngine().update(model, query, data);
         } catch (error) {
             console.error('Error in update:', error);
             throw error;

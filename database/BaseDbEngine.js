@@ -15,6 +15,11 @@ export class BaseDbEngine {
     return initialized;
   }
 
+  async connect() {
+    // Base implementation - override in specific engines
+    return Promise.resolve();
+  }
+
   async find(collection, query) {
     throw new Error('Method not implemented');
   }

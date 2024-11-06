@@ -1,5 +1,7 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
-import { initializeApp } from 'firebase/app';
+import { 
+  initializeApp 
+} from 'firebase/app';
 import { 
   getFirestore, 
   collection as firestoreCollection, 
@@ -14,8 +16,7 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
-  setLogLevel,
-  Timestamp
+  setLogLevel
 } from 'firebase/firestore/lite';
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
@@ -46,6 +47,8 @@ const validateConfig = () => {
   }
 };
 
+validateConfig();
+
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -59,7 +62,6 @@ export class FirestoreDbEngine extends BaseDbEngine {
   constructor() {
     super();
     try {
-      validateConfig();
       this.app = initializeApp(firebaseConfig);
       this.db = getFirestore(this.app);
       
@@ -72,62 +74,19 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
   }
 
-  _convertDatesToTimestamps(obj) {
-    if (!obj) return obj;
-    if (obj instanceof Date) return Timestamp.fromDate(obj);
-    if (typeof obj !== 'object') return obj;
-
-    const converted = Array.isArray(obj) ? [] : {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (value instanceof Date) {
-        converted[key] = Timestamp.fromDate(value);
-      } else if (value && typeof value === 'object') {
-        converted[key] = this._convertDatesToTimestamps(value);
-      } else {
-        converted[key] = value;
-      }
-    }
-    return converted;
-  }
-
-  _convertTimestampsToDates(obj) {
-    if (!obj) return obj;
-    if (typeof obj !== 'object') return obj;
-
-    if (obj?.seconds !== undefined && obj?.nanoseconds !== undefined) {
-      return new Date(obj.seconds * 1000 + obj.nanoseconds / 1000000);
-    }
-
-    const converted = Array.isArray(obj) ? [] : {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (value && typeof value === 'object') {
-        if (value.seconds !== undefined && value.nanoseconds !== undefined) {
-          converted[key] = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-        } else {
-          converted[key] = this._convertTimestampsToDates(value);
-        }
-      } else {
-        converted[key] = value;
-      }
-    }
-    return converted;
-  }
-
   _flattenObject(obj) {
-    const flattened = flatten(obj, {
+    return flatten(obj, {
       safe: true,
       delimiter: '.',
       maxDepth: 20
     });
-    return this._convertDatesToTimestamps(flattened);
   }
 
   _unflattenObject(obj) {
-    const unflattened = unflatten(obj, {
+    return unflatten(obj, {
       safe: true,
       delimiter: '.'
     });
-    return this._convertTimestampsToDates(unflattened);
   }
 
   _getCollectionName(mongooseModel) {
@@ -139,18 +98,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
     
     Object.entries(queryObj).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        if (value instanceof Date) {
-          q = query(q, where(key, '==', Timestamp.fromDate(value)));
-        } else if (typeof value === 'object' && !(value instanceof Timestamp)) {
+        if (typeof value === 'object') {
           Object.entries(value).forEach(([operator, operandValue]) => {
             if (operandValue !== undefined) {
               switch(operator) {
                 case '$ne':
-                  q = query(q, where(key, '!=', 
-                    operandValue instanceof Date ? 
-                      Timestamp.fromDate(operandValue) : 
-                      operandValue
-                  ));
+                  q = query(q, where(key, '!=', operandValue));
                   break;
               }
             }
@@ -201,22 +154,6 @@ export class FirestoreDbEngine extends BaseDbEngine {
 
   async findOne(mongooseModel, queryObj) {
     try {
-      if (queryObj._id) {
-        const collectionName = this._getCollectionName(mongooseModel);
-        const docRef = doc(this.db, collectionName, queryObj._id);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-          console.log(`Could not find document ${queryObj._id}`);
-          return null;
-        }
-
-        return this._initializeData(mongooseModel, {
-          ...this._unflattenObject(docSnap.data()),
-          _id: docSnap.id
-        });
-      }
-
       const collectionName = this._getCollectionName(mongooseModel);
       const collectionRef = firestoreCollection(this.db, collectionName);
       let q = this._buildQuery(collectionRef, queryObj);
@@ -225,10 +162,10 @@ export class FirestoreDbEngine extends BaseDbEngine {
       const snapshot = await getDocs(q);
       if (snapshot.empty) return null;
 
-      const document = snapshot.docs[0];
+      const doc = snapshot.docs[0];
       return this._initializeData(mongooseModel, {
-        ...this._unflattenObject(document.data()),
-        _id: document.id
+        ...this._unflattenObject(doc.data()),
+        _id: doc.id
       });
     } catch (error) {
       console.error('Firestore findOne error:', error);
@@ -276,6 +213,11 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
   }
 
+  // IMPORTANT: Firebase deleteDoc() behavior
+  // 1. deleteDoc() returns void, not a Promise
+  // Reference: https://firebase.google.com/docs/reference/js/firestore_.md#deletedoc
+  // 2. Using await with deleteDoc() can cause hanging
+  // Reference: https://stackoverflow.com/questions/75343779/firebase-9-deletedoc-to-delete-a-document-is-not-working-uncaught-typeerror-c
   async delete(mongooseModel, queryObj) {
     try {
       const collectionName = this._getCollectionName(mongooseModel);
@@ -288,20 +230,18 @@ export class FirestoreDbEngine extends BaseDbEngine {
       }
 
       let deletedCount = 0;
-      
-      // Process deletions sequentially to avoid hanging
       for (const document of snapshot.docs) {
         try {
           const docRef = doc(this.db, collectionName, document.id);
-          // Call deleteDoc without await and increment counter immediately
+          // Do NOT use await here - deleteDoc returns void
           deleteDoc(docRef);
           deletedCount++;
         } catch (error) {
           console.error(`Failed to delete document ${document.id}:`, error);
+          throw error;
         }
       }
 
-      // Return the count of attempted deletions
       return { deletedCount };
     } catch (error) {
       console.error('Firestore delete error:', error);

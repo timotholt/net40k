@@ -3,7 +3,8 @@ import { db } from '../database/database.js';
 import crypto from 'crypto';
 import { Lock } from './Lock.js';
 
-const gameStateSchema = new mongoose.Schema({
+// Schema definition (but not initialization)
+const schemaDefinition = {
   id: {
     type: String,
     required: true,
@@ -37,47 +38,69 @@ const gameStateSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
-
-export const GameState = mongoose.model('GameState', gameStateSchema);
-
-// Add schema metadata for database engines
-GameState.schema = {
-  players: { type: 'array', default: [] }
 };
 
+// Firestore schema metadata
+const firestoreSchema = {
+  id: { type: 'string', required: true },
+  name: { type: 'string', required: true },
+  creator: { type: 'string', required: true },
+  maxPlayers: { type: 'number', required: true },
+  password: { type: 'string', default: '' },
+  players: { type: 'array', default: [] },
+  created: { type: 'date', default: () => new Date() }
+};
+
+let GameState;
+
 export const GameStateDB = {
+  async init() {
+    if (!GameState) {
+      const schema = new mongoose.Schema(schemaDefinition);
+      GameState = mongoose.model('GameState', schema);
+      GameState.schema = firestoreSchema;
+    }
+    return GameState;
+  },
+
   async findAll() {
-    return await db.getEngine().find(GameState, {});
+    const model = await this.init();
+    return await db.getEngine().find(model, {});
   },
 
   async findOne(query) {
-    return await db.getEngine().findOne(GameState, query);
+    const model = await this.init();
+    return await db.getEngine().findOne(model, query);
   },
 
   async create(gameData) {
-    return await db.getEngine().create(GameState, {
+    const model = await this.init();
+    return await db.getEngine().create(model, {
       ...gameData,
       id: crypto.randomUUID()
     });
   },
 
   async update(query, data) {
-    return await db.getEngine().update(GameState, query, data);
+    const model = await this.init();
+    return await db.getEngine().update(model, query, data);
   },
 
   async delete(query) {
-    return await db.getEngine().delete(GameState, query);
+    const model = await this.init();
+    return await db.getEngine().delete(model, query);
   },
 
   async findByCreator(userId) {
-    return await db.getEngine().find(GameState, { creator: userId });
+    const model = await this.init();
+    return await db.getEngine().find(model, { creator: userId });
   },
 
   async addPlayer(gameId, userId) {
     try {
       const release = await Lock.acquire(`game:${gameId}`);
       try {
+        const model = await this.init();
         const game = await this.findOne({ id: gameId });
         if (!game) return null;
 
@@ -107,6 +130,7 @@ export const GameStateDB = {
     try {
       const release = await Lock.acquire(`game:${gameId}`);
       try {
+        const model = await this.init();
         const game = await this.findOne({ id: gameId });
         if (!game) return null;
 
@@ -130,6 +154,7 @@ export const GameStateDB = {
   },
 
   async isPlayerInGame(gameId, userId) {
+    const model = await this.init();
     const game = await this.findOne({ id: gameId });
     const players = game ? (Array.isArray(game.players) ? game.players : []) : [];
     return players.includes(userId);
