@@ -8,7 +8,7 @@ A real-time game lobby system built with Node.js, Express, and a modular databas
 - Real-time game lobby
 - Create and join games with player limits
 - Nickname support for all players
-- Modular database system (in-memory or MongoDB)
+- Modular database system (in-memory/MongoDB)
 - Security features
 
 ## Prerequisites

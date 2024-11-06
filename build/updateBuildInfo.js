@@ -6,10 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const buildInfo = {
-  version: process.env.npm_package_version || '1.0.0',
-  buildDate: new Date().toISOString(),
-  buildNumber: process.env.BUILD_NUMBER || '0',
-  environment: process.env.NODE_ENV || 'development'
+    version: process.env.npm_package_version || '1.0.0',
+    buildDate: new Date().toISOString(),
+    buildNumber: process.env.BUILD_NUMBER || '0',
+    environment: process.env.NODE_ENV || 'development'
 };
 
 const content = `// Auto-generated file - DO NOT EDIT

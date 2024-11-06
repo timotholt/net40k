@@ -20,7 +20,7 @@ only lasts as long as the server is running. As soon as the
 server is stopped, the database is gone. (Best for development).
 
 FirebaseDbEngine.js is the Google Firebase cloud database.
-It is works well.  Users, Chat messages, and Games are all
+It is really really well.  Users, Chat messages, and Games are all
 stored properly on Firebase.
 
 MongoDbEngine.js is a real mongoDB implementation that writes to
