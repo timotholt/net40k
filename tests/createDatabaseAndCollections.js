@@ -74,11 +74,13 @@ export async function initializeDatabase() {
         await database.collection('gamestate').deleteMany({});
         await database.collection('chat').deleteMany({});
 
-        // Create indexes for the collections
+        // Create indexes for the user collection
         await database.collection('user').createIndex({ username: 1 }, { unique: true });
         await database.collection('user').createIndex({ userId: 1 }, { unique: true });
-        await database.collection('gamestate').createIndex({ gameId: 1 }, { unique: true });
-        await database.collection('chat').createIndex({ chatId: 1 }, { unique: true });
+
+        // These are for future use
+        //await database.collection('gamestate').createIndex({ id: 1 }, { unique: true });
+        //await database.collection('chat').createIndex({ chatId: 1 }, { unique: true });
 
         // Upload user data (will be validated against the schema)
         const userData = JSON.parse(fs.readFileSync('./tests/hack40k.user.json', 'utf8'));
