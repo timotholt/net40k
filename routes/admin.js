@@ -1,7 +1,7 @@
 import express from 'express';
 import { GameStateDB } from '../models/GameState.js';
 import { UserDB } from '../models/User.js';
-
+import { initializeDatabase } from '../tests/createDatabaseAndCollections.js';
 const router = express.Router();
 
 // Helper function to calculate stats
@@ -102,6 +102,18 @@ router.get('/dashboard/events', (req, res) => {
     req.on('close', () => {
         clearInterval(interval);
     });
+});
+
+// This PUT route called /createDB will call initializeDatabase in ./tests/createDatabaseAndCollections.js
+router.put('/createdb', async (req, res) => {
+    try {
+        console.log('Endpoint /admin/createdb called, creating database...');
+        await initializeDatabase();
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error creating database:', error);
+        res.sendStatus(500);
+    }
 });
 
 export { router };
