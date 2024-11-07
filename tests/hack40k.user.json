@@ -1,7 +1,5 @@
 [{
-  "_id": {
-    "$oid": "672cb3bdaffd4dfa848ca825"
-  },
+  "_id": "672cb3bdaffd4dfa848ca825",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "<system>",
@@ -9,9 +7,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb67a9784b666006d9b89"
-  },
+  "_id": "672cb67a9784b666006d9b89",
   "username": "tinytammy",
   "password": "uUkwelk00$$",
   "nickname": "FOOBAR",
@@ -19,9 +15,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb7589784b666006d9b8d"
-  },
+  "_id": "672cb7589784b666006d9b8d",
   "username": "rickyfano",
   "password": "Rickyfano$$90",
   "nickname": "The Only Ricky!",
@@ -29,9 +23,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb7849784b666006d9b8e"
-  },
+  "_id": "672cb7849784b666006d9b8e",
   "username": "johndoe",
   "password": "JohnDoe45@@",
   "nickname": "John Doe The Boss",
@@ -39,9 +31,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb7aa9784b666006d9b8f"
-  },
+  "_id": "672cb7aa9784b666006d9b8f",
   "username": "janedoe",
   "password": "NotADeerInHeadlights43@@",
   "nickname": "Wife Of John Doe",
@@ -49,9 +39,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb7e09784b666006d9b90"
-  },
+  "_id": "672cb7e09784b666006d9b90",
   "username": "kiddoe",
   "password": "Kiddo7890!!",
   "nickname": "Child of John and Jane Doe",
@@ -59,9 +47,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb8099784b666006d9b91"
-  },
+  "_id": "672cb8099784b666006d9b91",
   "username": "persimmongirl",
   "password": "TryAgainBro78$$",
   "nickname": "Persimmons Are Awesome",
@@ -69,9 +55,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb8229784b666006d9b92"
-  },
+  "_id": "672cb8229784b666006d9b92",
   "username": "deadfish",
   "password": "DeadFish0987%%%%",
   "nickname": "No Dont Ask",
@@ -79,9 +63,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb8a09784b666006d9b93"
-  },
+  "_id": "672cb8a09784b666006d9b93",
   "username": "ragnorok",
   "password": "Ryndqrow29$$",
   "nickname": "Thor The God Of Thunder",
@@ -89,9 +71,7 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb8d19784b666006d9b94"
-  },
+  "_id": "672cb8d19784b666006d9b94",
   "username": "yippers8232",
   "password": "yippersTRY82$$",
   "nickname": "62 And Counting",
@@ -99,12 +79,11 @@
   "deleted": false
 },
 {
-  "_id": {
-    "$oid": "672cb9389784b666006d9b95"
-  },
+  "_id":"672cb9389784b666006d9b95",
   "username": "wakeandbake",
   "password": "Madchef87$$",
   "nickname": "Wake And Bake Everyday",
   "userId": "44da94d2-cdf3-4ee4-a3dd-cebb0d810495",
   "deleted": false
 }]
+

@@ -104,8 +104,8 @@ router.get('/dashboard/events', (req, res) => {
     });
 });
 
-// This PUT route called /createDB will call initializeDatabase in ./tests/createDatabaseAndCollections.js
-router.put('/createdb', async (req, res) => {
+// This GET route called /createDB will call initializeDatabase in ./tests/createDatabaseAndCollections.js
+router.get('/createdb', async (req, res) => {
     try {
         console.log('Endpoint /admin/createdb called, creating database...');
         await initializeDatabase();

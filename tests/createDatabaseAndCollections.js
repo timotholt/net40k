@@ -1,62 +1,71 @@
-const { MongoClient } = require('mongodb');
-const fs = require('fs');
+import { MongoClient } from 'mongodb';
+import fs from 'fs';
 
 // We will use dotenv to load environment variables from a .env file
-require('dotenv').config();
+import dotenv from 'dotenv';
 
 // Define the validation rule for the "user" collection
 const userValidationRule = {
     $jsonSchema: {
-        bsonType: "object",
-        required: ["username", "password", "userId", "deleted", "nickname"],
+        // required: ["username", "password", "userId", "deleted", "nickname"],
         properties: {
-        _id: {
-            bsonType: "objectId"
-        },
-        username: {
-            bsonType: "string",
-            minLength: 5,
-            maxLength: 20,
-            pattern: "^[a-zA-Z0-9_]+$"
-        },
-        password: {
-            bsonType: "string",
-            minLength: 8,
-            maxLength: 32,
-            pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$"
-        },
-        userId: {
-            bsonType: "string",
-            pattern: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-        },
-        deleted: {
-            bsonType: "bool"
-        },
-        nickname: {
-            bsonType: "string",
-            minLength: 3,
-            maxLength: 20,
-            pattern: "^[a-zA-Z][a-zA-Z0-9_.'-]*$"
+            // _id: {
+            //     bsonType: "objectId"
+            // },
+            username: {
+                bsonType: "string",
+                minLength: 5,
+                maxLength: 20,
+                pattern: "^[a-zA-Z0-9_]+$"
+            },
+            // password: {
+            //     bsonType: "string",
+            //     minLength: 8,
+            //     maxLength: 36,
+            //     // pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$"
+            //     pattern: "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+-=[]{};':\"\\\\|,.<>/\\?~`]).{8,}$",
+            // },
+            userId: {
+                bsonType: "string",
+            },
+            deleted: {
+                bsonType: "bool"
+            },
+            nickname: {
+                bsonType: "string",
+                minLength: 3,
+                maxLength: 20,
+ //               pattern: "^[a-zA-Z][a-zA-Z0-9_.'-\\s]*$"
+            }
         }
-        }
-    }
+    },
 };
 
 
 export async function initializeDatabase() {
-    // Get mongoDB connection string from .env file
-    const MONGODB_URI = process.env.MONGODB_URI;
-    const client = new MongoClient(uri);
 
+    // Get mongoDB connection string from .env file
+    dotenv.config();
+
+    const MONGODB_URI = process.env.MONGODB_URI;    
     console.log('Initializing database, using connection string:', MONGODB_URI);
+
+    const client = new MongoClient(MONGODB_URI);
 
     try {
         await client.connect();
 
         // Create the 'hack40k' database if it doesn't exist
         const database = client.db('hack40k');
+
+        // Drop all the collections
+        await database.dropCollection('user');
+        await database.dropCollection('gamestate');
+        await database.dropCollection('chat');
+
         // Create collections if they don't exist (with validation for "user")
-        await database.createCollection('user', { validator: userValidationRule });
+        await database.createCollection('user', { validator: userValidationRule, validationAction: "warn" });
+        // await database.createCollection('user');
         await database.createCollection('gamestate');
         await database.createCollection('chat');
 
@@ -64,6 +73,12 @@ export async function initializeDatabase() {
         await database.collection('user').deleteMany({});
         await database.collection('gamestate').deleteMany({});
         await database.collection('chat').deleteMany({});
+
+        // Create indexes for the collections
+        await database.collection('user').createIndex({ username: 1 }, { unique: true });
+        await database.collection('user').createIndex({ userId: 1 }, { unique: true });
+        await database.collection('gamestate').createIndex({ gameId: 1 }, { unique: true });
+        await database.collection('chat').createIndex({ chatId: 1 }, { unique: true });
 
         // Upload user data (will be validated against the schema)
         const userData = JSON.parse(fs.readFileSync('./tests/hack40k.user.json', 'utf8'));
