@@ -25,6 +25,14 @@ Upgrades from SBA318
 7) Discovered a huge bug in the custom middleware bug I used in SBA318 and
    decided it wasn't worth keeping.
 
+## .ENV file
+
+Make sure you have PORT and DB_TYPE and MONGODB_URI and ENABLE_CACHE set correctly!
+
+![Screenshot](env1-screen.png)
+![Screenshot](env2-screen.png)
+
+
 ## Launching the app:
 
 nodemon dev
@@ -32,6 +40,8 @@ nodemon dev
 ## Launching the client:
 
 localhost:3000
+
+    ![Screenshot](launchapp-screen.png)
 
 Note: You can launch multiple clients in different browser tabs and
 talk to each other.  It works!
@@ -60,6 +70,8 @@ talk to each other.  It works!
 8. Sensible data validation is on the user collection.  Nickname uses
    some hardcore validation logic and can be seen in the compass
    validation page.
+
+    ![Screenshot](validation-screen.png)
 
 # History
 
