@@ -131,9 +131,10 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     _getCollectionName(mongooseModel) {
-        return mongooseModel.collection.collectionName || mongooseModel.modelName.toLowerCase();
-    }
-
+        //    return mongooseModel.collection.collectionName || mongooseModel.modelName.toLowerCase();
+            return mongooseModel.modelName.toLowerCase();
+        }
+        
     _buildQuery(collectionRef, queryObj) {
         let q = query(collectionRef);
         
