@@ -7,7 +7,8 @@ and MongoDB storage.
 ![Screenshot](login-screen.png)
 ![Screenshot](registration-screen.png)
 ![Screenshot](lobby-screen.png)
-![Screenshot](settings-screen.png)
+![Screenshot](account-screen.png)
+![Screenshot](profile-screen.png)
 
 ## Launching the app:
 
@@ -19,6 +20,33 @@ localhost:3000
 
 Note: You can launch multiple clients in different browser tabs and
 talk to each other.  It works!
+
+## Testing
+
+1. Register user, create game, and send chat message does a POST on
+   the user collection
+
+2. Delete game does a DELETE from the game collection
+
+3. Delete user from the settings page DOES NOT do a DELETE
+   (intentionally). It does a soft delete on purpose cause relations
+   would break (I also learned big game servers dont do a hard
+   delete either).
+
+4. Chats in the game room and lobby use GETS with different query parms
+   criteria so it's already tested.
+
+5. Updating your password in the settings -> account page does a PUT
+
+6. Updating your nickanme in the settings -> profile page does a PUT
+
+7. Index is created when you initialize the database at /admin/createdb
+
+8. Sensible data validation is on the user collection.  Nickname uses
+   some hardcore validation logic and can be seen in the compass
+   validation page.
+
+9. 
 
 # History
 
@@ -36,6 +64,8 @@ stability issues, when it works it looks amazing!
 
 2) in your browser go to URL:
     localhost:3000/admin/createdb
+
+    ![Screenshot](createdb-screen.png)
 
 3) launch one or more browser tabs for each client:
     localhost:3000

@@ -215,9 +215,143 @@
   "type": "lobby",
   "userId": "a5c2c642-e9a6-49bc-8a3d-3c2a9f8f15ae",
   "username": "lizzy",
-  "nickname": "LIZZY IS BIZZY",
+  "nickname": "LIZZY IS BIZZY2",
   "message": "Im ready to powerup and stream on twitch!",
   "timestamp": {
     "$date": "2024-11-08T04:41:15.043Z"
+  }
+},
+{
+  "_id": "76a50a09-ffbf-4b4f-8e50-68001183ed47",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY IS BIZZY logged in",
+  "timestamp": {
+    "$date": "2024-11-08T04:50:07.714Z"
+  }
+},
+{
+  "_id": "ab7a2ff0-49ad-4319-a0e4-1003e296f121",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY IS BIZZY changed their nickname to LIZZY IS BIZZY2",
+  "timestamp": {
+    "$date": "2024-11-08T04:50:34.791Z"
+  }
+},
+{
+  "_id": "bbd8b08a-683c-4b4b-ab89-dd8b5b2ee069",
+  "type": "game",
+  "gameId": "5f648e8c-5079-4bea-b872-45e51c98c4ad",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY IS BIZZY2 joined the game",
+  "timestamp": {
+    "$date": "2024-11-08T04:55:47.167Z"
+  }
+},
+{
+  "_id": "d4069f0c-ab32-4c90-a25a-85e10379697a",
+  "type": "game",
+  "gameId": "5f648e8c-5079-4bea-b872-45e51c98c4ad",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY IS BIZZY2 left the game",
+  "timestamp": {
+    "$date": "2024-11-08T04:55:51.931Z"
+  }
+},
+{
+  "_id": "2b337462-b1c9-457a-aafd-bd3d0ad4669e",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY BORDEN logged in",
+  "timestamp": {
+    "$date": "2024-11-08T04:56:50.182Z"
+  }
+},
+{
+  "_id": "682649ad-c7ff-432a-892f-53415558c3c8",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY BORDEN logged out",
+  "timestamp": {
+    "$date": "2024-11-08T04:57:22.808Z"
+  }
+},
+{
+  "_id": "5f5118f9-ca12-47ed-8475-460fc1565748",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY BORDEN logged in",
+  "timestamp": {
+    "$date": "2024-11-08T05:15:53.872Z"
+  }
+},
+{
+  "_id": "e4a4fb60-0608-4280-a2f7-6ce24e626811",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY BORDEN created game \"Another Game Bro\"",
+  "timestamp": {
+    "$date": "2024-11-08T05:26:48.222Z"
+  }
+},
+{
+  "_id": "dc1dd95b-970c-4a97-ad34-ec718c890542",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "LIZZY BORDEN logged out",
+  "timestamp": {
+    "$date": "2024-11-08T05:27:12.668Z"
+  }
+},
+{
+  "_id": "d5575082-79b8-46ca-ac22-48060fc5a808",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "JoshIsTheBoss logged in",
+  "timestamp": {
+    "$date": "2024-11-08T05:27:53.993Z"
+  }
+},
+{
+  "_id": "69f21f27-fd74-4337-839c-535a3c41ea02",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "JoshIsTheBoss created game \"SBA319 Is Due Tonight\"",
+  "timestamp": {
+    "$date": "2024-11-08T05:28:12.556Z"
+  }
+},
+{
+  "_id": "e0f3fa6c-1d55-4636-bb90-d2a2cbedc90e",
+  "type": "lobby",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "JoshIsTheBoss logged out",
+  "timestamp": {
+    "$date": "2024-11-08T05:30:03.328Z"
   }
 }]

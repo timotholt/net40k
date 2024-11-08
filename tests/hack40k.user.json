@@ -45,11 +45,33 @@
 {
   "_id": "a5c2c642-e9a6-49bc-8a3d-3c2a9f8f15ae",
   "username": "lizzy",
-  "password": "LizzyIsBizzy89!!",
-  "nickname": "LIZZY IS BIZZY",
+  "password": "LizzyIsBizzy89!$",
+  "nickname": "LIZZY IS BIZZY2",
   "userId": "a5c2c642-e9a6-49bc-8a3d-3c2a9f8f15ae",
   "createdAt": {
     "$date": "2024-11-08T04:40:14.604Z"
+  },
+  "deleted": false
+},
+{
+  "_id": "9da29090-24f1-4a9b-9d61-93bb4d7db7a2",
+  "username": "lizzy2",
+  "password": "LizzyIzBizzy8888$$",
+  "nickname": "LIZZY BORDEN",
+  "userId": "9da29090-24f1-4a9b-9d61-93bb4d7db7a2",
+  "createdAt": {
+    "$date": "2024-11-08T04:56:39.543Z"
+  },
+  "deleted": false
+},
+{
+  "_id": "00e54e5b-0d3d-49ad-839e-19a9d36ee093",
+  "username": "joshm",
+  "password": "JoshIsTheBoss8844$$",
+  "nickname": "JoshIsTheBoss",
+  "userId": "00e54e5b-0d3d-49ad-839e-19a9d36ee093",
+  "createdAt": {
+    "$date": "2024-11-08T05:27:25.206Z"
   },
   "deleted": false
 }]
