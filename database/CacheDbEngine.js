@@ -203,6 +203,10 @@ export class CacheDbEngine extends BaseDbEngine {
     }
   }
 
+//   async isHealthy() {
+//       return true;
+//   }
+
   async find(collection, query) {
     const stats = this._getCollectionStats(collection);
     const cacheKey = this._getCacheKey(collection, query);

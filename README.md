@@ -14,10 +14,10 @@ Upgrades from SBA318
 
 1) About 20 database engine bugs fixed in the swappable database engine
 2) MongoDB engine added (so now we have In-memory, Firebase, and MongoDb)
-   (NOTE NO REGRESSION TESTING ON In-Memory or Firesbase yet)
+   (NOTE NO REGRESSION TESTING ON In-Memory yet)
 3) Cache engine! There is a full cache engine that can be set in the .env.
-   Turned off by default.  It works really well on top of Firestore.  Not
-   tested on MongoDb yet. 
+   Turned off by default.  It works really well on top of Firestore.
+   IT DOES NOT WORK ON MONGODB yet. 
 4) Settings page with seperate tabs
 5) Initialize MongoDB database (only MongoDB) through a route
    localhost:3000/admin/createdb

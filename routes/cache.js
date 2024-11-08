@@ -147,4 +147,4 @@ router.get('/volume', (req, res) => {
     });
 });
 
-export default router;
+export { router };

@@ -5,6 +5,7 @@ import { router as userRoutes } from './routes/users.js';
 import { router as lobbyRoutes } from './routes/lobby.js';
 import { router as adminRoutes } from './routes/admin.js';
 import { router as chatRoutes } from './routes/chat.js';
+import { router as cacheRoutes } from './routes/cache.js';
 import { db } from './database/database.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandling.js';
@@ -53,6 +54,7 @@ app.use('/user', userRoutes);
 app.use('/lobby', lobbyRoutes);
 app.use('/chat', chatRoutes);
 app.use('/admin', adminRoutes);
+app.use('/cache', cacheRoutes);
 
 // Root route
 app.get('/about', (req, res) => {
