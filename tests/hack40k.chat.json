@@ -1,286 +1,223 @@
 [{
-  "_id": {
-    "$oid": "672cb6819784b666006d9b8a"
-  },
+  "_id": "a34d97d7-93c8-4729-92b5-f27a202e3dec",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "FOOBAR logged in",
+  "message": "BIG DEER HUNTER logged in",
   "timestamp": {
-    "$date": "2024-11-07T12:45:52.947Z"
+    "$date": "2024-11-08T04:22:23.119Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb6a29784b666006d9b8b"
-  },
-  "type": "lobby",
-  "userId": "3c016a1d-5384-4a4d-897e-32c5e16e30b5",
-  "username": "tim",
-  "nickname": "FOOBAR",
-  "message": "I'm Bored, join the Practice Room!",
-  "timestamp": {
-    "$date": "2024-11-07T12:46:26.348Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cb6eb9784b666006d9b8c"
-  },
+  "_id": "22cf94f6-a0a3-4cd5-8334-5fd8eb1765c0",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "FOOBAR logged out",
+  "message": "BIG DEER HUNTER created game \"123\"",
   "timestamp": {
-    "$date": "2024-11-07T12:47:39.257Z"
+    "$date": "2024-11-08T04:23:14.723Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb9a23724046500568926"
-  },
+  "_id": "e5049170-54b5-4d04-af11-1b5e01b31926",
+  "type": "lobby",
+  "userId": "18d1b48b-e5cc-4f7a-ac7e-b7bd4f25695a",
+  "username": "johndoe",
+  "nickname": "BIG DEER HUNTER",
+  "message": "hi",
+  "timestamp": {
+    "$date": "2024-11-08T04:23:22.518Z"
+  }
+},
+{
+  "_id": "d5f29c7c-8328-47c5-ad73-6b4b6e91066e",
+  "type": "lobby",
+  "userId": "18d1b48b-e5cc-4f7a-ac7e-b7bd4f25695a",
+  "username": "johndoe",
+  "nickname": "BIG DEER HUNTER",
+  "message": "how are you",
+  "timestamp": {
+    "$date": "2024-11-08T04:24:08.724Z"
+  }
+},
+{
+  "_id": "dccbc089-6738-45c9-93bf-b2ece3582bb2",
+  "type": "game",
+  "gameId": "5f648e8c-5079-4bea-b872-45e51c98c4ad",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "BIG DEER HUNTER joined the game",
+  "timestamp": {
+    "$date": "2024-11-08T04:24:20.744Z"
+  }
+},
+{
+  "_id": "5afdfedd-9476-4f33-9b95-3a1bdcc1d26a",
+  "type": "game",
+  "gameId": "5f648e8c-5079-4bea-b872-45e51c98c4ad",
+  "userId": "18d1b48b-e5cc-4f7a-ac7e-b7bd4f25695a",
+  "username": "johndoe",
+  "nickname": "BIG DEER HUNTER",
+  "message": "hello",
+  "timestamp": {
+    "$date": "2024-11-08T04:24:25.457Z"
+  }
+},
+{
+  "_id": "2be78dd9-b048-46c5-914c-1ea077d2460f",
+  "type": "game",
+  "gameId": "5f648e8c-5079-4bea-b872-45e51c98c4ad",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "username": "system",
+  "nickname": "System",
+  "message": "BIG DEER HUNTER left the game",
+  "timestamp": {
+    "$date": "2024-11-08T04:24:32.762Z"
+  }
+},
+{
+  "_id": "bd4796c4-78de-4270-830a-882be93d5d8d",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "FOOBAR logged in",
+  "message": "BIG DEER HUNTER logged out",
   "timestamp": {
-    "$date": "2024-11-07T12:59:14.315Z"
+    "$date": "2024-11-08T04:25:14.674Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb9c83724046500568928"
-  },
+  "_id": "0ff135d0-e9b8-4c3c-a582-7bc9ac87baeb",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "FOOBAR created game \"FOOBAR's ROOM\"",
+  "message": "The REAL BOSS logged in",
   "timestamp": {
-    "$date": "2024-11-07T12:59:52.880Z"
+    "$date": "2024-11-08T04:25:58.099Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb9d23724046500568929"
-  },
+  "_id": "3dd05577-f357-43db-8ef4-8e0943d1b56b",
+  "type": "lobby",
+  "userId": "42d059f7-bc4c-468b-8406-d06b12ba3099",
+  "username": "janedoe",
+  "nickname": "The REAL BOSS",
+  "message": "hi big deer hunter!",
+  "timestamp": {
+    "$date": "2024-11-08T04:26:11.773Z"
+  }
+},
+{
+  "_id": "eb3041c6-4bec-4b53-be77-083f25f2dd2e",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "FOOBAR logged out",
+  "message": "The REAL BOSS created game \"Practice For the Deer Family\"",
   "timestamp": {
-    "$date": "2024-11-07T13:00:02.606Z"
+    "$date": "2024-11-08T04:27:04.549Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb9ea372404650056892a"
-  },
+  "_id": "e612fcdd-a412-42cf-ae81-10a92a3351e7",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "The Only Ricky! logged in",
+  "message": "The REAL BOSS logged out",
   "timestamp": {
-    "$date": "2024-11-07T13:00:26.041Z"
+    "$date": "2024-11-08T04:27:35.261Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cb9f1372404650056892b"
-  },
-  "type": "lobby",
-  "userId": "64633ddc-2963-4d5d-b733-8fcda7b5e837",
-  "username": "rickyfano",
-  "nickname": "The Only Ricky!",
-  "message": "Hey kids, let's play a game!",
-  "timestamp": {
-    "$date": "2024-11-07T13:00:33.106Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cba00372404650056892d"
-  },
+  "_id": "c63f3014-1ab4-4072-8349-e484805994b7",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "The Only Ricky! created game \"Ricky Rocks!\"",
+  "message": "LITTLE SAMMY logged in",
   "timestamp": {
-    "$date": "2024-11-07T13:00:47.976Z"
+    "$date": "2024-11-08T04:37:02.102Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cba10372404650056892e"
-  },
+  "_id": "865726f7-4766-4b2d-8b7d-2020a0f01a49",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "The Only Ricky! logged out",
+  "message": "LITTLE SAMMY created game \"Pretty Sammy Is Here!\"",
   "timestamp": {
-    "$date": "2024-11-07T13:01:04.907Z"
+    "$date": "2024-11-08T04:37:39.074Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cba20372404650056892f"
-  },
+  "_id": "30eec337-a81e-46f9-a886-1ee920ebefd1",
+  "type": "lobby",
+  "userId": "daa91f4a-5226-4a66-bbad-a6c0f9162e79",
+  "username": "sam",
+  "nickname": "LITTLE SAMMY",
+  "message": "My game password is 123",
+  "timestamp": {
+    "$date": "2024-11-08T04:37:52.853Z"
+  }
+},
+{
+  "_id": "bde6e145-2265-438a-b979-eebb9b47437a",
+  "type": "lobby",
+  "userId": "daa91f4a-5226-4a66-bbad-a6c0f9162e79",
+  "username": "sam",
+  "nickname": "LITTLE SAMMY",
+  "message": "If you wanna join i'll let you get the best loot!",
+  "timestamp": {
+    "$date": "2024-11-08T04:38:19.947Z"
+  }
+},
+{
+  "_id": "2f43ddfe-e75a-4b38-9a6e-3d7e007ccab0",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "John Doe The Boss logged in",
+  "message": "LITTLE SAMMY logged out",
   "timestamp": {
-    "$date": "2024-11-07T13:01:20.339Z"
+    "$date": "2024-11-08T04:39:22.191Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cba343724046500568931"
-  },
+  "_id": "7aa2b23e-ce98-47ee-9fbe-f506463f2f0c",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "John Doe The Boss created game \"Only Deer Speedrun\"",
+  "message": "LIZZY IS BIZZY logged in",
   "timestamp": {
-    "$date": "2024-11-07T13:01:39.986Z"
+    "$date": "2024-11-08T04:40:39.806Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cba3e3724046500568932"
-  },
+  "_id": "881e04b3-6d66-4ea6-9dee-2069ae0116ea",
   "type": "lobby",
   "userId": "00000000-0000-0000-0000-000000000000",
   "username": "system",
   "nickname": "System",
-  "message": "John Doe The Boss logged out",
+  "message": "LIZZY IS BIZZY created game \"Lizzy Is Dizzy\"",
   "timestamp": {
-    "$date": "2024-11-07T13:01:50.802Z"
+    "$date": "2024-11-08T04:40:58.928Z"
   }
 },
 {
-  "_id": {
-    "$oid": "672cba5a3724046500568933"
-  },
+  "_id": "63bea84e-8132-4293-a512-6bc1580f2630",
   "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Persimmons Are Awesome logged in",
+  "userId": "a5c2c642-e9a6-49bc-8a3d-3c2a9f8f15ae",
+  "username": "lizzy",
+  "nickname": "LIZZY IS BIZZY",
+  "message": "Im ready to powerup and stream on twitch!",
   "timestamp": {
-    "$date": "2024-11-07T13:02:18.388Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cba6b3724046500568935"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Persimmons Are Awesome created game \"Play with my persimmons!\"",
-  "timestamp": {
-    "$date": "2024-11-07T13:02:35.065Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cba733724046500568936"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Persimmons Are Awesome logged out",
-  "timestamp": {
-    "$date": "2024-11-07T13:02:43.708Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cba863724046500568937"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Thor The God Of Thunder logged in",
-  "timestamp": {
-    "$date": "2024-11-07T13:03:02.595Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cba9e3724046500568939"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Thor The God Of Thunder created game \"Only The Avengers Are Allowed\"",
-  "timestamp": {
-    "$date": "2024-11-07T13:03:25.930Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cbacc372404650056893a"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Thor The God Of Thunder logged out",
-  "timestamp": {
-    "$date": "2024-11-07T13:04:12.159Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cbae1372404650056893b"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Wake And Bake Everyday logged in",
-  "timestamp": {
-    "$date": "2024-11-07T13:04:33.442Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cbaed372404650056893d"
-  },
-  "type": "lobby",
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "username": "system",
-  "nickname": "System",
-  "message": "Wake And Bake Everyday created game \"Kevin Smith Fans Only\"",
-  "timestamp": {
-    "$date": "2024-11-07T13:04:45.893Z"
-  }
-},
-{
-  "_id": {
-    "$oid": "672cbb02372404650056893e"
-  },
-  "type": "lobby",
-  "userId": "44da94d2-cdf3-4ee4-a3dd-cebb0d810495",
-  "username": "wakeandbake",
-  "nickname": "Wake And Bake Everyday",
-  "message": "Yo if you like Kevin Smith join my room!",
-  "timestamp": {
-    "$date": "2024-11-07T13:05:06.301Z"
+    "$date": "2024-11-08T04:41:15.043Z"
   }
 }]
