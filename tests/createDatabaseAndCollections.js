@@ -18,13 +18,13 @@ const userValidationRule = {
                 maxLength: 20,
                 pattern: "^[a-zA-Z0-9_]+$"
             },
-            // password: {
-            //     bsonType: "string",
-            //     minLength: 8,
-            //     maxLength: 36,
+            password: {
+                bsonType: "string",
+                minLength: 8,
+                maxLength: 36,
             //     // pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$"
             //     pattern: "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+-=[]{};':\"\\\\|,.<>/\\?~`]).{8,}$",
-            // },
+            },
             userId: {
                 bsonType: "string",
             },
@@ -34,8 +34,21 @@ const userValidationRule = {
             nickname: {
                 bsonType: "string",
                 minLength: 3,
-                maxLength: 20,
- //               pattern: "^[a-zA-Z][a-zA-Z0-9_.'-\\s]*$"
+                maxLength: 30,
+                // pattern: "^[a-zA-Z][a-zA-Z0-9_.'\\ -]*$"
+
+                // Include unicode A-Z and !
+                // pattern: "^[A-Za-zÀ-ÖØ-öø-ū0-9][A-Za-zÀ-ÖØ-öø-ū0-9_.'\\ -!]*$"
+
+                // Better! Try to include more such as !~@#$%^& 
+                // pattern: "^[A-Za-zÀ-ÖØ-öø-ū0-9][A-Za-zÀ-ÖØ-öø-ū0-9_.'\\ -!~@#$%^&]*$"
+
+                // Better!  Includes {}<> (THIS IS THE CURRENT BEST ONE)
+                pattern: "^[A-Za-zÀ-ÖØ-öø-ū0-9][A-Za-zÀ-ÖØ-öø-ū0-9_.'\\ -!~@#$%^&{}<>]*$"
+
+                // THESE BELOW DONT WORK
+                // pattern: "^[A-Za-zÀ-ÖØ-öø-ū][A-Za-zÀ-ÖØ-öø-ū0-9_.\'\\-`~!@#$%^&*()_+={[\]}\\s]*$"
+                // pattern: "^[A-Za-zÀ-ÖØ-öø-ū][A-Za-zÀ-ÖØ-öø-ū0-9_.\'\\-`~!@#$%^&*()_+={[\]}\s]*$"
             }
         }
     },
