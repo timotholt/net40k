@@ -10,6 +10,21 @@ and MongoDB storage.
 ![Screenshot](account-screen.png)
 ![Screenshot](profile-screen.png)
 
+Upgrades from SBA318
+
+1) About 20 database engine bugs fixed in the swappable database engine
+2) MongoDB engine added (so now we have In-memory, Firebase, and MongoDb)
+   (NOTE NO REGRESSION TESTING ON In-Memory or Firesbase yet)
+3) Cache engine! There is a full cache engine that can be set in the .env.
+   Turned off by default.  It works really well on top of Firestore.  Not
+   tested on MongoDb yet. 
+4) Settings page with seperate tabs
+5) Initialize MongoDB database (only MongoDB) through a route
+   localhost:3000/admin/createdb
+6) Tons of userID handling fixes (and it needs more)
+7) Discovered a huge bug in the custom middleware bug I used in SBA318 and
+   decided it wasn't worth keeping.
+
 ## Launching the app:
 
 nodemon dev
@@ -36,17 +51,15 @@ talk to each other.  It works!
 4. Chats in the game room and lobby use GETS with different query parms
    criteria so it's already tested.
 
-5. Updating your password in the settings -> account page does a PUT
+5. Updating your password in the settings -> account page does a PATCH
 
-6. Updating your nickanme in the settings -> profile page does a PUT
+6. Updating your nickanme in the settings -> profile page does a PATCH
 
 7. Index is created when you initialize the database at /admin/createdb
 
 8. Sensible data validation is on the user collection.  Nickname uses
    some hardcore validation logic and can be seen in the compass
    validation page.
-
-9. 
 
 # History
 

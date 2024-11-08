@@ -1,0 +1,426 @@
+Game Lobby API Reference
+=======================
+
+Base URL: /
+Content-Type: application/json
+
+Authentication Endpoints
+----------------------
+
+1. Register User
+   Endpoint: POST /user/register
+   Description: Creates a new user account
+   Request Body:
+   {
+     "username": "string",     // Required, 3-30 chars, lowercase letters and numbers only
+     "password": "string",     // Required, min 8 chars, must contain uppercase, lowercase, number, symbol
+     "nickname": "string"      // Optional, 1-30 chars, defaults to username
+   }
+   Response: 
+   {
+     "success": true,
+     "message": "Registration successful"
+   }
+   Errors:
+   - 400: Username and password are required
+   - 400: Username already exists
+   - 400: Invalid username format
+   - 400: Invalid password format
+   - 500: Registration failed
+
+2. Login
+   Endpoint: POST /user/login
+   Description: Authenticates a user
+   Request Body:
+   {
+     "username": "string",
+     "password": "string"
+   }
+   Response:
+   {
+     "success": true,
+     "nickname": "string",    // User's current nickname
+     "userId": "string"       // UUID v4 format
+   }
+   Errors:
+   - 401: Invalid username or password
+   - 400: Invalid username format
+   - 400: Invalid password format
+   - 500: Login failed
+
+3. Logout
+   Endpoint: POST /user/logout
+   Description: Logs out user and removes them from any games
+   Request Body:
+   {
+     "userId": "string"      // UUID v4
+   }
+   Response:
+   {
+     "success": true
+   }
+   Errors:
+   - 400: Valid userId is required
+   - 500: Logout failed
+
+Profile Management Endpoints
+--------------------------
+
+1. Change Nickname
+   Endpoint: PATCH /user/change-nickname
+   Description: Updates user's display name
+   Request Body:
+   {
+     "userId": "string",     // UUID v4
+     "nickname": "string"    // 1-30 chars
+   }
+   Response:
+   {
+     "success": true
+   }
+   Errors:
+   - 400: Nickname cannot be empty
+   - 400: Invalid nickname format
+   - 404: User not found
+   - 500: Failed to change nickname
+
+2. Change Password
+   Endpoint: PATCH /user/change-password
+   Description: Updates user's password
+   Request Body:
+   {
+     "userId": "string",          // UUID v4
+     "currentPassword": "string",
+     "newPassword": "string"      // Must meet password requirements
+   }
+   Response:
+   {
+     "success": true
+   }
+   Errors:
+   - 401: Current password is incorrect
+   - 400: Invalid password format
+   - 404: User not found
+   - 500: Failed to change password
+
+3. Delete Account
+   Endpoint: DELETE /user/:userId
+   Description: Soft deletes user account and updates related records
+   URL Parameters:
+   - userId: UUID v4 of user to delete
+   Response:
+   {
+     "success": true
+   }
+   Errors:
+   - 404: User not found
+   - 400: Cannot delete account with active games
+   - 500: Failed to delete account
+
+Game Lobby Endpoints
+------------------
+
+1. Get All Games
+   Endpoint: GET /lobby
+   Description: Retrieves list of all active games with player info
+   Query Parameters:
+   - userId: Optional UUID v4. If provided, returns only games where user is creator or player
+   Response:
+   [
+     {
+       "id": "string",        // UUID v4
+       "name": "string",
+       "creator": "string",   // Creator's UUID
+       "maxPlayers": number,  // 1-4
+       "players": [           // Array of player IDs
+         "string"            // Player UUID
+       ],
+       "created": "date"      // ISO 8601
+     }
+   ]
+   Errors:
+   - 500: Failed to retrieve games
+
+2. Create Game
+   Endpoint: POST /lobby
+   Description: Creates a new game
+   Request Body:
+   {
+     "name": "string",
+     "creator": "string",    // Creator's UUID
+     "maxPlayers": number    // Optional, 1-4, defaults to 4
+   }
+   Response:
+   {
+     "success": true,
+     "game": {
+       // Full game object (see GET /lobby response)
+     }
+   }
+   Errors:
+   - 400: Game name and creator are required
+   - 400: Max players must be between 1 and 4
+   - 400: Game name already exists
+   - 404: Creator not found
+   - 500: Failed to create game
+
+3. Join Game
+   Endpoint: POST /lobby/:id/join
+   Description: Adds user to a game
+   URL Parameters:
+   - id: Game ID (UUID)
+   Request Body:
+   {
+     "userId": "string"      // UUID v4
+   }
+   Response:
+   {
+     "success": true,
+     "game": {
+       // Full game object
+     }
+   }
+   Errors:
+   - 404: Game not found
+   - 400: Game is full
+   - 404: User not found
+   - 500: Failed to join game
+
+4. Leave Game
+   Endpoint: POST /lobby/:id/leave
+   Description: Removes user from a game
+   URL Parameters:
+   - id: Game ID (UUID)
+   Request Body:
+   {
+     "userId": "string"      // UUID v4
+   }
+   Response:
+   {
+     "success": true,
+     "game": {
+       // Full game object
+     }
+   }
+   Errors:
+   - 404: Game not found
+   - 400: User not in game
+   - 500: Failed to leave game
+
+5. Delete Game
+   Endpoint: DELETE /lobby/:id
+   Description: Removes a game (creator only)
+   URL Parameters:
+   - id: Game ID (UUID)
+   Query Parameters:
+   - userId: Creator's UUID
+   Response:
+   {
+     "success": true
+   }
+   Errors:
+   - 400: UserId is required
+   - 404: Game not found
+   - 403: Only the creator can delete the game
+   - 500: Failed to delete game
+
+Chat Endpoints
+------------
+
+1. Get Messages
+   Endpoint: GET /chat
+   Description: Retrieves chat messages
+   Query Parameters:
+   - type: Required ('lobby' or 'game')
+   - gameId: Required for game chat (UUID)
+   - userId: Optional. If provided, includes private messages for this user
+   Response:
+   [
+     {
+       "type": "string",     // 'lobby' or 'game'
+       "gameId": "string",   // Only for game chat
+       "userId": "string",   // UUID v4
+       "nickname": "string", // Current or last known nickname
+       "message": "string",
+       "timestamp": "date",  // ISO 8601
+       "deleted": boolean,   // True if user was deleted
+       "private": boolean,   // True for private messages
+       "recipientId": "string" // UUID of recipient for private messages
+     }
+   ]
+   Notes:
+   - Without userId, only public messages are returned
+   - Private messages are only visible to sender and recipient
+   - System messages (userId: 00000000-0000-0000-0000-000000000000) are always visible
+   Errors:
+   - 400: Valid chat type required
+   - 404: Game not found (for game chat)
+   - 403: Not authorized to view game messages
+   - 500: Failed to retrieve messages
+
+2. Send Message
+   Endpoint: POST /chat
+   Description: Sends a new chat message
+   Request Body:
+   {
+     "type": "string",      // 'lobby' or 'game'
+     "gameId": "string",    // Required for game chat
+     "userId": "string",    // UUID v4
+     "message": "string"    // Max 500 chars
+   }
+   Response:
+   {
+     "success": true,
+     "message": {
+       // Full message object
+     }
+   }
+   Notes:
+   - Messages starting with '/' are treated as commands
+   - Available commands:
+     * /help - Show available commands
+     * /nick <new_nickname> - Change nickname
+     * /msg <user> <message> - Send private message
+     * /kick <user> - Kick user from game (creator only)
+   Errors:
+   - 400: Invalid message type
+   - 400: Message too long
+   - 404: User not found
+   - 404: Game not found (for game chat)
+   - 403: User not in game (for game chat)
+   - 400: Unknown command
+   - 500: Failed to send message
+
+3. Delete Game Chat
+   Endpoint: DELETE /chat/game/:gameId
+   Description: Deletes all chat messages for a game (creator only)
+   URL Parameters:
+   - gameId: Game ID (UUID)
+   Query Parameters:
+   - userId: Creator's UUID
+   Response:
+   {
+     "success": true,
+     "message": "Chat history deleted"
+   }
+   Errors:
+   - 404: Game not found
+   - 403: Only game creator can delete chat history
+   - 500: Failed to delete chat history
+
+Administrative Endpoints
+----------------------
+
+1. Get MongoDB Admin URL
+   Endpoint: GET /user/admin-url
+   Description: Retrieves MongoDB admin interface URL
+   Response:
+   {
+     "url": "string"
+   }
+
+2. Create initial Database
+   Endpoint: GET /admin/createdb
+   Description: Create the initial Database
+   Response: OK
+
+
+Error Response Format
+-------------------
+All error responses follow this format:
+{
+  "success": false,
+  "message": "string",    // Human-readable error message
+  "stack": "string"       // Only in development mode
+}
+
+HTTP Status Codes
+---------------
+- 200: Success
+- 400: Bad Request (invalid input)
+- 401: Unauthorized (invalid credentials)
+- 403: Forbidden (insufficient permissions)
+- 404: Not Found
+- 500: Internal Server Error
+
+Notes
+-----
+1. All endpoints require Content-Type: application/json header
+2. Dates are returned in ISO 8601 format
+3. All IDs (userId, gameId) are UUID v4 format
+4. Nicknames are used for display purposes
+5. The server supports both in-memory and MongoDB storage
+6. Real-time updates require polling the /lobby endpoint
+7. Maximum players per game is configurable from 1-4
+8. Deleted users are marked as deleted but retained for reference
+9. Database type is configured via DB_TYPE environment variable
+10. Password changes require current password verification
+11. Account deletion is a soft delete
+12. Game creator cannot be removed from their own game
+13. Chat messages retain original sender info even if user is deleted
+14. System messages use special userId: 00000000-0000-0000-0000-000000000000
+15. Private messages are only visible to sender and recipient
+
+Security Features
+---------------
+1. Request size limited to 10kb
+2. MongoDB injection protection enabled
+3. CORS enabled for all origins
+4. Password fields redacted in logs
+5. Stack traces only shown in development
+6. Validation middleware for all inputs
+7. Custom error handling middleware
+8. Request logging with sanitized data
+9. Response time tracking
+10. IP address logging
+11. UUID-based identification
+12. Soft delete for user accounts
+
+Environment Variables
+-------------------
+- PORT: Server port (default: 3000)
+- DB_TYPE: Database type ('memory' or 'mongodb')
+- MONGODB_URI: MongoDB connection string
+- MONGO_ADMIN_URL: MongoDB admin interface URL
+- NODE_ENV: Environment ('development' or 'production')
+
+Database Engines
+--------------
+1. In-Memory Database (development)
+   - Data persists only during server runtime
+   - No external dependencies
+   - Fast performance
+   - Data lost on server restart
+
+2. MongoDB (production)
+   - Persistent data storage
+   - Automatic reconnection
+   - Schema validation
+   - Production ready
+
+3. Firestore (production)
+   - Persistent data storage
+   - Automatic reconnection
+   - Schema validation
+   - Production ready
+
+Middleware Stack
+--------------
+1. Request Size Limit (10kb)
+2. URL Encoded Parser
+3. MongoDB Sanitizer
+4. CORS Handler
+5. Request Logger
+6. Input Validation
+7. Error Handlers (404, Global)
+
+Client Integration
+----------------
+1. Regular polling recommended (5s for games, 1s for chat)
+2. Handle all error responses
+3. Implement exponential backoff
+4. Validate all inputs
+5. Sanitize displayed content
+6. Handle network errors
+7. Track session state
+8. Cache responses when appropriate
