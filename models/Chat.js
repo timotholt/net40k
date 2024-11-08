@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { db } from '../database/database.js';
+import crypto from 'crypto';
 
 // Schema definition (but not initialization)
 const schemaDefinition = {

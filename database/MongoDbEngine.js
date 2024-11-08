@@ -1,5 +1,6 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { MongoClient } from 'mongodb';
+import crypto from 'crypto';
 
 export class MongoDbEngine extends BaseDbEngine {
     constructor() {
