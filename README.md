@@ -41,7 +41,7 @@ nodemon dev
 
 localhost:3000
 
-    ![Screenshot](launchapp-screen.png)
+![Screenshot](launchapp-screen.png)
 
 Note: You can launch multiple clients in different browser tabs and
 talk to each other.  It works!
@@ -71,7 +71,7 @@ talk to each other.  It works!
    some hardcore validation logic and can be seen in the compass
    validation page.
 
-    ![Screenshot](validation-screen.png)
+![Screenshot](validation-screen.png)
 
 # History
 
