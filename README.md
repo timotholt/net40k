@@ -5,7 +5,7 @@ modular database system supporting both in-memory and Firebase
 and MongoDB storage.
 
 ![Screenshot](login-screen.png)
-![Screenshot](registration-screen.png)
+![Screenshot](register-screen.png)
 ![Screenshot](lobby-screen.png)
 ![Screenshot](account-screen.png)
 ![Screenshot](profile-screen.png)
