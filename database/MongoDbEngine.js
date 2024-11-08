@@ -76,6 +76,11 @@ export class MongoDbEngine extends BaseDbEngine {
         throw new Error('Database connection is not healthy');
         }
 
+        // If an _id is not provided, make one from a UUID
+        if (!data._id) {
+            data._id = crypto.randomUUID();
+        }
+
         const collectionName = collection.modelName.toLowerCase();
         const result = await this.db.collection(collectionName).insertOne(data);
         return { ...data, _id: result.insertedId };

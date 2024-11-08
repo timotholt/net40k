@@ -1,82 +1,111 @@
-[
-{
-  "_id": "672cb67a9784b666006d9b89",
-  "username": "tinytammy",
-  "password": "uUkwelk00$$",
-  "nickname": "FOOBAR",
-  "userId": "3c016a1d-5384-4a4d-897e-32c5e16e30b5",
-  "deleted": false
-},
-{
-  "_id": "672cb7589784b666006d9b8d",
-  "username": "rickyfano",
-  "password": "Rickyfano$$90",
-  "nickname": "The Only Ricky!",
-  "userId": "64633ddc-2963-4d5d-b733-8fcda7b5e837",
-  "deleted": false
-},
-{
-  "_id": "672cb7849784b666006d9b8e",
-  "username": "johndoe",
-  "password": "JohnDoe45@@",
-  "nickname": "John Doe The Boss",
-  "userId": "036f697a-9c83-415a-997b-90bf2db410f9",
-  "deleted": false
-},
-{
-  "_id": "672cb7aa9784b666006d9b8f",
-  "username": "janedoe",
-  "password": "NotADeerInHeadlights43@@",
-  "nickname": "Wife Of John Doe",
-  "userId": "9f65f4da-4021-4438-a17f-74a32921ab07",
-  "deleted": false
-},
-{
-  "_id": "672cb7e09784b666006d9b90",
-  "username": "kiddoe",
-  "password": "Kiddo7890!!",
-  "nickname": "Child of John and Jane Doe",
-  "userId": "cb887fac-bb62-44b9-9ead-e97cd61fdcd7",
-  "deleted": false
-},
-{
-  "_id": "672cb8099784b666006d9b91",
-  "username": "persimmongirl",
-  "password": "TryAgainBro78$$",
-  "nickname": "Persimmons Are Awesome",
-  "userId": "5859a20d-e332-47ca-85eb-9d7a94af14e5",
-  "deleted": false
-},
-{
-  "_id": "672cb8229784b666006d9b92",
-  "username": "deadfish",
-  "password": "DeadFish0987%%%%",
-  "nickname": "No Dont Ask",
-  "userId": "d5c38cf2-74df-4e5a-8eec-24eb7dfaa721",
-  "deleted": false
-},
-{
-  "_id": "672cb8a09784b666006d9b93",
-  "username": "ragnorok",
-  "password": "Ryndqrow29$$",
-  "nickname": "Thor The God Of Thunder",
-  "userId": "769e2ee6-2a8d-47ad-ab1c-638f724b9878",
-  "deleted": false
-},
-{
-  "_id": "672cb8d19784b666006d9b94",
-  "username": "yippers8232",
-  "password": "yippersTRY82$$",
-  "nickname": "62 And Counting",
-  "userId": "39d8a73d-df89-4f8e-a619-e994c874209f",
-  "deleted": false
-},
-{
-  "_id":"672cb9389784b666006d9b95",
-  "username": "wakeandbake",
-  "password": "Madchef87$$",
-  "nickname": "Wake And Bake Everyday",
-  "userId": "44da94d2-cdf3-4ee4-a3dd-cebb0d810495",
-  "deleted": false
-}]
 
+data:[{
+    "_id": {
+      "$oid": "672cb3bdaffd4dfa848ca825"
+    },
+    "userId": "00000000-0000-0000-0000-000000000000",
+    "username": "system",
+    "nickname": "<system>",
+    "password": "9996fec4-21de-4ec0-9cf3-43bcc6736324",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb67a9784b666006d9b89"
+    },
+    "username": "tinytammy",
+    "password": "uUkwelk00$$",
+    "nickname": "FOOBAR",
+    "userId": "3c016a1d-5384-4a4d-897e-32c5e16e30b5",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb7589784b666006d9b8d"
+    },
+    "username": "rickyfano",
+    "password": "Rickyfano$$90",
+    "nickname": "The Only Ricky!",
+    "userId": "64633ddc-2963-4d5d-b733-8fcda7b5e837",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb7849784b666006d9b8e"
+    },
+    "username": "johndoe",
+    "password": "JohnDoe45@@",
+    "nickname": "John Doe The Boss",
+    "userId": "036f697a-9c83-415a-997b-90bf2db410f9",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb7aa9784b666006d9b8f"
+    },
+    "username": "janedoe",
+    "password": "NotADeerInHeadlights43@@",
+    "nickname": "Wife Of John Doe",
+    "userId": "9f65f4da-4021-4438-a17f-74a32921ab07",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb7e09784b666006d9b90"
+    },
+    "username": "kiddoe",
+    "password": "Kiddo7890!!",
+    "nickname": "Child of John and Jane Doe",
+    "userId": "cb887fac-bb62-44b9-9ead-e97cd61fdcd7",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb8099784b666006d9b91"
+    },
+    "username": "persimmongirl",
+    "password": "TryAgainBro78$$",
+    "nickname": "Persimmons Are Awesome",
+    "userId": "5859a20d-e332-47ca-85eb-9d7a94af14e5",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb8229784b666006d9b92"
+    },
+    "username": "deadfish",
+    "password": "DeadFish0987%%%%",
+    "nickname": "No Dont Ask",
+    "userId": "d5c38cf2-74df-4e5a-8eec-24eb7dfaa721",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb8a09784b666006d9b93"
+    },
+    "username": "ragnorok",
+    "password": "Ryndqrow29$$",
+    "nickname": "Thor The God Of Thunder",
+    "userId": "769e2ee6-2a8d-47ad-ab1c-638f724b9878",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb8d19784b666006d9b94"
+    },
+    "username": "yippers8232",
+    "password": "yippersTRY82$$",
+    "nickname": "62 And Counting",
+    "userId": "39d8a73d-df89-4f8e-a619-e994c874209f",
+    "deleted": false
+  },
+  {
+    "_id": {
+      "$oid": "672cb9389784b666006d9b95"
+    },
+    "username": "wakeandbake",
+    "password": "Madchef87$$",
+    "nickname": "Wake And Bake Everyday",
+    "userId": "44da94d2-cdf3-4ee4-a3dd-cebb0d810495",
+    "deleted": false
+  }]

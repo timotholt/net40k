@@ -365,6 +365,10 @@ document.querySelectorAll('.eyeBoxIcon svg').forEach(icon => {
         try {
             const response = await api.login(username, password);
             if (response?.success) {
+
+//                window.alert(`logged in as ${response.userId}`);
+
+
                 window.globalUserId = response.userId;
                 window.globalUsername = username;
                 window.globalNickname = response.nickname || username;
@@ -471,7 +475,10 @@ document.querySelectorAll('.eyeBoxIcon svg').forEach(icon => {
     
     async createGame() {
     showCreateGameModal(async (name, password, maxPlayers) => {
+        // window.alert(`API.js line 58:Creating game... ${name} by ${window.globalUserId}`);
+
         try {
+
             const response = await api.createGame(name, window.globalUserId, maxPlayers, password);
             if (response?.success) {
                 this.updateGamesList();

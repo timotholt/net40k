@@ -88,10 +88,20 @@ export const UserDB = {
 
   async create(userData) {
     const model = await this.init();
+
+    // Ensure _id is generated if not provided
+    if (!userData._id) {
+        userData._id = crypto.randomUUID();
+      }
     
     // Ensure userId is generated if not provided
     if (!userData.userId) {
-      userData.userId = crypto.randomUUID();
+        userData.userId = userData._id;
+    }
+
+    // Ensure a createdAt is generated if not provided
+    if (!userData.createdAt) {
+      userData.createdAt = new Date();
     }
 
     // Ensure deleted is set to false

@@ -11,7 +11,11 @@ export class SystemMessages {
         // Create system user if it doesn't exist
         const systemUser = await UserDB.findById(SYSTEM_USER_ID);
         if (!systemUser) {
+
+            console.log('Creating system user in SystemMessages line 15...');
+
             await UserDB.create({
+                _id: crypto.randomUUID(),
                 userId: SYSTEM_USER_ID,
                 username: SYSTEM_USERNAME,
                 nickname: SYSTEM_NICKNAME,

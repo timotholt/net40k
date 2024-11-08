@@ -42,6 +42,8 @@ const gamesWithCreatorInfo = await Promise.all(filteredGames.map(async game => {
 router.post('/', async (req, res, next) => {
     try {
         const { name, creator, maxPlayers, password } = req.body;
+
+        console.log(`Creating game... ${name} by ${creator}`);
         
         if (!name || !creator) {
             throw new APIError('Game name and creator are required', 400);

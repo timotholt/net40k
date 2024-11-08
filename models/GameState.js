@@ -75,6 +75,22 @@ export const GameStateDB = {
 
   async create(gameData) {
     const model = await this.init();
+
+    // console.log('=================================================')
+    // console.log('Creating game...');
+    // console.log(gameData);
+
+    // Ensure userId is generated if not provided
+    if (!gameData._id) {
+        gameData._id = crypto.randomUUID();
+      }
+  
+      // Ensure a createdAt is generated if not provided
+      if (!gameData.created) {
+        gameData.created = Date.now();
+      }
+  
+
     return await db.getEngine().create(model, {
       ...gameData,
       id: crypto.randomUUID()

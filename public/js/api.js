@@ -54,6 +54,9 @@ export const api = {
     },
   
     async createGame(name, creator, maxPlayers = 4, password = '') {
+
+//        window.alert(`API.js line 58:Creating game... ${name} by ${creator}`);
+
         return this.sendRequest('/lobby', 'POST', { 
             name, 
             creator,

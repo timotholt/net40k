@@ -139,6 +139,12 @@ export const ChatDB = {
 
     async create(chatData) {
         console.log('Enter create with data:', chatData);
+
+        // Ensure userId is generated if not provided
+        if (!chatData._id) {
+            chatData._id= crypto.randomUUID();
+        }
+
         try {
             const model = await this.init();
             // Remove gameId if it's a lobby message
