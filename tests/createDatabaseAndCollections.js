@@ -44,6 +44,9 @@ const userValidationRule = {
                 // pattern: "^[A-Za-zÀ-ÖØ-öø-ū0-9][A-Za-zÀ-ÖØ-öø-ū0-9_.'\\ -!~@#$%^&]*$"
 
                 // Better!  Includes {}<> (THIS IS THE CURRENT BEST ONE)
+                //
+                // Nickname has to start with a letter A-Z uppercase, lowercase, latin alphabet, 0-9
+                // Nickname can continue with same plus space and _.\-!~@#$%^&{}<>
                 pattern: "^[A-Za-zÀ-ÖØ-öø-ū0-9][A-Za-zÀ-ÖØ-öø-ū0-9_.'\\ -!~@#$%^&{}<>]*$"
 
                 // THESE BELOW DONT WORK
