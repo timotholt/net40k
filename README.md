@@ -27,11 +27,15 @@ Upgrades from SBA318
 
 ## .ENV file
 
-Make sure you have PORT and DB_TYPE and MONGODB_URI and ENABLE_CACHE set correctly!
+Make sure you have PORT and DB_TYPE and MONGODB_URI and
+ENABLE_CACHE set correctly!
 
 ![Screenshot](env1-screen.png)
 ![Screenshot](env2-screen.png)
 
+If you are grading my homework, and can't get the .env to work right, just
+text me (408) 406-1832.  It's my biz and personal phone #... it's all over
+the internet, I have a business, I get 40-80 client texts on a busy day.
 
 ## Launching the app:
 
