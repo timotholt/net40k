@@ -121,7 +121,7 @@ stability issues, when it works it looks amazing!
 correct.  Real quick:
 
 /users
--- This endpoint creates users (POST), updates users info (PATCH), queries users (GET)k
+-- This endpoint creates users (POST), updates users info (PATCH), queries users (GET)
 login (POST), logout (POST)
 
 /lobby
