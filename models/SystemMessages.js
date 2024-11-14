@@ -4,7 +4,7 @@ import { chatService } from '../services/ChatService.js';
 
 const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 const SYSTEM_USERNAME = 'system';
-const SYSTEM_NICKNAME = '<system>';
+const SYSTEM_NICKNAME = '<system>'; 
 
 export class SystemMessages {
     static async initialize() {
