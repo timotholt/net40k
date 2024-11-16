@@ -7,7 +7,7 @@ import { generateSchema } from '../utils/schemaGenerator.js';
 import logger from '../utils/logger.js';
 import { sanitizeInput } from '../utils/sanitizer.js';
 import { ValidationError, DatabaseError, AuthError } from '../utils/errors.js';
-import { acquireLock, releaseLock } from '../utils/lockManager.js';
+import { Lock } from './Lock.js';
 import { PASSWORD_SALT_ROUNDS, VERIFICATION_TOKEN_EXPIRY } from '../config/constants.js';
 
 // Service Layer: User Representation
@@ -106,12 +106,12 @@ class User {
 
 // Database Layer
 export const UserDB = {
-    collection: { modelName: 'users', schema: User.schema },
+    collection: 'user',
 
     async create(userData) {
         const lockId = `user-create-${userData.email}`;
         try {
-            await acquireLock(lockId);
+            await Lock.acquire(lockId);
             logger.info(`Creating new user: ${userData.email}`);
             
             const user = new User(userData);
@@ -134,21 +134,21 @@ export const UserDB = {
             user.verificationToken = crypto.randomBytes(32).toString('hex');
             user.verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
 
-            const result = await db.getEngine().insert(this.collection.modelName, user.toJSON());
+            const result = await db.getEngine().insert(this.collection, user.toJSON());
             logger.info(`User created successfully: ${user.email}`);
             return result;
         } catch (error) {
             logger.error(`Failed to create user: ${error.message}`);
             throw error instanceof ValidationError ? error : new DatabaseError('Failed to create user');
         } finally {
-            await releaseLock(lockId);
+            await Lock.release(lockId);
         }
     },
 
     async findAll() {
         try {
             logger.debug('Fetching all users');
-            return await db.getEngine().find(this.collection.modelName, { isDeleted: false });
+            return await db.getEngine().find(this.collection, { isDeleted: false });
         } catch (error) {
             logger.error(`Failed to fetch users: ${error.message}`);
             throw new DatabaseError('Failed to fetch users');
@@ -158,7 +158,7 @@ export const UserDB = {
     async findOne(query) {
         try {
             logger.debug(`Finding user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().findOne(this.collection.modelName, query);
+            return await db.getEngine().findOne(this.collection, query);
         } catch (error) {
             logger.error(`Failed to find user: ${error.message}`);
             throw new DatabaseError('Failed to find user');
@@ -168,7 +168,7 @@ export const UserDB = {
     async findById(userUuid) {
         try {
             logger.debug(`Finding user by UUID: ${userUuid}`);
-            return await db.getEngine().findOne(this.collection.modelName, { userUuid, isDeleted: false });
+            return await db.getEngine().findOne(this.collection, { userUuid, isDeleted: false });
         } catch (error) {
             logger.error(`Failed to find user by ID: ${error.message}`);
             throw new DatabaseError('Failed to find user');
@@ -178,7 +178,7 @@ export const UserDB = {
     async findActive() {
         try {
             logger.debug('Finding active users');
-            return await db.getEngine().find(this.collection.modelName, {
+            return await db.getEngine().find(this.collection, {
                 isActive: true,
                 isDeleted: false,
                 isBanned: false,
@@ -193,7 +193,7 @@ export const UserDB = {
     async delete(query) {
         try {
             logger.info(`Deleting user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().update(this.collection.modelName, query, { isDeleted: true });
+            return await db.getEngine().update(this.collection, query, { isDeleted: true });
         } catch (error) {
             logger.error(`Failed to delete user: ${error.message}`);
             throw new DatabaseError('Failed to delete user');
@@ -203,7 +203,7 @@ export const UserDB = {
     async permanentDelete(query) {
         try {
             logger.info(`Permanently deleting user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().delete(this.collection.modelName, query);
+            return await db.getEngine().delete(this.collection, query);
         } catch (error) {
             logger.error(`Failed to permanently delete user: ${error.message}`);
             throw new DatabaseError('Failed to permanently delete user');
@@ -213,7 +213,7 @@ export const UserDB = {
     async update(query, updateData) {
         const lockId = `user-update-${query.userUuid || query._id}`;
         try {
-            await acquireLock(lockId);
+            await Lock.acquire(lockId);
             logger.info(`Updating user: ${JSON.stringify(query)}`);
             
             // Sanitize update data
@@ -230,14 +230,14 @@ export const UserDB = {
                 sanitizedData.password = await bcrypt.hash(sanitizedData.password, PASSWORD_SALT_ROUNDS);
             }
 
-            const result = await db.getEngine().update(this.collection.modelName, query, sanitizedData);
+            const result = await db.getEngine().update(this.collection, query, sanitizedData);
             logger.info(`User updated successfully`);
             return result;
         } catch (error) {
             logger.error(`Failed to update user: ${error.message}`);
             throw new DatabaseError('Failed to update user');
         } finally {
-            await releaseLock(lockId);
+            await Lock.release(lockId);
         }
     },
 
@@ -329,7 +329,7 @@ export const UserDB = {
     async verify(token) {
         try {
             logger.info(`Verifying user with token: ${token}`);
-            const user = await db.getEngine().findOne(this.collection.modelName, {
+            const user = await db.getEngine().findOne(this.collection, {
                 verificationToken: token,
                 verificationExpires: { $gt: DateService.now() }
             });
@@ -339,7 +339,7 @@ export const UserDB = {
             }
 
             await db.getEngine().update(
-                this.collection.modelName,
+                this.collection,
                 { userUuid: user.userUuid },
                 {
                     isVerified: true,
@@ -358,7 +358,7 @@ export const UserDB = {
     async resendVerification(userUuid) {
         try {
             logger.info(`Resending verification for user: ${userUuid}`);
-            const user = await db.getEngine().findOne(this.collection.modelName, { userUuid });
+            const user = await db.getEngine().findOne(this.collection, { userUuid });
             if (!user || user.isVerified) {
                 throw new AuthError('User is already verified');
             }
@@ -367,7 +367,7 @@ export const UserDB = {
             const verificationExpires = DateService.addDuration(DateService.now(), { hours: 24 });
 
             await db.getEngine().update(
-                this.collection.modelName,
+                this.collection,
                 { userUuid },
                 {
                     verificationToken,

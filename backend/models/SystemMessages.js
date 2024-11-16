@@ -2,7 +2,6 @@ import { SYSTEM_USERS, SYSTEM_ROOMS } from '../constants/GameUuids.js';
 import { UserDB } from './User.js';
 import { chatService } from '../services/ChatService.js';
 import { Lock } from './Lock.js';
-import { GenerateSchema } from '../utils/schemaGenerator.js';
 
 // System Users
 const SYSTEM_USER_ID = SYSTEM_USERS.SYSTEM;
@@ -20,62 +19,37 @@ const NEWS_NICKNAME = '<News>';
 // System Rooms
 const SYSTEM_ROOM_ID = SYSTEM_ROOMS.SYSTEM;
 const LOBBY_ROOM_ID = SYSTEM_ROOMS.LOBBY;
-const NEWS_ROOM_ID = SYSTEM_ROOMS.NEWS;
-const GAMEMASTER_ROOM_ID = SYSTEM_ROOMS.GAMEMASTER;
 
-const ReservedUsers = [
-    { userId: SYSTEM_USER_ID, username: SYSTEM_USERNAME, nickname: SYSTEM_NICKNAME },
-    { userId: GAMEMASTER_USER_ID, username: GAMEMASTER_USERNAME, nickname: GAMEMASTER_NICKNAME },
-    { userId: NEWS_USER_ID, username: NEWS_USERNAME, nickname: NEWS_NICKNAME }
-];
-
-@GenerateSchema({
-    userId: { type: 'string', required: true },
-    username: { type: 'string', required: true },
-    nickname: { type: 'string', required: true }
-})
-class SystemUser {
-    constructor(data) {
-        this.userId = data.userId;
-        this.username = data.username;
-        this.nickname = data.nickname;
-        this.validate();
-    }
-
-    validate() {
-        if (!this.userId || typeof this.userId !== 'string') {
-            throw new Error('Invalid userId');
-        }
-        if (!this.username || typeof this.username !== 'string') {
-            throw new Error('Invalid username');
-        }
-        if (!this.nickname || typeof this.nickname !== 'string') {
-            throw new Error('Invalid nickname');
-        }
-    }
-}
-
-export class SystemMessages {
-    static async initialize() {
+export const SystemMessages = {
+    async initialize() {
         const releaseLock = await Lock.acquire('system:initialize');
         try {
             // Check if system users exist
-            const systemUser = await UserDB.findOne({ userId: SYSTEM_USER_ID });
+            const systemUser = await UserDB.findOne({ userUuid: SYSTEM_USER_ID });
             if (!systemUser) {
-                console.log('Creating system users...');
+                await UserDB.create({
+                    userUuid: SYSTEM_USER_ID,
+                    username: SYSTEM_USERNAME,
+                    nickname: SYSTEM_NICKNAME
+                });
+            }
 
-                // Create the reserved users
-                for (const userData of ReservedUsers) {
-                    const user = new SystemUser(userData);
-                    await UserDB.create({
-                        _id: user.userId,
-                        userId: user.userId,
-                        username: user.username,
-                        nickname: user.nickname,
-                        // System users don't need passwords as they can't be logged into
-                        isSystemUser: true
-                    });
-                }
+            const gmUser = await UserDB.findOne({ userUuid: GAMEMASTER_USER_ID });
+            if (!gmUser) {
+                await UserDB.create({
+                    userUuid: GAMEMASTER_USER_ID,
+                    username: GAMEMASTER_USERNAME,
+                    nickname: GAMEMASTER_NICKNAME
+                });
+            }
+
+            const newsUser = await UserDB.findOne({ userUuid: NEWS_USER_ID });
+            if (!newsUser) {
+                await UserDB.create({
+                    userUuid: NEWS_USER_ID,
+                    username: NEWS_USERNAME,
+                    nickname: NEWS_NICKNAME
+                });
             }
         } catch (error) {
             console.error('Failed to initialize system users:', error);
@@ -83,151 +57,89 @@ export class SystemMessages {
         } finally {
             releaseLock();
         }
-    }
+    },
 
-    static validateGameId(gameId) {
-        if (!gameId || typeof gameId !== 'string') {
-            throw new Error('Invalid gameId');
-        }
-    }
+    async _sendToLobby(message) {
+        return chatService.createMessage(LOBBY_ROOM_ID, SYSTEM_USER_ID, message);
+    },
 
-    static validateNickname(nickname) {
-        if (!nickname || typeof nickname !== 'string') {
-            throw new Error('Invalid nickname');
-        }
-    }
+    async _sendToGame(gameUuid, message) {
+        return chatService.createMessage(gameUuid, SYSTEM_USER_ID, message);
+    },
 
-    static validateMessage(message) {
-        if (!message || typeof message !== 'string') {
-            throw new Error('Invalid message');
-        }
-    }
+    // Game events
+    async userJoined(gameUuid, nickname) {
+        return this._sendToGame(gameUuid, `${nickname} joined the game`);
+    },
 
-    static async broadcastToLobby(message) {
-        this.validateMessage(message);
-        try {
-            return await chatService.createMessage(
-                'lobby',
-                SYSTEM_USER_ID,
-                message
-            );
-        } catch (error) {
-            console.error('Failed to broadcast to lobby:', error);
-            throw error;
-        }
-    }
+    async userLeft(gameUuid, nickname) {
+        return this._sendToGame(gameUuid, `${nickname} left the game`);
+    },
 
-    static async broadcastToGame(gameId, message) {
-        this.validateGameId(gameId);
-        this.validateMessage(message);
-        try {
-            return await chatService.createMessage(
-                'game',
-                SYSTEM_USER_ID,
-                message,
-                gameId
-            );
-        } catch (error) {
-            console.error('Failed to broadcast to game:', error);
-            throw error;
-        }
-    }
+    async gameStarted(gameUuid) {
+        return this._sendToGame(gameUuid, `🎮 Game started!`);
+    },
 
-    // Pre-defined message helpers
-    static async userJoined(gameId, nickname) {
-        this.validateGameId(gameId);
-        this.validateNickname(nickname);
-        return this.broadcastToGame(gameId, `${nickname} joined the game`);
-    }
+    async gameEnded(gameUuid) {
+        return this._sendToGame(gameUuid, `🏁 Game ended`);
+    },
 
-    static async userLeft(gameId, nickname) {
-        this.validateGameId(gameId);
-        this.validateNickname(nickname);
-        return this.broadcastToGame(gameId, `${nickname} left the game`);
-    }
+    async kickedFromGame(gameUuid, nickname, reason) {
+        return this._sendToGame(gameUuid, `${nickname} was kicked from the game${reason ? `: ${reason}` : ''}`);
+    },
 
-    static async userLoggedIn(nickname) {
-        this.validateNickname(nickname);
-        return this.broadcastToLobby(`${nickname} logged in`);
-    }
+    // Lobby events
+    async userLoggedIn(nickname) {
+        return this._sendToLobby(`${nickname} logged in`);
+    },
 
-    static async userLoggedOut(nickname) {
-        this.validateNickname(nickname);
-        return this.broadcastToLobby(`${nickname} logged out`);
-    }
+    async userLoggedOut(nickname) {
+        return this._sendToLobby(`${nickname} logged out`);
+    },
 
-    static async serverShutdown(minutes) {
-        if (typeof minutes !== 'number' || minutes < 0) {
-            throw new Error('Invalid minutes value');
-        }
-        return this.broadcastToLobby(`⚠️ Server shutting down in ${minutes} minutes`);
-    }
+    async gameCreated(gameName, creatorNickname) {
+        return this._sendToLobby(`${creatorNickname} created game "${gameName}"`);
+    },
 
-    static async serverMaintenance(message) {
-        this.validateMessage(message);
-        return this.broadcastToLobby(`🔧 ${message}`);
-    }
+    async gameDeleted(gameName, creatorNickname) {
+        return this._sendToLobby(`${creatorNickname} deleted game "${gameName}"`);
+    },
 
-    static async gameCreated(gameName, creatorNickname) {
-        this.validateMessage(gameName);
-        this.validateNickname(creatorNickname);
-        return this.broadcastToLobby(`${creatorNickname} created game "${gameName}"`);
-    }
+    async userDeleted(nickname) {
+        return this._sendToLobby(`${nickname} deleted their account`);
+    },
 
-    static async gameDeleted(gameName, creatorNickname) {
-        this.validateMessage(gameName);
-        this.validateNickname(creatorNickname);
-        return this.broadcastToLobby(`${creatorNickname} deleted game "${gameName}"`);
-    }
+    async nicknameChanged(oldNickname, newNickname) {
+        return this._sendToLobby(`${oldNickname} changed their nickname to ${newNickname}`);
+    },
 
-    static async userDeleted(nickname) {
-        this.validateNickname(nickname);
-        return this.broadcastToLobby(`${nickname} deleted their account`);
-    }
+    // Server events
+    async serverStarted() {
+        return this._sendToLobby(`🟢 Server started`);
+    },
 
-    static async nicknameChanged(oldNickname, newNickname) {
-        this.validateNickname(oldNickname);
-        this.validateNickname(newNickname);
-        return this.broadcastToLobby(`${oldNickname} changed their nickname to ${newNickname}`);
-    }
+    async serverStopping() {
+        return this._sendToLobby(`🔴 Server stopping...`);
+    },
 
-    static async serverStarted() {
-        return this.broadcastToLobby(`🟢 Server started`);
-    }
+    async serverShutdown(minutes) {
+        return this._sendToLobby(`⚠️ Server shutting down in ${minutes} minutes`);
+    },
 
-    static async serverStopping() {
-        return this.broadcastToLobby(`🔴 Server stopping...`);
-    }
+    async serverMaintenance(message) {
+        return this._sendToLobby(`🔧 ${message}`);
+    },
 
-    static async kickedFromGame(gameId, nickname, reason) {
-        this.validateGameId(gameId);
-        this.validateNickname(nickname);
-        if (reason) this.validateMessage(reason);
-        return this.broadcastToGame(gameId, `${nickname} was kicked from the game${reason ? `: ${reason}` : ''}`);
-    }
+    // System notifications
+    async systemError(message) {
+        return this._sendToLobby(`❌ System Error: ${message}`);
+    },
 
-    static async gameStarted(gameId) {
-        this.validateGameId(gameId);
-        return this.broadcastToGame(gameId, `🎮 Game started!`);
-    }
+    async systemWarning(message) {
+        return this._sendToLobby(`⚠️ Warning: ${message}`);
+    },
 
-    static async gameEnded(gameId) {
-        this.validateGameId(gameId);
-        return this.broadcastToGame(gameId, `🏁 Game ended`);
+    async systemInfo(message) {
+        return this._sendToLobby(`ℹ️ ${message}`);
     }
-
-    static async systemError(message) {
-        this.validateMessage(message);
-        return this.broadcastToLobby(`❌ System Error: ${message}`);
-    }
-
-    static async systemWarning(message) {
-        this.validateMessage(message);
-        return this.broadcastToLobby(`⚠️ Warning: ${message}`);
-    }
-
-    static async systemInfo(message) {
-        this.validateMessage(message);
-        return this.broadcastToLobby(`ℹ️ ${message}`);
-    }
-}
+};

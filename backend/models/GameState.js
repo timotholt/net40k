@@ -135,7 +135,7 @@ class GameState {
 }
 
 export const GameStateDB = {
-    collection: { modelName: 'gameStates', schema: GameState.schema },
+    collection: 'gamestate',
 
     async create(gameStateData) {
         const gameState = new GameState(gameStateData);

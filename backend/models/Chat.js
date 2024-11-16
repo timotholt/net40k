@@ -1,24 +1,8 @@
-import mongoose from 'mongoose';
 import { db } from '../database/database.js';
 import { UuidService } from '../services/UuidService.js';
 import DateService from '../services/DateService.js';
-import { GenerateSchema } from '../utils/schemaGenerator.js';
 import { createMessageUuid } from '../constants/GameUuids.js';
 
-// Service Layer: Chat Representation
-const schemaOptions = {
-    messageUuid: { required: true },
-    roomUuid: { required: true },
-    senderUuid: { required: true },
-    senderNickname: { required: true },
-    message: { required: true },
-    createdAt: { required: true },
-    isWhisper: { required: false },
-    recipientId: { required: false },
-    metadata: { required: false }
-};
-
-@GenerateSchema(schemaOptions)
 class Chat {
     constructor(data = {}) {
         this.messageUuid = data.messageUuid || createMessageUuid();
@@ -105,15 +89,12 @@ class Chat {
     }
 }
 
-// The schema is now automatically generated from the Chat class
-const schemaDefinition = Chat.generateSchema();
-
 export const ChatDB = {
     _model: null,
 
     async init() {
         if (!this._model) {
-            this._model = await db.createModel('chats', schemaDefinition);
+            this._model = await db.createModel('chats');
         }
         return this._model;
     },
