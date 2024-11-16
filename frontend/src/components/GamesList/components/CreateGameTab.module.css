@@ -1,0 +1,165 @@
+.createGameTab {
+  padding: 1rem;
+  height: calc(100% - 2rem); 
+  overflow: hidden; 
+}
+
+.form {
+  height: 100%;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 12rem;
+  grid-template-rows: auto auto auto;
+  row-gap: 0.75rem;
+  column-gap: 4rem;
+  height: 100%;
+  max-height: 18rem;
+}
+
+.nameField {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+}
+
+.playersField {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+
+.descriptionField {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+}
+
+.turnLengthField {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+}
+
+.passwordField {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+}
+
+.submitField {
+  grid-column: 2;
+  grid-row: 3;
+  margin-top: 1.5rem;
+}
+
+.createButton {
+  background: rgba(0, 165, 0, 0.15);
+  backdrop-filter: blur(0.2rem);
+  color: var(--color-soft-white);
+  border: var(--border-width) solid var(--color-green);
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-weight: 500;
+  opacity: 0.95;
+  height: 2.5rem;
+  width: 100%;
+}
+
+.createButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(0, 165, 0, 0.8);
+  box-shadow: 0 0 15px rgba(0, 165, 0, 0.7);
+  color: white;
+}
+
+.createButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(0, 255, 0, 0.1);
+  border-color: rgba(0, 255, 0, 0.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  color: var(--color-soft-white);
+  margin-bottom: var(--rem-between-label-and-input);
+  font-size: 0.9rem;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, var(--opacity-input-bg));
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.inputWrapper:hover {
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-white);
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--color-green);
+  box-shadow: var(--glow-intense);
+}
+
+.inputWrapper svg {
+  color: var(--color-green);
+  margin-right: 0.75rem;
+  width: 20px;
+  height: 20px;
+  transition: color var(--transition-speed) ease;
+}
+
+.inputWrapper:hover svg,
+.inputWrapper:focus-within svg {
+  color: var(--color-soft-white);
+}
+
+.select {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300ff00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+}
+
+.select:focus {
+  outline: none;
+}
+
+.select option {
+  background: var(--color-darker);
+  color: var(--color-soft-white);
+}
+
+/* Add glow effect to the select arrow on hover */
+.inputWrapper:hover .select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+}

@@ -1,0 +1,93 @@
+export const mockGames = [
+  {
+    id: 1,
+    name: "Test Game 1",
+    description: "A test game",
+    createdBy: { id: "1", nickname: "Player 1" },
+    players: ["1", "2"],
+    maxPlayers: 4,
+    turns: 0,
+    turnLength: 1000,
+    isPasswordProtected: false,
+    isYours: true,
+    isFriendGame: false
+  },
+  {
+    id: 2,
+    name: "Password Game",
+    description: "Protected game",
+    createdBy: { id: "2", nickname: "Player 2" },
+    players: ["2"],
+    maxPlayers: 4,
+    turns: 5,
+    turnLength: 500,
+    isPasswordProtected: true,
+    isYours: false,
+    isFriendGame: true
+  },
+  {
+    id: 3,
+    name: "Full Game",
+    description: "No spots left",
+    createdBy: { id: "3", nickname: "Player 3" },
+    players: ["3", "4", "5", "6"],
+    maxPlayers: 4,
+    turns: 12,
+    turnLength: 2000,
+    isPasswordProtected: false,
+    isYours: false,
+    isFriendGame: false
+  },
+  {
+    id: 4,
+    name: "Friend's Game",
+    description: "Join your friends",
+    createdBy: { id: "5", nickname: "Player 5" },
+    players: ["5", "7"],
+    maxPlayers: 4,
+    turns: 3,
+    turnLength: 3000,
+    isPasswordProtected: false,
+    isYours: false,
+    isFriendGame: true
+  },
+  {
+    id: 5,
+    name: "Your Game",
+    description: "Game you created",
+    createdBy: { id: "1", nickname: "Player 1" },
+    players: ["1"],
+    maxPlayers: 4,
+    turns: 0,
+    turnLength: 1000,
+    isPasswordProtected: true,
+    isYours: true,
+    isFriendGame: false
+  },
+  {
+    id: 6,
+    name: "Quick Match",
+    description: "Fast-paced game",
+    createdBy: { id: "8", nickname: "Player 8" },
+    players: ["8", "9"],
+    maxPlayers: 4,
+    turns: 7,
+    turnLength: 500,
+    isPasswordProtected: false,
+    isYours: false,
+    isFriendGame: false
+  },
+  {
+    id: 7,
+    name: "Tournament Game",
+    description: "Competitive match",
+    createdBy: { id: "10", nickname: "Player 10" },
+    players: ["10"],
+    maxPlayers: 4,
+    turns: 0,
+    turnLength: 2000,
+    isPasswordProtected: true,
+    isYours: false,
+    isFriendGame: false
+  }
+];

@@ -1,0 +1,10 @@
+.text {
+  cursor: context-menu;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+
+.text:hover {
+  color: var(--color-soft-white);
+}

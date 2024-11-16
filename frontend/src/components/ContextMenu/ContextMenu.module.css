@@ -1,0 +1,118 @@
+.contextMenu {
+  background: var(--gradient-screen);
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.25rem;
+  min-width: 10rem;
+  width: fit-content;
+  box-shadow: var(--glow-container);
+  backdrop-filter: blur(15px);
+  z-index: 100000;
+  pointer-events: auto;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 32, 0, 0.95) 100%);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--color-soft-white);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  border-radius: var(--border-radius-sm);
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.item svg {
+  color: var(--color-white);
+  /* opacity: 0.9; */
+  transition: all var(--transition-speed) ease;
+}
+
+.item:hover {
+  background: rgba(0, 165, 0, 0.8);
+  box-shadow: 0 0 10px rgba(0, 165, 0, 0.4);
+}
+
+.item:hover svg {
+  color: var(--color-soft-white);
+  opacity: 1;
+}
+
+.item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.separator {
+  height: 1px;
+  background: rgba(0, 255, 0, 0.2);
+  margin: 0.25rem 0;
+}
+
+/* This is the More... item */
+.submenuItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  /* width: 100%; */
+  color: var(--color-soft-white);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  border-radius: var(--border-radius-sm);
+  white-space: nowrap;
+}
+
+.submenuItem::after {
+  content: '›';
+  margin-left: 1rem;
+  transform: scaleY(1.5);
+  opacity: 0.5;
+}
+
+.submenuItem:hover {
+  background: rgba(0, 165, 0, 0.45);
+  box-shadow: 0 0 10px rgba(0, 165, 0, 0.4);
+}
+
+.submenuItem:hover > .submenu {
+  display: block;
+}
+
+.submenu {
+  display: none;
+  position: absolute;
+  left: calc(100% - 0rem);
+  top: calc(100% - 5rem);
+  background: var(--gradient-screen);
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.25rem;
+  min-width: 10rem;
+  width: fit-content;
+  box-shadow: var(--glow-container);
+  backdrop-filter: blur(15px);
+  z-index: 100001;
+  pointer-events: auto;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 32, 0, 0.98) 100%);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  opacity: 0.9;
+  color: var(--color-green);
+}

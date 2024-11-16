@@ -1,0 +1,92 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem;
+  z-index: var(--z-controls);
+  background: var(--gradient-screen);
+  pointer-events: auto;
+  border-bottom: 0.0625rem solid var(--color-green);
+  transition: opacity 0.8s ease-in-out;
+}
+
+.navContent {
+  max-width: 75rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 6rem;
+}
+
+.centerSection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rightSection {
+  min-width: 6rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.8s ease-in-out, visibility 0s linear 0s;
+}
+
+.hidden {
+  opacity: 0.4;
+  visibility: visible;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hidden::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0.25rem;
+  background: var(--color-green);
+  opacity: 0.3;
+}
+
+.fpsCounter {
+  color: var(--color-green);
+  opacity: 0.8;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.settingsButton {
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsButton:hover {
+  opacity: 1;
+  transform: rotate(45deg);
+}

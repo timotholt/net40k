@@ -1,0 +1,89 @@
+.gameContainer {
+  padding: 2rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gradient-screen);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header h2 {
+  color: var(--color-green);
+  margin: 0;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.startButton {
+  background: var(--color-green);
+  color: black;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.startButton:hover:not(:disabled) {
+  background: var(--color-green-hover);
+}
+
+.startButton:disabled {
+  background: rgba(0, 255, 0, 0.3);
+  cursor: not-allowed;
+}
+
+.leaveButton {
+  background: rgba(255, 0, 0, 0.2);
+  color: var(--color-soft-white);
+  border: 1px solid #ff4444;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.leaveButton:hover {
+  background: rgba(255, 0, 0, 0.3);
+}
+
+.waitingText {
+  color: var(--color-soft-white);
+  opacity: 0.8;
+}
+
+.error {
+  color: #ff4444;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+  height: calc(100vh - 8rem);
+}
+
+.gameArea {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.chat {
+  height: 100%;
+  border-left: 1px solid rgba(0, 255, 0, 0.2);
+  padding-left: 2rem;
+}

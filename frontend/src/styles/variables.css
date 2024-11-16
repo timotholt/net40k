@@ -1,0 +1,65 @@
+:root {
+  /* Colors */
+  --color-dark-green: #004400;
+  --color-green: #008800;
+  --color-green-hover: #00aa00;
+  --color-dark: #222222;
+  --color-darker: #111111;
+  --color-gray-light: #aaaaaa;
+  --color-gray: #888888;
+  --color-soft-white: rgba(255, 255, 255, 0.9);
+  
+  /* Opacity */
+  --opacity-overlay: 0.7;
+  --opacity-bg: 0.03;
+  --opacity-text: 0.7;
+  --opacity-input-bg: 0.4;
+  --opacity-container-bg: 0.2;
+  
+  /* Gradients */
+  --gradient-screen: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 32, 0, 0.6) 100%);
+  --gradient-container: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 32, 0, 0.3) 100%);
+  
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.875rem;
+  --space-xl: 3.75rem;
+  
+  /* Borders */
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-full: 9999px;
+  --border-width: 2px;
+  --rem-between-label-and-input: 0.3rem;
+  
+  /* Transitions */
+  --transition-speed: 0.5s;
+  
+  /* Z-index */
+  --z-background: 0;
+  --z-content: 1;
+  --z-controls: 100;
+
+  /* Glows */
+  --glow-hover: 0 0 30px rgba(0, 136, 0, 0.5);
+  --glow-focus: 0 0 40px rgba(0, 136, 0, 0.7);
+  --glow-intense: 0 0 50px rgba(0, 136, 0, 0.9);
+  --glow-text: 0 0 10px rgba(0, 136, 0, 0.8);
+  --glow-white: 0 0 30px rgba(255, 255, 255, 0.5);
+  --glow-white-intense: 0 0 50px rgba(255, 255, 255, 0.7);
+  --glow-container: 0 0 20px rgba(0, 136, 0, 0.3);
+  --glow-container-hover: 0 0 30px rgba(0, 136, 0, 0.5);
+  --glow-button: 0 0 15px rgba(0, 136, 0, 0.4);
+  --glow-button-hover: 0 0 25px rgba(0, 136, 0, 0.6);
+
+  /* Canvas */
+  --canvas-hover-opacity: 0.8;
+  --canvas-hover-glow: 0 0 20px rgba(0, 136, 0, 0.4);
+
+  /* Selection */
+  --selection-bg: rgba(0, 136, 0, 0.5);
+  --selection-text: var(--color-soft-white);
+}

@@ -10,7 +10,9 @@
     "test": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "update-build": "node build/updateBuildInfo.js"
+    "update-build": "node build/updateBuildInfo.js",
+    "build-frontend": "cd ../frontend && npm run build",
+    "prepare-deploy": "npm run build-frontend"
   },
   "keywords": [],
   "author": "",

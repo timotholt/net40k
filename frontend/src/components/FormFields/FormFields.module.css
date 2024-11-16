@@ -1,0 +1,160 @@
+.fieldContainer {
+  margin-bottom: 1rem;
+  text-align: left;
+  position: relative;
+}
+
+.label {
+  display: block;
+  color: var(--color-soft-white);
+  margin-bottom: var(--rem-between-label-and-input);
+  font-size: 0.9rem;
+}
+
+.required {
+  color: #ff4444;
+  margin-left: 0.25rem;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, var(--opacity-input-bg));
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.inputWrapper:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-white);
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--color-green);
+  box-shadow: var(--glow-intense);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-green);
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.inputWrapper:hover .icon {
+  color: var(--color-soft-white);
+}
+
+.leftIcon {
+  margin-right: 0.75rem;
+}
+
+.rightIcon {
+  margin-left: 0.75rem;
+}
+
+.input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.1rem;
+  padding: 0;
+  min-width: 0;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.input:focus {
+  outline: none;
+}
+
+/* Override browser autofill styles */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-soft-white);
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
+  background-clip: content-box !important;
+}
+
+.errorMessage {
+  color: #ff4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition: all var(--transition-speed) ease;
+}
+
+.errorMessage.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.inputWrapper.error {
+  border-color: #ff4444;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
+}
+
+.inputWrapper.error:hover,
+.inputWrapper.error:focus-within {
+  border-color: #ff6666;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.errorIcon {
+  color: #ff4444;
+  margin-right: 0.5rem;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(255, 68, 68, 0.9);
+  color: white;
+  padding: 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.8rem;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-speed) ease;
+  z-index: 1000;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.25rem solid transparent;
+  border-top-color: rgba(255, 68, 68, 0.9);
+}
+
+.inputWrapper:hover .tooltip,
+.inputWrapper:focus-within .tooltip {
+  opacity: 1;
+}
+
+/* Selection styles */
+.input::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+.input::-moz-selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}

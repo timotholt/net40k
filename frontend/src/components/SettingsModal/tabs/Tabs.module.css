@@ -1,0 +1,122 @@
+.tabPanel {
+  color: var(--color-soft-white);
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h3 {
+  color: var(--color-green);
+  margin: 0 0 1rem 0;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-soft-white);
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-green);
+  border-radius: 4px;
+  color: var(--color-soft-white);
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: var(--color-green-hover);
+}
+
+.button {
+  background: var(--color-green);
+  color: black;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background: var(--color-green-hover);
+}
+
+.deleteButton {
+  background: rgba(255, 0, 0, 0.2);
+  color: var(--color-soft-white);
+  border: 1px solid #ff4444;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 0, 0, 0.3);
+}
+
+.error {
+  color: #ff4444;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.volumeControls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.volumeSlider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.volumeSlider label {
+  min-width: 120px;
+}
+
+.volumeSlider input {
+  flex: 1;
+}
+
+.volumeSlider span {
+  min-width: 48px;
+  text-align: right;
+}
+
+.notificationSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox input {
+  cursor: pointer;
+}
+
+.note {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-style: italic;
+}

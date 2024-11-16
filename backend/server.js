@@ -46,8 +46,12 @@ app.use(function (req, res, next) {
 app.use(requestLogger);
 
 // Static files
-app.use(express.static(path.join(__dirname, '../frontend/public')));
-app.use('/utils', express.static(path.join(__dirname, 'utils')));
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Catch-all route to serve React's index.html for client-side routing
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
 
 // Routes
 app.use('/user', userRoutes);

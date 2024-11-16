@@ -1,0 +1,125 @@
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  pointer-events: none;
+  user-select: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-content);
+  background: rgba(0, 0, 0, 0);
+  transition: background var(--transition-speed) ease;
+}
+
+.loginContainer:has(.loginForm:hover),
+.loginContainer:has(.loginForm:focus-within) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.loginForm {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background: var(--gradient-screen);
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--glow-hover);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  transition: box-shadow var(--transition-speed) ease;
+  pointer-events: auto;
+  line-height: 1.5rem;
+}
+
+.loginForm:hover,
+.loginForm:focus-within {
+  box-shadow: var(--glow-intense);
+}
+
+.loginForm h2 {
+  color: var(--color-soft-white);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  text-shadow: var(--glow-text);
+}
+
+.errorContainer {
+  min-height: 3.5rem;
+  margin: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  padding: 0.75rem;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.loginButton {
+  width: 100%;
+  background: rgba(0, 165, 0, 0.15);
+  backdrop-filter: blur(0.2rem);
+  color: var(--color-soft-white);
+  border: var(--border-width) solid var(--color-green);
+  padding: 0.75rem;
+  border-radius: var(--border-radius-md);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+.loginButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(0, 165, 0, 0.8);
+  box-shadow: 0 0 15px rgba(0, 165, 0, 0.7);
+  color: white;
+}
+
+.loginButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(0, 255, 0, 0.1);
+  border-color: rgba(0, 255, 0, 0.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.registerPrompt {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.registerLink {
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.registerLink:hover {
+  opacity: 1;
+  text-shadow: var(--glow-white);
+}
+
+.registerLink:focus {
+  outline: none;
+  text-shadow: var(--glow-white-intense);
+}

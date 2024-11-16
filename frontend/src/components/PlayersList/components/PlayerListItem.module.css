@@ -1,0 +1,90 @@
+.playerItem {
+  display: flex;
+  padding: 0.5rem 0.75rem;
+  transition: all var(--transition-speed) ease;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--selection-bg);
+}
+
+.playerItem:nth-child(odd) {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.playerItem:first-child {
+  border-top: none;
+}
+
+/* Separate hover and selection styles */
+.playerItem:hover:not(.selected) {
+  background: rgba(0, 165, 0, 0.2);
+  box-shadow: 0 0 10px rgba(0, 165, 0, 0.2);
+}
+
+.playerItem.selected {
+  background: rgba(0, 165, 0, 0.4);
+  box-shadow: var(--glow-hover);
+}
+
+.playerContent {
+  display: grid;
+  grid-template-columns: 66% 30%;
+  gap: 4%;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playerName {
+  display: flex;
+  align-items: left;
+  color: var(--color-soft-white);
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 14rem;
+  overflow-x: hidden;
+}
+
+.playerStatus {
+  color: var(--color-soft-white);
+  opacity: 0.8;
+  font-size: 0.75rem;
+  text-align: right;
+  align-items: right;
+  padding: 0rem;
+}
+
+.onlineStatus {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.onlineStatus.online {
+  background: var(--color-green);
+  box-shadow: 0 0 5px var(--color-green);
+}
+
+.onlineStatus.offline {
+  background: #ff4444;
+  box-shadow: 0 0 5px #ff4444;
+}
+
+.friendBadge {
+  width: 1rem;
+  height: 1rem;
+  stroke: var(--color-green);
+  fill: none;
+  margin-top: -0.1rem;
+  margin-left: 0.5rem;
+}
+
+.mutedIcon {
+  width: 1rem;
+  height: 1rem;
+  stroke: #ff4444;
+  fill: none;
+  margin-left: 0.5rem;
+}

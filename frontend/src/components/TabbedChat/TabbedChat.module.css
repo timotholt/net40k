@@ -1,0 +1,97 @@
+.tabbedChatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  pointer-events: auto;
+  position: relative;
+}
+
+/* Add focus styles for the container */
+.tabbedChatContainer:focus {
+  outline: none;
+}
+
+.tabbedChatContainer:focus-within {
+  box-shadow: var(--glow-container-hover);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0;
+  margin-left: 1em;
+}
+
+.tab {
+  background: rgba(0, 165, 0, 0.15);
+  backdrop-filter: blur(0.2rem);
+  color: var(--soft-white);
+  border: var(--border-width) solid var(--color-green);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-weight: 500;
+  opacity: 0.95;
+  font-size: 0.9rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5rem;
+}
+
+/* Remove focus outline from tabs since we handle keyboard nav */
+.tab:focus {
+  outline: none;
+}
+
+.tab:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 165, 0, 0.8);
+  box-shadow: 0 0 15px rgba(0, 165, 0, 0.7);
+  color: white;
+}
+
+.activeTab {
+  background: rgba(0, 165, 0, 0.8);
+  color: white;
+}
+
+.chatWrapper {
+  flex: 1;
+  min-height: 0;
+  margin-top: -3px;
+  padding-bottom: var(--space-sm);
+}
+
+.tab[data-tab="system"] {
+  margin-left: auto;
+  margin-right: 1rem;
+  border-color: rgba(255, 255, 0, 0.5);
+  min-width: 4rem;
+}
+
+.tab[data-tab="system"]:hover {
+  background: rgba(255, 255, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+.tab[data-tab="system"].activeTab {
+  background: rgba(255, 255, 0, 0.6);
+}
+
+/* Game master tab */
+.tab[data-tab="games"] {
+  background: rgba(255, 165, 0, 0.3);
+  border-color: rgba(255, 165, 0, 0.5);
+}
+
+.tab[data-tab="games"]:hover {
+  background: rgba(255, 165, 0, 0.8);
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.7);
+}
+
+.tab[data-tab="games"].activeTab {
+  background: rgba(255, 165, 0, 0.8);
+}

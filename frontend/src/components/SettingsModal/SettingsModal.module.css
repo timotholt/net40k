@@ -1,0 +1,88 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: 90%;
+  max-width: 600px;
+  background: var(--gradient-screen);
+  border: 1px solid var(--color-green);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-green);
+}
+
+.header h2 {
+  color: var(--color-green);
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.closeButton:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  opacity: 0.8;
+}
+
+.activeTab {
+  color: var(--color-green);
+  opacity: 1;
+  border-bottom: 2px solid var(--color-green);
+}
+
+.tabContent {
+  min-height: 300px;
+}

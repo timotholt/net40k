@@ -1,0 +1,60 @@
+Required Sound Files:
+
+1. /public/sounds/hover.mp3
+   - Short, subtle hover sound for menu interactions
+   - Used when hovering over navigation links
+   - Recommended: Light, non-intrusive electronic blip
+
+2. /public/sounds/click.mp3
+   - Click/selection sound for menu interactions
+   - Used when clicking navigation links
+   - Recommended: Crisp, short electronic click
+
+3. /public/sounds/transition.mp3
+   - Page transition sound effect
+   - Plays when navigating between pages
+   - Recommended: Smooth, short whoosh or fade sound
+
+4. /public/sounds/background.mp3
+   - Looping background ambient music
+   - Plays continuously during the experience
+   - Recommended: Subtle, atmospheric dungeon ambiance
+   - Should loop seamlessly
+
+Music Recommendations:
+
+Background Music Style:
+- Dark ambient / dungeon synth genre
+- Low-key, atmospheric composition
+- Minimal melodic elements
+- Deep drones and subtle textures
+- Slight reverb for spatial depth
+- No sudden dynamic changes
+- BPM: Very slow (60-80)
+- Key: Minor or modal
+- Volume: Mixed quietly (-12db to -15db)
+
+Specific Elements:
+- Deep pad sounds
+- Distant echoes
+- Subtle wind effects
+- Occasional water drops
+- Faint cave ambiance
+- Low rumbling textures
+- Ethereal synthesizer tones
+- Soft metallic resonances
+
+Technical Requirements:
+- Format: MP3, 320kbps
+- Duration: 1-2 minutes
+- Must loop seamlessly
+- Stereo field: Wide but not extreme
+- Frequency range: Focus on mids and lows
+- No sharp transients
+- Gentle fade-in/fade-out (1-2 seconds)
+
+Note: All sound files should be:
+- MP3 format
+- Relatively small file size
+- Background music: ~1-2 minutes (loops)
+- Effect sounds: <1 second each

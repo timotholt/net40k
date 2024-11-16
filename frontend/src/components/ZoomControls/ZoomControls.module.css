@@ -1,0 +1,52 @@
+.controls {
+  position: fixed;
+  top: var(--space-md);
+  right: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--gradient-screen);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(10px);
+  z-index: var(--z-controls);
+  border: var(--border-width) solid var(--color-green);
+  box-shadow: var(--glow-container);
+  transition: all var(--transition-speed) ease;
+  width: 2.5rem;
+}
+
+.controls:hover,
+.controls:focus-within {
+  box-shadow: var(--glow-container-hover);
+}
+
+.zoomButton {
+  background: none;
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-full);
+  width: 1.875rem;
+  height: 1.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--color-green);
+  transition: all var(--transition-speed) ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.zoomButton:hover {
+  background: rgba(0, 255, 0, var(--opacity-bg));
+  box-shadow: var(--glow-button-hover);
+  color: var(--color-soft-white);
+  border-color: var(--color-soft-white);
+}
+
+.zoomButton:focus {
+  outline: none;
+  box-shadow: var(--glow-button);
+}

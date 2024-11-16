@@ -1,0 +1,52 @@
+.page {
+  padding: var(--space-lg);
+  margin: calc(var(--space-xl) + var(--space-lg)) auto var(--space-lg);
+  max-width: 50rem;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-screen);
+  backdrop-filter: blur(0.5rem);
+  border-radius: var(--border-radius-md);
+  border: var(--border-width) solid var(--color-green);
+  pointer-events: auto;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  color: var(--color-soft-white);
+  text-shadow: 0 0 0.625rem rgba(0, 255, 0, 0.3);
+}
+
+.text {
+  font-size: 1.2rem;
+  color: var(--color-soft-white);
+  opacity: var(--opacity-text);
+  text-align: center;
+  max-width: 37.5rem;
+  line-height: 1.6;
+}
+
+.links {
+  margin-top: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.link {
+  color: var(--color-green);
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all var(--transition-speed) ease;
+  opacity: 0.8;
+}
+
+.link:hover {
+  opacity: 1;
+  text-shadow: 0 0 0.5rem var(--color-green);
+}

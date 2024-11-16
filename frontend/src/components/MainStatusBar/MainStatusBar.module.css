@@ -1,0 +1,95 @@
+.statusBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem;
+  /* z-index: var(--z-controls); */
+  z-index: 50000;
+  background: var(--gradient-screen);
+  border-bottom: var(--border-width) solid var(--color-green);
+  transition: all var(--transition-speed) ease;
+  box-shadow: var(--glow-container);
+  opacity: 0;
+  transform: translateY(-85%);
+  backdrop-filter: blur(10px);
+}
+
+.statusBar.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all var(--transition-speed) ease;
+}
+
+.statusBar.hidden {
+  opacity: 0.4;
+  transform: translateY(-85%);
+  transition: all var(--transition-speed) ease;
+  pointer-events: none;
+}
+
+.content {
+  max-width: 75rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 6rem;
+}
+
+.centerSection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rightSection {
+  min-width: 6rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fpsCounter {
+  color: var(--color-soft-white);
+  opacity: 0.8;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.settingsButton {
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.settingsButton:hover {
+  opacity: 1;
+  color: var(--color-green);
+  filter: drop-shadow(0 0 10px var(--color-green));
+}
+
+.settingsButton:focus {
+  outline: none;
+  opacity: 1;
+  color: var(--color-green);
+  filter: drop-shadow(0 0 10px var(--color-green));
+}

@@ -1,0 +1,5 @@
+.container {
+  cursor: context-menu;
+  position: relative;
+  z-index: 1;
+}

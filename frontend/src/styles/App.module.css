@@ -1,0 +1,37 @@
+.contentWrapper {
+  position: relative;
+  z-index: var(--z-content);
+  min-height: 100vh;
+  width: 100%;
+  pointer-events: none;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+/* Global selection styles */
+::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+::-moz-selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+/* Remove select caret */
+.controls,
+.volumeSlider,
+.zoomButton,
+.muteButton {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
