@@ -1,6 +1,6 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { MongoClient } from 'mongodb';
-import crypto from 'crypto';
+import { UuidService } from '../services/UuidService.js';
 
 export class MongoDbEngine extends BaseDbEngine {
     constructor() {
@@ -79,7 +79,7 @@ export class MongoDbEngine extends BaseDbEngine {
 
         // If an _id is not provided, make one from a UUID
         if (!data._id) {
-            data._id = crypto.randomUUID();
+            data._id = UuidService.generate();
         }
 
         const collectionName = collection.modelName.toLowerCase();

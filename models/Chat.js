@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { db } from '../database/database.js';
-import crypto from 'crypto';
+import { UuidService } from '../services/UuidService.js';
 
 // Schema definition (but not initialization)
 const schemaDefinition = {
@@ -143,7 +143,7 @@ export const ChatDB = {
 
         // Ensure userId is generated if not provided
         if (!chatData._id) {
-            chatData._id= crypto.randomUUID();
+            chatData._id = UuidService.generate();
         }
 
         try {

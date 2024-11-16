@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { db } from '../database/database.js';
-import crypto from 'crypto';
+import { UuidService } from '../services/UuidService.js';
 import { Lock } from './Lock.js';
 
 // Schema definition (but not initialization)
@@ -82,7 +82,7 @@ export const GameStateDB = {
 
     // Ensure userId is generated if not provided
     if (!gameData._id) {
-        gameData._id = crypto.randomUUID();
+        gameData._id = UuidService.generate();
       }
   
       // Ensure a createdAt is generated if not provided
@@ -93,7 +93,7 @@ export const GameStateDB = {
 
     return await db.getEngine().create(model, {
       ...gameData,
-      id: crypto.randomUUID()
+      id: UuidService.generate()
     });
   },
 

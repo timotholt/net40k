@@ -30,7 +30,9 @@
     "mongodb": "^6.10.0",
     "mongoose": "8.8.1",
     "morgan": "^1.10.0",
-    "object-sizeof": "^2.6.5"
+    "object-sizeof": "^2.6.5",
+    "uuid": "^11.0.3",
+    "uuidv7": "^1.0.2"
   },
   "devDependencies": {
     "eslint": "^8.55.0",

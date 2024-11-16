@@ -1,26 +1,47 @@
-import crypto from 'crypto';
+import { UuidService } from '../services/UuidService.js';
 import { UserDB } from './User.js';
 import { chatService } from '../services/ChatService.js';
 
-const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
-const SYSTEM_USERNAME = 'system';
-const SYSTEM_NICKNAME = '<system>'; 
+// Reserved user IDs 
+const SYSTEM_USER_ID      = UuidService.SYSTEM_USER_ID;
+const SYSTEM_USERNAME     = 'system';
+const SYSTEM_NICKNAME     = '<s>';
+const GAMEMASTER_USER_ID  = UuidService.GAMEMASTER_USER_ID;
+const GAMEMASTER_USERNAME = 'gamemaster';
+const GAMEMASTER_NICKNAME = '<Game Master>';
+const NEWS_USER_ID        = UuidService.NEWS_USER_ID;
+const NEWS_USERNAME       = 'news';
+const NEWS_NICKNAME       = '<News>';
+
+// Reserved game IDs
+const SYSTEM_GAME_ID  = UuidService.SYSTEM_GAME_ID;
+const LOBBY_GAME_ID   = UuidService.LOBBY_GAME_ID;
+const NEWS_GAME_ID    = UuidService.NEWS_GAME_ID;
+const WHISPER_GAME_ID = UuidService.WHISPER_GAME_ID;
+
+const ReservedUsers = [
+    { userId: SYSTEM_USER_ID, username: SYSTEM_USERNAME, nickname: SYSTEM_NICKNAME },
+    { userId: GAMEMASTER_USER_ID, username: GAMEMASTER_USERNAME, nickname: GAMEMASTER_NICKNAME },
+    { userId: NEWS_USER_ID, username: NEWS_USERNAME, nickname: NEWS_NICKNAME }
+];
 
 export class SystemMessages {
     static async initialize() {
         // Create system user if it doesn't exist
-        const systemUser = await UserDB.findById(SYSTEM_USER_ID);
+        const systemUser = await UserDB.findOne({ userId: SYSTEM_USER_ID });
         if (!systemUser) {
+            console.log('Creating system user in SystemMessages line 30...');
 
-            console.log('Creating system user in SystemMessages line 15...');
-
-            await UserDB.create({
-                _id: crypto.randomUUID(),
-                userId: SYSTEM_USER_ID,
-                username: SYSTEM_USERNAME,
-                nickname: SYSTEM_NICKNAME,
-                password: crypto.randomUUID(), // Random password since it's never used
-            });
+            // Create the reserved users
+            for (const user of ReservedUsers) {
+                await UserDB.create({
+                    _id: user.userId,  // Use the predefined UUID as _id
+                    userId: user.userId,
+                    username: user.username,
+                    nickname: user.nickname,
+                    password: UuidService.generate(), // Random password since it's never used
+                });
+            }
         }
     }
 
