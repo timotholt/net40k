@@ -15,7 +15,8 @@ import {
     deleteDoc,
     setDoc,
     setLogLevel,
-    Timestamp
+    Timestamp,
+    connectFirestoreEmulator
 } from 'firebase/firestore/lite';
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
@@ -76,68 +77,146 @@ export class FirestoreDbEngine extends BaseDbEngine {
     _normalizeDates(data) {
         const normalized = { ...data };
         Object.keys(normalized).forEach(key => {
-            if (normalized[key] === undefined) {
+            const value = normalized[key];
+            if (value === undefined) {
                 normalized[key] = null;
-            } else if (normalized[key] instanceof Date) {
+            } else if (value instanceof Date) {
                 // Keep dates as is, they'll be converted to Timestamps later
-                normalized[key] = normalized[key];
+                normalized[key] = value;
+            } else if (Array.isArray(value)) {
+                // Preserve arrays and normalize their contents
+                normalized[key] = value.map(item => {
+                    if (item === undefined) return null;
+                    if (typeof item === 'object' && item !== null) {
+                        return this._normalizeDates(item);
+                    }
+                    return item;
+                });
+            } else if (typeof value === 'object' && value !== null) {
+                // Recursively normalize nested objects
+                normalized[key] = this._normalizeDates(value);
             }
         });
         return normalized;
     }
 
     _convertDatesToTimestamps(obj) {
-        const converted = { ...obj };
-        Object.keys(converted).forEach(key => {
-            if (converted[key] === undefined) {
-                converted[key] = null;
-            } else if (converted[key] instanceof Date) {
-                converted[key] = Timestamp.fromDate(converted[key]);
-            } else if (typeof converted[key] === 'object' && converted[key] !== null) {
-                converted[key] = this._convertDatesToTimestamps(converted[key]);
-            }
-        });
+        if (obj === undefined) return null;
+        if (obj === null) return null;
+        if (typeof obj !== 'object') return obj;
+        if (obj instanceof Date) return Timestamp.fromDate(obj);
+        if (obj instanceof Timestamp) return obj;
+
+        // Handle arrays
+        if (Array.isArray(obj)) {
+            return obj.map(item => this._convertDatesToTimestamps(item));
+        }
+
+        // Handle objects
+        const converted = {};
+        for (const [key, value] of Object.entries(obj)) {
+            converted[key] = this._convertDatesToTimestamps(value);
+        }
         return converted;
     }
 
     _convertTimestampsToDates(obj) {
-        if (!obj) return obj;
+        if (obj === undefined) return null;
+        if (obj === null) return null;
         if (typeof obj !== 'object') return obj;
-
+        
+        // Convert Timestamp to Date
         if (obj?.seconds !== undefined && obj?.nanoseconds !== undefined) {
-        return new Date(obj.seconds * 1000 + obj.nanoseconds / 1000000);
+            return new Date(obj.seconds * 1000 + obj.nanoseconds / 1000000);
         }
 
-        const converted = Array.isArray(obj) ? [] : {};
-        for (const [key, value] of Object.entries(obj)) {
-        if (value && typeof value === 'object') {
-            if (value.seconds !== undefined && value.nanoseconds !== undefined) {
-            converted[key] = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-            } else {
-            converted[key] = this._convertTimestampsToDates(value);
-            }
-        } else {
-            converted[key] = value;
+        // Handle arrays
+        if (Array.isArray(obj)) {
+            return obj.map(item => this._convertTimestampsToDates(item));
         }
+
+        // Handle objects
+        const converted = {};
+        for (const [key, value] of Object.entries(obj)) {
+            converted[key] = this._convertTimestampsToDates(value);
         }
         return converted;
     }
 
     _flattenObject(obj) {
-        const flattened = flatten(obj, {
-        safe: true,
-        delimiter: '.',
-        maxDepth: 20
-        });
-        return this._convertDatesToTimestamps(flattened);
+        if (obj === undefined || obj === null) return obj;
+        
+        // Handle arrays (including nested)
+        if (Array.isArray(obj)) {
+            console.log('Flattening array:', JSON.stringify(obj));
+            const result = obj.map(item => this._flattenObject(item));
+            console.log('Flattened array result:', JSON.stringify(result));
+            return result;
+        }
+
+        // Handle primitive values and Dates
+        if (typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) {
+            return obj;
+        }
+
+        // Handle objects
+        const processed = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (Array.isArray(value)) {
+                console.log(`Processing array at key ${key}:`, JSON.stringify(value));
+                // Preserve arrays as is, just process their contents
+                processed[key] = value.map(item => this._flattenObject(item));
+                console.log(`Processed array at key ${key}:`, JSON.stringify(processed[key]));
+            } else if (typeof value === 'object' && value !== null && !(value instanceof Date) && !(value instanceof Timestamp)) {
+                // Only flatten non-array objects
+                const flattened = flatten(value, {
+                    safe: true,
+                    delimiter: '.'
+                });
+                processed[key] = this._flattenObject(flattened);
+            } else {
+                processed[key] = value;
+            }
+        }
+        return processed;
     }
 
     _unflattenObject(obj) {
-        const unflattened = unflatten(obj, {
-        safe: true,
-        delimiter: '.'
-        });
-        return this._convertTimestampsToDates(unflattened);
+        if (obj === undefined || obj === null) return obj;
+
+        // Handle arrays (including nested)
+        if (Array.isArray(obj)) {
+            console.log('Unflattening array:', JSON.stringify(obj));
+            const result = obj.map(item => this._unflattenObject(item));
+            console.log('Unflattened array result:', JSON.stringify(result));
+            return result;
+        }
+
+        // Handle primitive values and Dates/Timestamps
+        if (typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) {
+            return obj;
+        }
+
+        // Handle objects
+        const processed = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (Array.isArray(value)) {
+                console.log(`Unflattening array at key ${key}:`, JSON.stringify(value));
+                // Preserve arrays as is, just process their contents
+                processed[key] = value.map(item => this._unflattenObject(item));
+                console.log(`Unflattened array at key ${key}:`, JSON.stringify(processed[key]));
+            } else if (typeof value === 'object' && value !== null) {
+                // Only unflatten non-array objects
+                const unflattened = unflatten(value, {
+                    safe: true,
+                    delimiter: '.'
+                });
+                processed[key] = this._unflattenObject(unflattened);
+            } else {
+                processed[key] = value;
+            }
+        }
+        return processed;
     }
 
     _getCollectionName(collection) {
@@ -151,27 +230,39 @@ export class FirestoreDbEngine extends BaseDbEngine {
         let q = query(collectionRef);
         
         Object.entries(queryObj).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-            if (value instanceof Date) {
-            q = query(q, where(key, '==', Timestamp.fromDate(value)));
-            } else if (typeof value === 'object' && !(value instanceof Timestamp)) {
-            Object.entries(value).forEach(([operator, operandValue]) => {
-                if (operandValue !== undefined) {
-                switch(operator) {
-                    case '$ne':
-                    q = query(q, where(key, '!=', 
-                        operandValue instanceof Date ? 
-                        Timestamp.fromDate(operandValue) : 
-                        operandValue
-                    ));
-                    break;
+            if (value !== undefined && value !== null) {
+                if (value instanceof Date) {
+                    q = query(q, where(key, '==', Timestamp.fromDate(value)));
+                } else if (typeof value === 'object' && !(value instanceof Timestamp)) {
+                    Object.entries(value).forEach(([operator, operandValue]) => {
+                        if (operandValue !== undefined) {
+                            const convertedValue = operandValue instanceof Date ? 
+                                Timestamp.fromDate(operandValue) : 
+                                operandValue;
+
+                            switch(operator) {
+                                case '$ne':
+                                    q = query(q, where(key, '!=', convertedValue));
+                                    break;
+                                case '$gt':
+                                    q = query(q, where(key, '>', convertedValue));
+                                    break;
+                                case '$gte':
+                                    q = query(q, where(key, '>=', convertedValue));
+                                    break;
+                                case '$lt':
+                                    q = query(q, where(key, '<', convertedValue));
+                                    break;
+                                case '$lte':
+                                    q = query(q, where(key, '<=', convertedValue));
+                                    break;
+                            }
+                        }
+                    });
+                } else {
+                    q = query(q, where(key, '==', value));
                 }
-                }
-            });
-            } else {
-            q = query(q, where(key, '==', value));
             }
-        }
         });
         
         return q;
@@ -181,13 +272,24 @@ export class FirestoreDbEngine extends BaseDbEngine {
         try {
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
-            let q = this._buildQuery(collectionRef, queryObj);
-
+            
+            // Normalize and flatten the query object
+            const normalizedQuery = this._normalizeDates(queryObj || {});
+            const flattenedQuery = this._flattenObject(normalizedQuery);
+            
+            let q = this._buildQuery(collectionRef, flattenedQuery);
             const snapshot = await getDocs(q);
-            const results = snapshot.docs.map(doc => ({
-                ...this._unflattenObject(doc.data()),
-                _id: doc.id
-            }));
+            
+            // Process results
+            const results = snapshot.docs.map(doc => {
+                const data = doc.data();
+                const unflattened = this._unflattenObject(data);
+                const withDates = this._convertTimestampsToDates(unflattened);
+                return {
+                    ...withDates,
+                    _id: doc.id
+                };
+            });
 
             return {
                 sort: (sortCriteria) => {
@@ -198,14 +300,15 @@ export class FirestoreDbEngine extends BaseDbEngine {
                         q = query(q, orderBy(field, order === -1 ? 'desc' : 'asc'));
                     }
                     return {
-                        limit: (n) => results.slice(0, n)
+                        limit: (n) => results.slice(0, n),
+                        then: (resolve) => resolve(results)
                     };
                 },
                 limit: (n) => results.slice(0, n),
                 then: (resolve) => resolve(results)
             };
         } catch (error) {
-            console.error('Firestore find error:', error);
+            console.error('Error in find:', error);
             throw error;
         }
     }
@@ -222,8 +325,11 @@ export class FirestoreDbEngine extends BaseDbEngine {
                     return null;
                 }
 
+                const data = docSnap.data();
+                const unflattened = this._unflattenObject(data);
+                const withDates = this._convertTimestampsToDates(unflattened);
                 return {
-                    ...this._unflattenObject(docSnap.data()),
+                    ...withDates,
                     _id: docSnap.id
                 };
             }
@@ -237,12 +343,15 @@ export class FirestoreDbEngine extends BaseDbEngine {
             if (snapshot.empty) return null;
 
             const document = snapshot.docs[0];
+            const data = document.data();
+            const unflattened = this._unflattenObject(data);
+            const withDates = this._convertTimestampsToDates(unflattened);
             return {
-                ...this._unflattenObject(document.data()),
+                ...withDates,
                 _id: document.id
             };
         } catch (error) {
-            console.error('Firestore findOne error:', error);
+            console.error('Error in findOne:', error);
             throw error;
         }
     }
@@ -257,12 +366,15 @@ export class FirestoreDbEngine extends BaseDbEngine {
             if (snapshot.empty) return null;
 
             const document = snapshot.docs[0];
+            const data = document.data();
+            const unflattened = this._unflattenObject(data);
+            const withDates = this._convertTimestampsToDates(unflattened);
             return {
-                ...this._unflattenObject(document.data()),
+                ...withDates,
                 _id: document.id
             };
         } catch (error) {
-            console.error('Firestore findByUuid error:', error);
+            console.error('Error in findByUuid:', error);
             throw error;
         }
     }
@@ -270,24 +382,67 @@ export class FirestoreDbEngine extends BaseDbEngine {
     async create(collection, data) {
         if (!this.db) throw new Error('Firestore not initialized');
 
-        // Normalize dates first
-        const normalizedData = this._normalizeDates(data);
+        try {
+            console.log('Creating document with data:', JSON.stringify(data, null, 2));
+            
+            // Normalize dates first
+            const normalizedData = this._normalizeDates(data);
+            console.log('Normalized data:', JSON.stringify(normalizedData, null, 2));
 
-        // Ensure UUID is generated if not provided
-        if (!normalizedData.uuid) {
-            normalizedData.uuid = UuidService.generate();
+            // Ensure UUID is generated if not provided
+            if (!normalizedData.uuid) {
+                normalizedData.uuid = UuidService.generate();
+            }
+
+            // Convert normalized dates to Firestore timestamps and flatten
+            const timestampData = this._convertDatesToTimestamps(normalizedData);
+            console.log('Data with timestamps:', JSON.stringify(timestampData, null, 2));
+            
+            const flattenedData = this._flattenObject(timestampData);
+            console.log('Flattened data:', JSON.stringify(flattenedData, null, 2));
+
+            const collectionName = this._getCollectionName(collection);
+            
+            // If _id is provided, use setDoc to create document with that ID
+            if (normalizedData._id) {
+                const docRef = doc(this.db, collectionName, normalizedData._id);
+                await setDoc(docRef, flattenedData);
+                const docSnap = await getDoc(docRef);
+                const savedData = docSnap.data();
+                console.log('Saved data:', JSON.stringify(savedData, null, 2));
+                
+                const unflattened = this._unflattenObject(savedData);
+                console.log('Unflattened data:', JSON.stringify(unflattened, null, 2));
+                
+                const withDates = this._convertTimestampsToDates(unflattened);
+                console.log('Data with dates:', JSON.stringify(withDates, null, 2));
+                
+                return {
+                    ...withDates,
+                    _id: docRef.id
+                };
+            }
+            
+            // Otherwise use addDoc to generate a new ID
+            const docRef = await addDoc(firestoreCollection(this.db, collectionName), flattenedData);
+            const docSnap = await getDoc(docRef);
+            const savedData = docSnap.data();
+            console.log('Saved data:', JSON.stringify(savedData, null, 2));
+            
+            const unflattened = this._unflattenObject(savedData);
+            console.log('Unflattened data:', JSON.stringify(unflattened, null, 2));
+            
+            const withDates = this._convertTimestampsToDates(unflattened);
+            console.log('Data with dates:', JSON.stringify(withDates, null, 2));
+            
+            return {
+                ...withDates,
+                _id: docRef.id
+            };
+        } catch (error) {
+            console.error('Error in create:', error);
+            throw error;
         }
-
-        // Convert normalized dates to Firestore timestamps
-        const timestampData = this._convertDatesToTimestamps(normalizedData);
-
-        const collectionName = this._getCollectionName(collection);
-        const docRef = await addDoc(firestoreCollection(this.db, collectionName), timestampData);
-        
-        return { 
-            ...normalizedData, 
-            _id: docRef.id 
-        };
     }
 
     async update(collection, queryObj, data) {
@@ -362,6 +517,27 @@ export class FirestoreDbEngine extends BaseDbEngine {
             return { deletedCount };
         } catch (error) {
             console.error('Firestore delete error:', error);
+            throw error;
+        }
+    }
+
+    async deleteCollection(collection) {
+        if (!this.db) throw new Error('Firestore not initialized');
+
+        try {
+            const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            const snapshot = await getDocs(collectionRef);
+
+            // Delete each document individually since writeBatch has limits
+            const deletePromises = snapshot.docs.map(doc => 
+                deleteDoc(doc.ref)
+            );
+            
+            await Promise.all(deletePromises);
+            console.log(`Deleted collection: ${collectionName}`);
+        } catch (error) {
+            console.error(`Error deleting collection ${collection}:`, error);
             throw error;
         }
     }

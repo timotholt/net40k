@@ -91,12 +91,22 @@ export class InMemoryDbEngine extends BaseDbEngine {
 
     async delete(collection, query) {
         const collectionData = this.storage.get(collection) || [];
-        const initialLength = collectionData.length;
-        const filtered = collectionData.filter(item => 
+        const updatedData = collectionData.filter(item => 
             !Object.entries(query).every(([key, value]) => item[key] === value)
         );
-        this.storage.set(collection, filtered);
-        return { deletedCount: initialLength - filtered.length };
+        this.storage.set(collection, updatedData);
+        return true;
+    }
+
+    async deleteCollection(collection) {
+        try {
+            this.storage.delete(collection);
+            console.log(`Deleted collection: ${collection}`);
+            return true;
+        } catch (error) {
+            console.error(`Error deleting collection ${collection}:`, error);
+            throw error;
+        }
     }
 
     // Helper method to clear all data (useful for testing)

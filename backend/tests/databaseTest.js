@@ -27,6 +27,29 @@ async function runTest(testName, testFn) {
     }
 }
 
+// Cleanup utility
+async function cleanupCollections() {
+    log('Cleaning up test collections...');
+    const collections = [
+        'test_collection',
+        'test_dates',
+        'test_arrays',
+        'test_queries',
+        'user',
+        'gamestate',
+        'chat'
+    ];
+
+    for (const collection of collections) {
+        try {
+            await db.deleteCollection(collection);
+        } catch (error) {
+            console.error(`Error cleaning up collection ${collection}:`, error);
+        }
+    }
+    log('Cleanup complete');
+}
+
 // Database initialization test
 async function testDatabaseInitialization() {
     assert(!db.isConnected(), 'Database should not be connected initially');
@@ -100,12 +123,17 @@ async function testArrayHandling() {
         nestedArrays: [[1, 2], [3, 4]]
     };
 
+    console.log('Original array data:', JSON.stringify(arrayData, null, 2));
     await db.create('test_arrays', arrayData);
     const retrieved = await db.findOne('test_arrays', { _id: 'test-arrays' });
+    console.log('Retrieved array data:', JSON.stringify(retrieved, null, 2));
 
     assert(Array.isArray(retrieved.emptyArray), 'Empty arrays should be preserved');
     assert(retrieved.numberArray.length === 3, 'Number arrays should be preserved');
     assert(retrieved.objectArray[0].id === 1, 'Object arrays should be preserved');
+    console.log('Nested arrays type:', Array.isArray(retrieved.nestedArrays));
+    console.log('First nested array type:', Array.isArray(retrieved.nestedArrays[0]));
+    console.log('Nested arrays value:', JSON.stringify(retrieved.nestedArrays, null, 2));
     assert(Array.isArray(retrieved.nestedArrays[0]), 'Nested arrays should be preserved');
 }
 
@@ -178,12 +206,19 @@ export async function testDatabaseEngine() {
     ];
 
     log('Starting database engine tests...');
+    
+    // Clean up collections before running tests
+    await cleanupCollections();
+    
     const results = [];
 
     for (const test of tests) {
         const passed = await runTest(test.name, test.fn);
         results.push({ name: test.name, passed });
     }
+
+    // Final cleanup after tests
+    await cleanupCollections();
 
     // Summary
     const totalTests = results.length;

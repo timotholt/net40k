@@ -71,6 +71,21 @@ class Database {
         }
         return this.#dbEngine.delete(collection, query);
     }
+
+    async deleteCollection(collection) {
+        if (!this.#initialized) {
+            throw new Error('Database not initialized');
+        }
+        return this.#dbEngine.deleteCollection(collection);
+    }
+
+    async disconnect() {
+        if (!this.#initialized) {
+            throw new Error('Database not initialized');
+        }
+        await this.#dbEngine.disconnect();
+        this.#initialized = false;
+    }
 }
 
 // Export only the singleton instance
