@@ -1,201 +1,186 @@
-import mongoose from 'mongoose';
 import { db } from '../database/database.js';
-import { UuidService } from '../services/UuidService.js';
-import { Lock } from './Lock.js';
+import { createGameUuid } from '../constants/GameUuids.js';
 import DateService from '../services/DateService.js';
 
-// Service Layer: Game State Representation
+export const GAME_PHASES = {
+    SETUP: 'setup',
+    DEPLOYMENT: 'deployment',
+    CHARACTER_CREATION: 'characterCreation',
+    WAITING_TO_START: 'waitingToStart',
+    AWAITING_PLAYER_ACTIONS: 'awaitingPlayerActions',
+    PROCESSING_PLAYER_ACTIONS: 'processingPlayerActions',
+    PLAYER_PAUSED: 'playerPaused',
+    PLAYER_IN_MENU: 'playerInMenu',
+    PLAYER_DISCONNECTED: 'playerDisconnected',
+    PLAYER_JOINING: 'playerJoining',
+    PROCESSING_TURN: 'processingTurn',
+    RENDERING_TURN: 'renderingTurn',
+    UPDATING_CLIENTS: 'updatingClients',
+    SAVING_GAME_STATE: 'savingGameState'
+};
+
 class GameState {
     constructor(data = {}) {
-        this.gameId = data.gameId || UuidService.generate();
-        this.name = data.name;
-        this.creatorId = data.creatorId;
-        this.maxPlayers = data.maxPlayers || 4;
-        this.playerIds = data.playerIds || [];
-        this.createdAt = data.createdAt || DateService.now().date;
-        this.isPrivate = data.isPrivate || false;
-        this.password = data.password || null;
+        this.gameUuid = data.gameUuid || createGameUuid();
+        this.name = data.name || `Game ${this.gameUuid}`;
+        this.description = data.description;
+        this.password = data.password || null;;
+        this.creatorUuid = data.creatorUuid;
+        this.createdAt = data.createdAt || DateService.now();
+        this.turnLength = data.turnLength || 1000; // default 1s
+        this.maxPlayers = Math.min(Math.max(data.maxPlayers || 2, 1), 4);
+        this.playersUuid = Array.isArray(data.playersUuid) ? data.playersUuid : [];
+        this.spectatorsUuid = Array.isArray(data.spectatorsUuid) ? data.spectatorsUuid : [];
+        this.currentTurn = data.currentTurn || 0;
+        this.nextPlayerUuid = data.nextPlayerUuid || null;
+        this.phase = data.phase || GAME_PHASES.SETUP;
+        this.gamePhase = data.gamePhase || GAME_PHASES.CHARACTER_CREATION;
     }
 
+    static schema = {
+        gameUuid: { type: 'string', required: true },
+        name: { type: 'string', required: true },
+        creatorUuid: { type: 'string', required: true },
+        createdAt: { type: 'date', required: true },
+        turnLength: { type: 'number', required: true },
+        maxPlayers: { type: 'number', required: true },
+        playersUuid: { type: 'array', required: true },
+        spectatorsUuid: { type: 'array', required: true },
+        currentTurn: { type: 'number', required: true },
+        nextPlayerUuid: { type: 'string', required: false },
+        phase: { type: 'string', required: true },
+        gamePhase: { type: 'string', required: true }
+    };
+
     toJSON() {
-        return {
-            gameId: this.gameId,
+        const data = {
+            gameUuid: this.gameUuid,
             name: this.name,
-            creatorId: this.creatorId,
-            maxPlayers: this.maxPlayers,
-            playerIds: this.playerIds,
+            creatorUuid: this.creatorUuid,
             createdAt: this.createdAt,
-            isPrivate: this.isPrivate
+            turnLength: this.turnLength,
+            maxPlayers: this.maxPlayers,
+            playersUuid: this.playersUuid,
+            spectatorsUuid: this.spectatorsUuid,
+            currentTurn: this.currentTurn,
+            nextPlayerUuid: this.nextPlayerUuid,
+            phase: this.phase,
+            gamePhase: this.gamePhase
         };
+
+        // Convert undefined values to null
+        Object.keys(data).forEach(key => {
+            if (data[key] === undefined) {
+                data[key] = null;
+            }
+        });
+
+        return data;
     }
 }
 
-// Database Layer Schema
-const schemaDefinition = {
-    _id: {
-        type: String,
-        default: UuidService.generate
-    },
-    gameId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 1
-    },
-    creatorId: {
-        type: String,
-        required: true
-    },
-    maxPlayers: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 4,
-        default: 4
-    },
-    playerIds: [{
-        type: String
-    }],
-    createdAt: {
-        type: Date,
-        default: () => DateService.now().date
-    },
-    isPrivate: {
-        type: Boolean,
-        default: false
-    },
-    password: {
-        type: String,
-        default: null
-    }
-};
-
 export const GameStateDB = {
-    _model: null,
-
-    async init() {
-        if (!this._model) {
-            const schema = new mongoose.Schema(schemaDefinition);
-            this._model = mongoose.model('GameState', schema);
-        }
-        return this._model;
-    },
+    collection: { modelName: 'gameStates', schema: GameState.schema },
 
     async create(gameStateData) {
-        const model = await this.init();
-        
-        // Ensure gameId is present and valid
-        if (!gameStateData.gameId) {
-            gameStateData.gameId = UuidService.generate();
-        }
-        
-        // Validate gameId
-        if (!UuidService.validate(gameStateData.gameId)) {
-            throw new Error('Invalid gameId');
-        }
-
-        // Create database record
-        const dbRecord = await db.getEngine().create(model, gameStateData);
-        
-        // Convert to service layer representation
-        return new GameState(dbRecord);
+        const gameState = new GameState(gameStateData);
+        const result = await db.getEngine().create(this.collection, gameState.toJSON());
+        return new GameState(result);
     },
 
     async findAll() {
-        const model = await this.init();
-        const dbRecords = await db.getEngine().find(model, {});
-        return dbRecords.map(record => new GameState(record));
+        const results = await db.getEngine().find(this.collection, {});
+        return results.map(result => new GameState(result));
     },
 
     async findOne(query) {
-        const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, query);
-        return dbRecord ? new GameState(dbRecord) : null;
+        const result = await db.getEngine().findOne(this.collection, query);
+        return result ? new GameState(result) : null;
     },
 
-    async delete(query) {
-        const model = await this.init();
-        return await db.getEngine().delete(model, query);
+    async findById(gameUuid) {
+        const result = await db.getEngine().findOne(this.collection, { gameUuid });
+        return result ? new GameState(result) : null;
     },
 
     async update(query, updateData) {
-        const model = await this.init();
-        const updatedRecord = await db.getEngine().update(model, query, updateData);
-        return updatedRecord ? new GameState(updatedRecord) : null;
+        const result = await db.getEngine().update(this.collection, query, updateData);
+        return result ? new GameState(result) : null;
     },
 
-    async findByCreator(userId) {
-        const model = await this.init();
-        const dbRecords = await db.getEngine().find(model, { creatorId: userId });
-        return dbRecords.map(record => new GameState(record));
-    },
-
-    async addPlayer(gameId, userId) {
-        try {
-            const release = await Lock.acquire(`game:${gameId}`);
-            try {
-                const model = await this.init();
-                const game = await this.findOne({ gameId });
-                if (!game) return null;
-
-                const playerIds = Array.isArray(game.playerIds) ? game.playerIds : [];
-                
-                if (playerIds.length >= game.maxPlayers) {
-                    throw new Error('Game is full');
-                }
-
-                if (!playerIds.includes(userId)) {
-                    playerIds.push(userId);
-                    await this.update({ gameId }, { playerIds });
-                }
-                return game;
-            } finally {
-                release();
-            }
-        } catch (error) {
-            if (error.message.includes('locked')) {
-                throw new Error('Game is currently busy, please try again');
-            }
-            throw error;
+    async updatePhase(gameUuid, phase) {
+        if (!Object.values(GAME_PHASES).includes(phase)) {
+            throw new Error('Invalid game phase');
         }
+        return await this.update({ gameUuid }, { phase });
     },
 
-    async removePlayer(gameId, userId) {
-        try {
-            const release = await Lock.acquire(`game:${gameId}`);
-            try {
-                const model = await this.init();
-                const game = await this.findOne({ gameId });
-                if (!game) return null;
+    async delete(query) {
+        return await db.getEngine().delete(this.collection, query);
+    },
 
-                const playerIds = Array.isArray(game.playerIds) ? game.playerIds : [];
-                const updatedPlayerIds = playerIds.filter(id => id !== userId);
-                
-                await this.update({ gameId }, { playerIds: updatedPlayerIds });
-                return {
-                    ...game,
-                    playerIds: updatedPlayerIds
-                };
-            } finally {
-                release();
-            }
-        } catch (error) {
-            if (error.message.includes('locked')) {
-                throw new Error('Game is currently busy, please try again');
-            }
-            throw error;
+    async addPlayer(gameUuid, playerUuid) {
+        const game = await this.findById(gameUuid);
+        if (!game) {
+            throw new Error('Game not found');
         }
+        if (game.playersUuid.includes(playerUuid)) {
+            return game;
+        }
+        if (game.playersUuid.length >= game.maxPlayers) {
+            throw new Error('Game is full');
+        }
+        game.playersUuid.push(playerUuid);
+        return await this.update({ gameUuid }, { playersUuid: game.playersUuid });
     },
 
-    async isPlayerInGame(gameId, userId) {
-        const model = await this.init();
-        const game = await this.findOne({ gameId });
-        const playerIds = game ? (Array.isArray(game.playerIds) ? game.playerIds : []) : [];
-        return playerIds.includes(userId);
+    async removePlayer(gameUuid, playerUuid) {
+        const game = await this.findById(gameUuid);
+        if (!game) {
+            throw new Error('Game not found');
+        }
+        game.playersUuid = game.playersUuid.filter(uuid => uuid !== playerUuid);
+        return await this.update({ gameUuid }, { playersUuid: game.playersUuid });
+    },
+
+    async addSpectator(gameUuid, spectatorUuid) {
+        const game = await this.findById(gameUuid);
+        if (!game) {
+            throw new Error('Game not found');
+        }
+        if (game.spectatorsUuid.includes(spectatorUuid)) {
+            return game;
+        }
+        game.spectatorsUuid.push(spectatorUuid);
+        return await this.update({ gameUuid }, { spectatorsUuid: game.spectatorsUuid });
+    },
+
+    async removeSpectator(gameUuid, spectatorUuid) {
+        const game = await this.findById(gameUuid);
+        if (!game) {
+            throw new Error('Game not found');
+        }
+        game.spectatorsUuid = game.spectatorsUuid.filter(uuid => uuid !== spectatorUuid);
+        return await this.update({ gameUuid }, { spectatorsUuid: game.spectatorsUuid });
+    },
+
+    async setPhase(gameUuid, gamePhase) {
+        if (!Object.values(GAME_PHASES).includes(gamePhase)) {
+            throw new Error('Invalid game phase');
+        }
+        return await this.update({ gameUuid }, { gamePhase });
+    },
+
+    async setNextPlayer(gameUuid, nextPlayerUuid) {
+        const game = await this.findById(gameUuid);
+        if (!game) {
+            throw new Error('Game not found');
+        }
+        if (!game.playersUuid.includes(nextPlayerUuid)) {
+            throw new Error('Player not in game');
+        }
+        return await this.update({ gameUuid }, { nextPlayerUuid });
     }
 };
+
+export default GameState;

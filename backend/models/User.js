@@ -1,194 +1,248 @@
-import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { db } from '../database/database.js';
-import { UuidService } from '../services/UuidService.js';
+import { createUserUuid } from '../constants/GameUuids.js';
 import DateService from '../services/DateService.js';
+import crypto from 'crypto';
 
 // Service Layer: User Representation
 class User {
     constructor(data = {}) {
-        this.userId = data.userId || UuidService.generate();
+        this.userUuid = data.userUuid || createUserUuid();
         this.username = data.username;
         this.nickname = data.nickname || data.username;
+        this.email = data.email;
         this.password = data.password;
+        this.createdAt = data.createdAt || DateService.now();
+        this.lastLoginAt = data.lastLoginAt || null;
+        this.isAdmin = data.isAdmin || false;
+        this.isActive = data.isActive !== undefined ? data.isActive : true;
         this.isDeleted = data.isDeleted || false;
-        this.deletedAt = data.deletedAt || null;
-        this.createdAt = data.createdAt || DateService.now().date;
+        this.isBanned = data.isBanned || false;
+        this.isVerified = data.isVerified || false;
+        this.verificationToken = data.verificationToken || null;
+        this.verificationExpires = data.verificationExpires || null;
+        this.banReason = data.banReason || null;
+        this.banExpiresAt = data.banExpiresAt || null;
+        this.preferences = data.preferences || {};
     }
+
+    static schema = {
+        userUuid: { type: 'string', required: true },
+        username: { type: 'string', required: true },
+        nickname: { type: 'string', required: true },
+        email: { type: 'string', required: true },
+        password: { type: 'string', required: true },
+        createdAt: { type: 'date', required: true },
+        lastLoginAt: { type: 'date', required: false },
+        isAdmin: { type: 'boolean', default: false },
+        isActive: { type: 'boolean', default: true },
+        isDeleted: { type: 'boolean', default: false },
+        isBanned: { type: 'boolean', default: false },
+        isVerified: { type: 'boolean', default: false },
+        verificationToken: { type: 'string', required: false },
+        verificationExpires: { type: 'date', required: false },
+        banReason: { type: 'string', required: false },
+        banExpiresAt: { type: 'date', required: false },
+        preferences: { type: 'object', default: {} }
+    };
 
     toJSON() {
-        return {
-            userId: this.userId,
+        const data = {
+            userUuid: this.userUuid,
             username: this.username,
             nickname: this.nickname,
+            email: this.email,
+            password: this.password,
+            createdAt: this.createdAt,
+            lastLoginAt: this.lastLoginAt,
+            isAdmin: this.isAdmin,
+            isActive: this.isActive,
             isDeleted: this.isDeleted,
-            createdAt: this.createdAt
+            isBanned: this.isBanned,
+            isVerified: this.isVerified,
+            verificationToken: this.verificationToken,
+            verificationExpires: this.verificationExpires,
+            banReason: this.banReason,
+            banExpiresAt: this.banExpiresAt,
+            preferences: this.preferences
         };
+
+        // Remove undefined values
+        Object.keys(data).forEach(key => {
+            if (data[key] === undefined) {
+                data[key] = null;
+            }
+        });
+
+        return data;
     }
 
-    // Optional: Add validation methods
-    validate() {
-        if (!this.username || this.username.length < 3 || this.username.length > 30) {
-            throw new Error('Invalid username');
-        }
-        if (!this.password || this.password.length < 6) {
-            throw new Error('Invalid password');
-        }
-        return true;
+    toPublicJSON() {
+        return {
+            userUuid: this.userUuid,
+            username: this.username,
+            nickname: this.nickname,
+            isAdmin: this.isAdmin,
+            isActive: this.isActive,
+            isBanned: this.isBanned,
+            isVerified: this.isVerified
+        };
     }
 }
 
-// Database Layer Schema
-const schemaDefinition = {
-    _id: {
-        type: String,
-        default: UuidService.generate
-    },
-    userId: {
-        type: String,
-        required: true,
-        unique: true,
-        default: UuidService.generate
-    },
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        minlength: 3,
-        maxlength: 30
-    },
-    nickname: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 1,
-        maxlength: 30
-    },
-    password: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 6
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false
-    },
-    deletedAt: {
-        type: Date,
-        default: null
-    },
-    createdAt: {
-        type: Date,
-        default: () => DateService.now().date
-    }
-};
-
+// Database Layer
 export const UserDB = {
-    _model: null,
+    collection: { modelName: 'users', schema: User.schema },
 
-    async init() {
-        if (!this._model) {
-            const schema = new mongoose.Schema(schemaDefinition);
-            this._model = mongoose.model('User', schema);
+    async create(userData) {
+        if (userData.password) {
+            userData.password = await bcrypt.hash(userData.password, 10);
         }
-        return this._model;
-    },
 
-    async findById(userId) {
-        const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, { userId });
-        return dbRecord ? new User(dbRecord) : null;
-    },
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = DateService.addDuration(DateService.now(), { hours: 24 });
 
-    async findOne(query) {
-        const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, query);
-        return dbRecord ? new User(dbRecord) : null;
+        const user = new User({
+            ...userData,
+            verificationToken,
+            verificationExpires
+        });
+
+        const engine = db.getEngine();
+        return await engine.create(this.collection, user.toJSON());
     },
 
     async findAll() {
-        const model = await this.init();
-        const dbRecords = await db.getEngine().find(model, {});
-        return dbRecords.map(record => new User(record));
+        const engine = db.getEngine();
+        return await engine.find(this.collection, {});
     },
 
-    async create(userData) {
-        const model = await this.init();
+    async findOne(query) {
+        const engine = db.getEngine();
+        return await engine.findOne(this.collection, query);
+    },
 
-        // Create service layer user
-        const user = new User(userData);
-        
-        // Validate user data
-        user.validate();
+    async findById(userUuid) {
+        return await this.findOne({ userUuid });
+    },
 
-        // Create database record
-        const dbRecord = await db.getEngine().create(model, {
-            ...userData,
-            userId: user.userId,
-            isDeleted: false
+    async findActive() {
+        const engine = db.getEngine();
+        return await engine.find(this.collection, {
+            isActive: true,
+            isDeleted: false,
+            isBanned: false,
+            isVerified: true
         });
-        
-        return new User(dbRecord);
-    },
-
-    async update(query, data) {
-        const model = await this.init();
-        const updatedRecord = await db.getEngine().update(model, query, data);
-        return updatedRecord ? new User(updatedRecord) : null;
-    },
-
-    async updateById(userId, data) {
-        const model = await this.init();
-        const updatedRecord = await db.getEngine().update(model, { userId }, data);
-        return updatedRecord ? new User(updatedRecord) : null;
-    },
-
-    async softDelete(userId) {
-        const model = await this.init();
-        const updatedRecord = await db.getEngine().update(
-            model, 
-            { userId }, 
-            { 
-                isDeleted: true,
-                deletedAt: DateService.now(),
-                nickname: "Deleted User"
-            }
-        );
-        return updatedRecord ? new User(updatedRecord) : null;
     },
 
     async delete(query) {
-        const model = await this.init();
-        return await db.getEngine().delete(model, query);
+        const engine = db.getEngine();
+        return await engine.update(this.collection, query, { isDeleted: true });
     },
 
-    async deleteById(userId) {
-        const model = await this.init();
-        return await db.getEngine().delete(model, { userId });
+    async permanentDelete(query) {
+        const engine = db.getEngine();
+        return await engine.delete(this.collection, query);
     },
 
-    async findActive(query) {
-        const model = await this.init();
-        const dbRecords = await db.getEngine().find(model, {
-            ...query,
-            isDeleted: { $ne: true }
+    async update(query, updateData) {
+        const engine = db.getEngine();
+        return await engine.update(this.collection, query, updateData);
+    },
+
+    async findByCredentials(username, password) {
+        const engine = db.getEngine();
+        const user = await engine.findOne(this.collection, { 
+            username,
+            isDeleted: false,
+            isActive: true,
+            isVerified: true
         });
-        return dbRecords.map(record => new User(record));
+        
+        if (!user) return null;
+        if (!user.password) return null;
+        if (user.isBanned && (!user.banExpiresAt || user.banExpiresAt > DateService.now())) {
+            return null;
+        }
+        
+        const isMatch = await bcrypt.compare(password, user.password);
+        return isMatch ? user : null;
     },
 
-    async findOneActive(query) {
-        const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, {
-            ...query,
-            isDeleted: false
+    async updateLastLogin(userUuid) {
+        return await this.update(
+            { userUuid },
+            { lastLoginAt: DateService.now() }
+        );
+    },
+
+    async updatePreferences(userUuid, preferences) {
+        return await this.update(
+            { userUuid },
+            { preferences }
+        );
+    },
+
+    async ban(userUuid, reason, duration = null) {
+        const banData = {
+            isBanned: true,
+            banReason: reason,
+            banExpiresAt: duration ? DateService.addDuration(DateService.now(), duration) : null
+        };
+        return await this.update({ userUuid }, banData);
+    },
+
+    async unban(userUuid) {
+        return await this.update(
+            { userUuid },
+            {
+                isBanned: false,
+                banReason: null,
+                banExpiresAt: null
+            }
+        );
+    },
+
+    async verify(token) {
+        const engine = db.getEngine();
+        const user = await engine.findOne(this.collection, {
+            verificationToken: token,
+            verificationExpires: { $gt: DateService.now() }
         });
-        return dbRecord ? new User(dbRecord) : null;
+
+        if (!user) return null;
+
+        await this.update(
+            { userUuid: user.userUuid },
+            {
+                isVerified: true,
+                verificationToken: null,
+                verificationExpires: null
+            }
+        );
+
+        return user;
     },
 
-    async findByUsername(username) {
-        const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, { username });
-        return dbRecord ? new User(dbRecord) : null;
+    async resendVerification(userUuid) {
+        const user = await this.findById(userUuid);
+        if (!user || user.isVerified) return null;
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = DateService.addDuration(DateService.now(), { hours: 24 });
+
+        await this.update(
+            { userUuid },
+            {
+                verificationToken,
+                verificationExpires
+            }
+        );
+
+        return { verificationToken };
     }
 };
+
+export default User;

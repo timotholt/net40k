@@ -1,23 +1,25 @@
-import { UuidService } from '../services/UuidService.js';
+import { SYSTEM_USERS, SYSTEM_ROOMS } from '../constants/GameUuids.js';
 import { UserDB } from './User.js';
 import { chatService } from '../services/ChatService.js';
 
-// Reserved user IDs 
-const SYSTEM_USER_ID      = UuidService.SYSTEM_USER_ID;
-const SYSTEM_USERNAME     = 'system';
-const SYSTEM_NICKNAME     = '<s>';
-const GAMEMASTER_USER_ID  = UuidService.GAMEMASTER_USER_ID;
+// System Users
+const SYSTEM_USER_ID = SYSTEM_USERS.SYSTEM;
+const SYSTEM_USERNAME = 'system';
+const SYSTEM_NICKNAME = '<s>';
+
+const GAMEMASTER_USER_ID = SYSTEM_USERS.GM;
 const GAMEMASTER_USERNAME = 'gamemaster';
 const GAMEMASTER_NICKNAME = '<Game Master>';
-const NEWS_USER_ID        = UuidService.NEWS_USER_ID;
-const NEWS_USERNAME       = 'news';
-const NEWS_NICKNAME       = '<News>';
 
-// Reserved game IDs
-const SYSTEM_GAME_ID  = UuidService.SYSTEM_GAME_ID;
-const LOBBY_GAME_ID   = UuidService.LOBBY_GAME_ID;
-const NEWS_GAME_ID    = UuidService.NEWS_GAME_ID;
-const WHISPER_GAME_ID = UuidService.WHISPER_GAME_ID;
+const NEWS_USER_ID = SYSTEM_USERS.NEWS;
+const NEWS_USERNAME = 'news';
+const NEWS_NICKNAME = '<News>';
+
+// System Rooms
+const SYSTEM_ROOM_ID = SYSTEM_ROOMS.SYSTEM;
+const LOBBY_ROOM_ID = SYSTEM_ROOMS.LOBBY;
+const NEWS_ROOM_ID = SYSTEM_ROOMS.NEWS;
+const GAMEMASTER_ROOM_ID = SYSTEM_ROOMS.GAMEMASTER;
 
 const ReservedUsers = [
     { userId: SYSTEM_USER_ID, username: SYSTEM_USERNAME, nickname: SYSTEM_NICKNAME },
@@ -39,7 +41,7 @@ export class SystemMessages {
                     userId: user.userId,
                     username: user.username,
                     nickname: user.nickname,
-                    password: UuidService.generate(), // Random password since it's never used
+                    password: SYSTEM_USERS.generate(), // Random password since it's never used
                 });
             }
         }

@@ -73,21 +73,30 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
     }
 
-    _convertDatesToTimestamps(obj) {
-        if (!obj) return obj;
-        if (obj instanceof Date) return Timestamp.fromDate(obj);
-        if (typeof obj !== 'object') return obj;
+    _normalizeDates(data) {
+        const normalized = { ...data };
+        Object.keys(normalized).forEach(key => {
+            if (normalized[key] === undefined) {
+                normalized[key] = null;
+            } else if (normalized[key] instanceof Date) {
+                // Keep dates as is, they'll be converted to Timestamps later
+                normalized[key] = normalized[key];
+            }
+        });
+        return normalized;
+    }
 
-        const converted = Array.isArray(obj) ? [] : {};
-        for (const [key, value] of Object.entries(obj)) {
-        if (value instanceof Date) {
-            converted[key] = Timestamp.fromDate(value);
-        } else if (value && typeof value === 'object') {
-            converted[key] = this._convertDatesToTimestamps(value);
-        } else {
-            converted[key] = value;
-        }
-        }
+    _convertDatesToTimestamps(obj) {
+        const converted = { ...obj };
+        Object.keys(converted).forEach(key => {
+            if (converted[key] === undefined) {
+                converted[key] = null;
+            } else if (converted[key] instanceof Date) {
+                converted[key] = Timestamp.fromDate(converted[key]);
+            } else if (typeof converted[key] === 'object' && converted[key] !== null) {
+                converted[key] = this._convertDatesToTimestamps(converted[key]);
+            }
+        });
         return converted;
     }
 

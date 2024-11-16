@@ -42,6 +42,28 @@ class DateService {
   }
 
   /**
+   * Add a duration to a date
+   * @param {Object} dateObj - Object with date property from now()
+   * @param {Object} duration - Duration to add
+   * @param {number} [duration.seconds] - Seconds to add
+   * @param {number} [duration.minutes] - Minutes to add
+   * @param {number} [duration.hours] - Hours to add
+   * @param {number} [duration.days] - Days to add
+   * @returns {Date} New date with duration added
+   */
+  static addDuration(dateObj, duration) {
+    const date = dateObj.date || new Date(dateObj);
+    const newDate = new Date(date);
+    
+    if (duration.seconds) newDate.setSeconds(newDate.getSeconds() + duration.seconds);
+    if (duration.minutes) newDate.setMinutes(newDate.getMinutes() + duration.minutes);
+    if (duration.hours) newDate.setHours(newDate.getHours() + duration.hours);
+    if (duration.days) newDate.setDate(newDate.getDate() + duration.days);
+    
+    return newDate;
+  }
+
+  /**
    * Get the difference between two dates in various units
    * @param {Date} date1 
    * @param {Date} date2 
