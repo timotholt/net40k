@@ -7,7 +7,6 @@ import DateService from '../services/DateService.js';
 class Chat {
     constructor(data = {}) {
         this.chatId = data.chatId || UuidService.generate();
-        this.type = data.type || 'lobby';
         this.userId = data.userId;
         this.gameId = data.type === 'game' ? data.gameId : null;
         this.username = data.username;
