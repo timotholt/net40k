@@ -46,8 +46,8 @@ app.use(function (req, res, next) {
 app.use(requestLogger);
 
 // Static files
-app.use(express.static('public'));
-app.use('/utils', express.static('utils'));
+app.use(express.static(path.join(__dirname, '../frontend/public')));
+app.use('/utils', express.static(path.join(__dirname, 'utils')));
 
 // Routes
 app.use('/user', userRoutes);

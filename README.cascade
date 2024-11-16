@@ -1,0 +1,20 @@
+# Cascade Project Metadata
+
+## Project Configuration
+- Language: JavaScript (NOT TypeScript)
+- Module System: ES Modules
+- Frontend: Vanilla JavaScript (pre-React migration)
+- Backend: Express.js with MongoDB
+
+## Important Notes
+- Do NOT assume TypeScript is used
+- All files are pure JavaScript (.js)
+- No TypeScript interfaces or type definitions
+- Prefer vanilla JS patterns over TypeScript-like constructs
+
+## Development Preferences
+- Prefer functional programming approaches
+- Minimize class-based architectures
+- Focus on readability and simplicity
+- Comment your code for clarity
+
