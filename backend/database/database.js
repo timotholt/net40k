@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
 import { getDbEngine } from './selectDbEngine.js';
-
-dotenv.config();
 
 class Database {
     #dbEngine;
@@ -40,32 +37,6 @@ class Database {
         }
     }
 
-    async connect() {
-        return this.init();
-    }
-
-    async disconnect() {
-        if (this.#dbEngine) {
-            try {
-                console.log('Disconnecting from database...');
-                if (typeof this.#dbEngine.disconnect === 'function') {
-                    await this.#dbEngine.disconnect();
-                }
-                this.#dbEngine = null;
-                this.#initialized = false;
-            } catch (error) {
-                console.error('Error disconnecting from database:', error);
-            }
-        }
-    }
-
-    getEngine() {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized. Call init() first.');
-        }
-        return this.#dbEngine;
-    }
-
     async find(collection, query) {
         if (!this.#initialized) {
             throw new Error('Database not initialized');
@@ -102,4 +73,5 @@ class Database {
     }
 }
 
+// Export only the singleton instance
 export const db = new Database();
