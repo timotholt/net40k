@@ -15,7 +15,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
 import { buildInfo } from './buildInfo.js';
-import { testAllDatabaseFunctions } from './tests/serviceTest.js';
+// import { testAllDatabaseFunctions } from './tests/serviceTest.js';
+import { testDatabaseEngine } from './tests/databaseTest.js'; 
 import { ChatDB } from './models/Chat.js';
 import { UserDB } from './models/User.js';
 import { GameStateDB } from './models/GameState.js';
@@ -48,7 +49,8 @@ async function interactiveStartup() {
             case 't':
                 console.log('\nRunning tests...');
                 try {
-                    await testAllDatabaseFunctions();
+                    await testDatabaseEngine();
+                    // await testAllDatabaseFunctions();
                     console.log('✅ All tests passed!');
                 } catch (error) {
                     console.error('❌ Test failed:', error);
