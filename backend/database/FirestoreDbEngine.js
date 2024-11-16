@@ -140,10 +140,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
         return this._convertTimestampsToDates(unflattened);
     }
 
-    _getCollectionName(mongooseModel) {
-        //    return mongooseModel.collection.collectionName || mongooseModel.modelName.toLowerCase();
-            return mongooseModel.modelName.toLowerCase();
+    _getCollectionName(collection) {
+        if (typeof collection === 'string') {
+            return collection.toLowerCase();
         }
+        throw new Error('Invalid collection: must be a string');
+    }
         
     _buildQuery(collectionRef, queryObj) {
         let q = query(collectionRef);
@@ -175,81 +177,79 @@ export class FirestoreDbEngine extends BaseDbEngine {
         return q;
     }
 
-    async find(mongooseModel, queryObj) {
+    async find(collection, queryObj) {
         try {
-        const collectionName = this._getCollectionName(mongooseModel);
-        const collectionRef = firestoreCollection(this.db, collectionName);
-        let q = this._buildQuery(collectionRef, queryObj);
+            const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            let q = this._buildQuery(collectionRef, queryObj);
 
-        const snapshot = await getDocs(q);
-        const results = snapshot.docs.map(doc => 
-            this._initializeData(mongooseModel, {
-            ...this._unflattenObject(doc.data()),
-            _id: doc.id
-            })
-        );
+            const snapshot = await getDocs(q);
+            const results = snapshot.docs.map(doc => ({
+                ...this._unflattenObject(doc.data()),
+                _id: doc.id
+            }));
 
-        return {
-            sort: (sortCriteria) => {
-            if (typeof sortCriteria === 'function') {
-                results.sort(sortCriteria);
-            } else {
-                const [field, order] = Object.entries(sortCriteria)[0];
-                q = query(q, orderBy(field, order === -1 ? 'desc' : 'asc'));
-            }
             return {
-                limit: (n) => results.slice(0, n)
+                sort: (sortCriteria) => {
+                    if (typeof sortCriteria === 'function') {
+                        results.sort(sortCriteria);
+                    } else {
+                        const [field, order] = Object.entries(sortCriteria)[0];
+                        q = query(q, orderBy(field, order === -1 ? 'desc' : 'asc'));
+                    }
+                    return {
+                        limit: (n) => results.slice(0, n)
+                    };
+                },
+                limit: (n) => results.slice(0, n),
+                then: (resolve) => resolve(results)
             };
-            },
-            limit: (n) => results.slice(0, n),
-            then: (resolve) => resolve(results)
-        };
         } catch (error) {
-        console.error('Firestore find error:', error);
-        throw error;
+            console.error('Firestore find error:', error);
+            throw error;
         }
     }
 
-    async findOne(mongooseModel, queryObj) {
+    async findOne(collection, queryObj) {
         try {
-        if (queryObj._id) {
-            const collectionName = this._getCollectionName(mongooseModel);
-            const docRef = doc(this.db, collectionName, queryObj._id);
-            const docSnap = await getDoc(docRef);
-            
-            if (!docSnap.exists()) {
-            console.log(`Could not find document ${queryObj._id}`);
-            return null;
+            if (queryObj._id) {
+                const collectionName = this._getCollectionName(collection);
+                const docRef = doc(this.db, collectionName, queryObj._id);
+                const docSnap = await getDoc(docRef);
+                
+                if (!docSnap.exists()) {
+                    console.log(`Could not find document ${queryObj._id}`);
+                    return null;
+                }
+
+                return {
+                    ...this._unflattenObject(docSnap.data()),
+                    _id: docSnap.id
+                };
             }
 
-            return this._initializeData(mongooseModel, {
-            ...this._unflattenObject(docSnap.data()),
-            _id: docSnap.id
-            });
-        }
+            const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            let q = this._buildQuery(collectionRef, queryObj);
+            q = query(q, firestoreLimit(1));
 
-        const collectionName = this._getCollectionName(mongooseModel);
-        const collectionRef = firestoreCollection(this.db, collectionName);
-        let q = this._buildQuery(collectionRef, queryObj);
-        q = query(q, firestoreLimit(1));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return null;
 
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) return null;
-
-        const document = snapshot.docs[0];
-        return this._initializeData(mongooseModel, {
-            ...this._unflattenObject(document.data()),
-            _id: document.id
-        });
+            const document = snapshot.docs[0];
+            return {
+                ...this._unflattenObject(document.data()),
+                _id: document.id
+            };
         } catch (error) {
-        console.error('Firestore findOne error:', error);
-        throw error;
+            console.error('Firestore findOne error:', error);
+            throw error;
         }
     }
 
-    async findByUuid(mongooseModel, uuid) {
+    async findByUuid(collection, uuid) {
         try {
-            const collectionName = this._getCollectionName(mongooseModel);
+            const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
             const q = query(collectionRef, where('uuid', '==', uuid), firestoreLimit(1));
 
@@ -257,17 +257,17 @@ export class FirestoreDbEngine extends BaseDbEngine {
             if (snapshot.empty) return null;
 
             const document = snapshot.docs[0];
-            return this._initializeData(mongooseModel, {
+            return {
                 ...this._unflattenObject(document.data()),
                 _id: document.id
-            });
+            };
         } catch (error) {
             console.error('Firestore findByUuid error:', error);
             throw error;
         }
     }
 
-    async create(mongooseModel, data) {
+    async create(collection, data) {
         if (!this.db) throw new Error('Firestore not initialized');
 
         // Normalize dates first
@@ -281,7 +281,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
         // Convert normalized dates to Firestore timestamps
         const timestampData = this._convertDatesToTimestamps(normalizedData);
 
-        const collectionName = mongooseModel.modelName.toLowerCase();
+        const collectionName = this._getCollectionName(collection);
         const docRef = await addDoc(firestoreCollection(this.db, collectionName), timestampData);
         
         return { 
@@ -290,12 +290,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
         };
     }
 
-    async update(mongooseModel, queryObj, data) {
+    async update(collection, queryObj, data) {
         if (!this.db) throw new Error('Firestore not initialized');
 
         try {
             // Get collection reference and build query
-            const collectionName = this._getCollectionName(mongooseModel);
+            const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
             let q = this._buildQuery(collectionRef, queryObj);
             
@@ -333,36 +333,36 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
     }
 
-    async delete(mongooseModel, queryObj) {
+    async delete(collection, queryObj) {
         try {
-        const collectionName = this._getCollectionName(mongooseModel);
-        const collectionRef = firestoreCollection(this.db, collectionName);
-        let q = this._buildQuery(collectionRef, queryObj);
-        
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-            return { deletedCount: 0 };
-        }
-
-        let deletedCount = 0;
-        
-        // Process deletions sequentially to avoid hanging
-        for (const document of snapshot.docs) {
-            try {
-            const docRef = doc(this.db, collectionName, document.id);
-            // Call deleteDoc without await and increment counter immediately
-            deleteDoc(docRef);
-            deletedCount++;
-            } catch (error) {
-            console.error(`Failed to delete document ${document.id}:`, error);
+            const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            let q = this._buildQuery(collectionRef, queryObj);
+            
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                return { deletedCount: 0 };
             }
-        }
 
-        // Return the count of attempted deletions
-        return { deletedCount };
+            let deletedCount = 0;
+            
+            // Process deletions sequentially to avoid hanging
+            for (const document of snapshot.docs) {
+                try {
+                    const docRef = doc(this.db, collectionName, document.id);
+                    // Call deleteDoc without await and increment counter immediately
+                    deleteDoc(docRef);
+                    deletedCount++;
+                } catch (error) {
+                    console.error(`Failed to delete document ${document.id}:`, error);
+                }
+            }
+
+            // Return the count of attempted deletions
+            return { deletedCount };
         } catch (error) {
-        console.error('Firestore delete error:', error);
-        throw error;
+            console.error('Firestore delete error:', error);
+            throw error;
         }
     }
 

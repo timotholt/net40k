@@ -16,7 +16,7 @@ export class InMemoryDbEngine extends BaseDbEngine {
     }
 
     async find(collection, query) {
-        const collectionData = this.storage.get(collection.modelName) || [];
+        const collectionData = this.storage.get(collection) || [];
         let results = collectionData.filter(item => 
             Object.entries(query).every(([key, value]) => item[key] === value)
         );
@@ -48,14 +48,14 @@ export class InMemoryDbEngine extends BaseDbEngine {
     }
 
     async findOne(collection, query) {
-        const collectionData = this.storage.get(collection.modelName) || [];
+        const collectionData = this.storage.get(collection) || [];
         return collectionData.find(item => 
             Object.entries(query).every(([key, value]) => item[key] === value)
         );
     }
 
     async create(collection, data) {
-        const collectionName = collection.modelName;
+        const collectionName = collection;
         if (!this.storage.has(collectionName)) {
             this.storage.set(collectionName, []);
         }
@@ -75,7 +75,7 @@ export class InMemoryDbEngine extends BaseDbEngine {
     }
 
     async update(collection, query, data) {
-        const collectionData = this.storage.get(collection.modelName) || [];
+        const collectionData = this.storage.get(collection) || [];
         let modifiedCount = 0;
 
         // Support updating multiple documents
@@ -90,12 +90,12 @@ export class InMemoryDbEngine extends BaseDbEngine {
     }
 
     async delete(collection, query) {
-        const collectionData = this.storage.get(collection.modelName) || [];
+        const collectionData = this.storage.get(collection) || [];
         const initialLength = collectionData.length;
         const filtered = collectionData.filter(item => 
             !Object.entries(query).every(([key, value]) => item[key] === value)
         );
-        this.storage.set(collection.modelName, filtered);
+        this.storage.set(collection, filtered);
         return { deletedCount: initialLength - filtered.length };
     }
 
@@ -106,7 +106,7 @@ export class InMemoryDbEngine extends BaseDbEngine {
 
     // Helper method to get collection size
     async count(collection, query = {}) {
-        const collectionData = this.storage.get(collection.modelName) || [];
+        const collectionData = this.storage.get(collection) || [];
         if (Object.keys(query).length === 0) {
             return collectionData.length;
         }

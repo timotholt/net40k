@@ -9,17 +9,17 @@ import DateService from '../services/DateService.js';
 //
 
 export class BaseDbEngine {
-    _initializeData(model, data) {
-        // If no data or no schema, return as is
-        if (!data || !model.schema) return data;
+    _initializeData(collection, data) {
+        // If no data, return as is
+        if (!data) return data;
 
         const initialized = { ...data };
         
-        // Initialize arrays and other schema-defined fields
-        Object.entries(model.schema).forEach(([field, config]) => {
-        if (config.type === 'array' && !initialized[field]) {
-            initialized[field] = config.default || [];
-        }
+        // Initialize any undefined arrays to empty arrays for Firebase compatibility
+        Object.entries(initialized).forEach(([field, value]) => {
+            if (Array.isArray(value)) {
+                initialized[field] = value || [];
+            }
         });
         
         return initialized;
