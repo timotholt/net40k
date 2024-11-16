@@ -134,7 +134,7 @@ export const UserDB = {
             user.verificationToken = crypto.randomBytes(32).toString('hex');
             user.verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
 
-            const result = await db.getEngine().insert(this.collection, user.toJSON());
+            const result = await db.getEngine().create(this.collection, user.toJSON());
             logger.info(`User created successfully: ${user.email}`);
             return result;
         } catch (error) {

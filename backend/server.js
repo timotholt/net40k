@@ -15,7 +15,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
 import { buildInfo } from './buildInfo.js';
-import { testAllDatabaseFunctions } from './tests/databaseTest.js';
+import { testAllDatabaseFunctions } from './tests/serviceTest.js';
 import { ChatDB } from './models/Chat.js';
 import { UserDB } from './models/User.js';
 import { GameStateDB } from './models/GameState.js';

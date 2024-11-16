@@ -1,12 +1,12 @@
 import assert from 'assert';
-import { UserDB } from '../models/User.js';
-import { GameStateDB } from '../models/GameState.js';
-import { ChatDB } from '../models/Chat.js';
+// import { UserDB } from '../models/User.js';
+// import { GameStateDB } from '../models/GameState.js';
+// import { ChatDB } from '../models/Chat.js';
 import { createUserUuid, createGameUuid, createMessageUuid } from '../constants/GameUuids.js';
-import { GAME_PHASES } from '../models/GameState.js';
+// import { GAME_PHASES } from '../models/GameState.js';
 import { db } from '../database/database.js';
 
-async function testUserOperations() {
+async function serviceTestUserOperations() {
     console.log('🧪 Testing User Operations...');
     
     try {
@@ -58,7 +58,7 @@ async function testUserOperations() {
     }
 }
 
-async function testGameOperations(testUser) {
+async function serviceTestGameOperations(testUser) {
     console.log('🧪 Testing Game Operations...');
     
     try {
@@ -83,9 +83,9 @@ async function testGameOperations(testUser) {
         
         // Update Game Phase
         console.log('✏️ Testing Game Phase Update...');
-        await GameStateDB.updatePhase(createdGame.gameUuid, GAME_PHASES.DEPLOYMENT);
+        await GameStateDB.setPhase(createdGame.gameUuid, GAME_PHASES.PHASE_CHARACTER_CREATION);
         const updatedGame = await GameStateDB.findById(createdGame.gameUuid);
-        assert.strictEqual(updatedGame.phase, GAME_PHASES.DEPLOYMENT, 'Game phase update failed');
+        assert.strictEqual(updatedGame.phase, GAME_PHASES.PHASE_CHARACTER_CREATION, 'Game phase update failed');
 
         // Test Spectator Management
         console.log('👥 Testing Spectator Management...');
@@ -104,7 +104,7 @@ async function testGameOperations(testUser) {
     }
 }
 
-async function testMessageOperations(testUser, testGame) {
+async function serviceTesttMessageOperations(testUser, testGame) {
     console.log('🧪 Testing Message Operations...');
     
     try {
@@ -140,7 +140,7 @@ async function testMessageOperations(testUser, testGame) {
     }
 }
 
-async function testErrorHandling() {
+async function serviceTestErrorHandling() {
     console.log('🧪 Testing Error Handling...');
     
     try {
@@ -191,16 +191,16 @@ async function runTests() {
         
         console.log('🚀 Starting Database Tests...');
         
-        const testUser = await testUserOperations();
+        const testUser = await serviceTestUserOperations();
         console.log('✅ User Operations Tests Passed\n');
         
-        const testGame = await testGameOperations(testUser);
+        const testGame = await serviceTestGameOperations(testUser);
         console.log('✅ Game Operations Tests Passed\n');
         
-        await testMessageOperations(testUser, testGame);
+        await serviceTestMessageOperations(testUser, testGame);
         console.log('✅ Message Operations Tests Passed\n');
         
-        await testErrorHandling();
+        await serviceTestErrorHandling();
         console.log('✅ Error Handling Tests Passed\n');
         
         console.log('🎉 All Tests Passed Successfully!');
@@ -213,7 +213,7 @@ async function runTests() {
 }
 
 // Export test functions
-export async function testAllDatabaseFunctions() {
+export async function serviceTestAllDatabaseFunctions() {
     console.log('🚀 Starting Database Tests...');
     
     // Initialize database
@@ -230,5 +230,5 @@ export async function testAllDatabaseFunctions() {
 
 // Only run tests if this file is run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-    testAllDatabaseFunctions();
+    serviceTestAllDatabaseFunctions();
 }
