@@ -4,11 +4,11 @@ A real-time chat lobby system built with Node.js, Express, and a
 modular database system supporting both in-memory and Firebase
 and MongoDB storage.
 
-![Screenshot](login-screen.png)
-![Screenshot](register-screen.png)
-![Screenshot](lobby-screen.png)
-![Screenshot](account-screen.png)
-![Screenshot](profile-screen.png)
+![Screenshot](screenshots/login-screen.png)
+![Screenshot](screenshots/register-screen.png)
+![Screenshot](screenshots/lobby-screen.png)
+![Screenshot](screenshots/account-screen.png)
+![Screenshot](screenshots/profile-screen.png)
 
 Upgrades from SBA318
 
@@ -30,8 +30,8 @@ Upgrades from SBA318
 Make sure you have PORT and DB_TYPE and MONGODB_URI and
 ENABLE_CACHE set correctly!
 
-![Screenshot](env1-screen.png)
-![Screenshot](env2-screen.png)
+![Screenshot](screenshots/env1-screen.png)
+![Screenshot](screenshots/env2-screen.png)
 
 If you are grading my homework, and can't get the .env to work right, just
 text me (408) 406-1832.  It's my biz and personal phone #... it's all over
@@ -45,7 +45,7 @@ nodemon dev
 
 localhost:3000
 
-![Screenshot](launchapp-screen.png)
+![Screenshot](screenshots/launchapp-screen.png)
 
 Note: You can launch multiple clients in different browser tabs and
 talk to each other.  It works!
@@ -75,7 +75,7 @@ talk to each other.  It works!
    some hardcore validation logic and can be seen in the compass
    validation page.
 
-![Screenshot](validation-screen.png)
+![Screenshot](screenshots/validation-screen.png)
 
 # History
 
@@ -94,7 +94,7 @@ stability issues, when it works it looks amazing!
 2) in your browser go to URL:
     localhost:3000/admin/createdb
 
-    ![Screenshot](createdb-screen.png)
+    ![Screenshot](screenshots/createdb-screen.png)
 
 3) launch one or more browser tabs for each client:
     localhost:3000
