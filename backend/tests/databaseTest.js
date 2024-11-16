@@ -35,19 +35,49 @@ async function cleanupCollections() {
         'test_dates',
         'test_arrays',
         'test_queries',
-        'user',
-        'gamestate',
-        'chat'
+        'users',
+        'game_states',
+        'chat_messages'
     ];
 
     for (const collection of collections) {
         try {
             await db.deleteCollection(collection);
+            
+            // Verify deletion by attempting to find documents
+            const remainingDocs = await db.find(collection, {});
+            if (remainingDocs && remainingDocs.length > 0) {
+                throw new Error(`Collection ${collection} was not fully deleted. ${remainingDocs.length} documents remain.`);
+            }
+            log(`✓ Verified ${collection} is empty`);
         } catch (error) {
             console.error(`Error cleaning up collection ${collection}:`, error);
         }
     }
     log('Cleanup complete');
+}
+
+// Database clear function for external use
+export async function clearDatabase() {
+    try {
+        log('Initializing database connection...');
+        await db.init();
+        
+        log('Starting database cleanup...');
+        await cleanupCollections();
+        
+        log('Database cleanup completed successfully');
+        return true;
+    } catch (error) {
+        console.error('Failed to clear database:', error);
+        throw error;
+    } finally {
+        try {
+            await db.disconnect();
+        } catch (error) {
+            console.error('Error disconnecting from database:', error);
+        }
+    }
 }
 
 // Database initialization test
