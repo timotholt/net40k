@@ -2,128 +2,118 @@ import mongoose from 'mongoose';
 import { db } from '../database/database.js';
 import { UuidService } from '../services/UuidService.js';
 import DateService from '../services/DateService.js';
+import { GenerateSchema } from '../utils/schemaGenerator.js';
+import { createMessageUuid } from '../constants/GameUuids.js';
 
 // Service Layer: Chat Representation
+const schemaOptions = {
+    messageUuid: { required: true },
+    roomUuid: { required: true },
+    senderUuid: { required: true },
+    senderNickname: { required: true },
+    message: { required: true },
+    createdAt: { required: true },
+    isWhisper: { required: false },
+    recipientId: { required: false },
+    metadata: { required: false }
+};
+
+@GenerateSchema(schemaOptions)
 class Chat {
     constructor(data = {}) {
-        this.chatId = data.chatId || UuidService.generate();
-        this.userId = data.userId;
-        this.gameId = data.type === 'game' ? data.gameId : null;
-        this.username = data.username;
-        this.nickname = data.nickname;
+        this.messageUuid = data.messageUuid || createMessageUuid();
+        this.roomUuid = data.roomUuid;
+        this.senderUuid = data.senderUuid;
+        this.gameUuid = data.gameUuid;
+        this.senderNickname = data.senderNickname;
         this.message = data.message;
-        this.timestamp = data.timestamp || DateService.now();
-        this.isPrivate = data.isPrivate || false;
-        this.recipientId = data.isPrivate ? data.recipientId : null;
-        this.isDeleted = data.isDeleted || false;
+        this.createdAt = data.createdAt || DateService.now();
+        this.isWhisper = data.isWhisper || false;
+        this.recipientId = data.isWhisper ? data.recipientId : null;
+        this.metadata = this.processMetadata(data.metadata || {});
+    }
+
+    processMetadata(metadata) {
+        // If there's a URL in metadata, validate and process it
+        if (metadata.url) {
+            const isInternalUrl = metadata.url.startsWith('i:');
+            return {
+                ...metadata,
+                url: metadata.url,
+                title: metadata.title || '',
+                description: metadata.description || '',
+                isInternalUrl
+            };
+        }
+        return metadata;
     }
 
     toJSON() {
-        return {
-            chatId: this.chatId,
-            type: this.type,
-            userId: this.userId,
-            gameId: this.gameId,
-            username: this.username,
-            nickname: this.nickname,
+        const data = {
+            messageUuid: this.messageUuid,
+            roomUuid: this.roomUuid,
+            senderUuid: this.senderUuid,
+            gameUuid: this.gameUuid,
+            senderNickname: this.senderNickname,
             message: this.message,
-            timestamp: this.timestamp,
-            isPrivate: this.isPrivate,
-            recipientId: this.recipientId
+            createdAt: this.createdAt,
+            isWhisper: this.isWhisper,
+            recipientId: this.recipientId,
+            metadata: this.metadata
         };
+
+        // Remove undefined values
+        Object.keys(data).forEach(key => {
+            if (data[key] === undefined) {
+                data[key] = null;
+            }
+        });
+
+        return data;
     }
 
     validate() {
-        if (!this.userId) {
-            throw new Error('User ID is required');
+        // Required fields validation
+        if (!this.messageUuid) {
+            throw new Error('Message UUID is required');
+        }
+        if (!this.senderUuid) {
+            throw new Error('Sender UUID is required');
         }
         if (!this.message || this.message.trim().length === 0) {
             throw new Error('Message cannot be empty');
         }
-        if (this.type === 'game' && !this.gameId) {
-            throw new Error('Game ID is required for game-type messages');
+        if (!this.roomUuid) {
+            throw new Error('Room UUID is required');
         }
-        if (this.isPrivate && !this.recipientId) {
-            throw new Error('Recipient ID is required for private messages');
+        if (!this.senderNickname) {
+            throw new Error('Sender nickname is required');
         }
+
+        // Conditional and format validations
+        if (this.gameUuid && !UuidService.isValid(this.gameUuid)) {
+            throw new Error('Invalid game UUID');
+        }
+        if (this.isWhisper && !this.recipientId) {
+            throw new Error('Recipient ID is required for whisper messages');
+        }
+        if (this.metadata?.url && typeof this.metadata.url !== 'string') {
+            throw new Error('URL must be a string');
+        }
+
         return true;
     }
 }
 
-// Database Layer Schema
-const schemaDefinition = {
-    _id: {
-        type: String,
-        default: UuidService.generate
-    },
-    chatId: {
-        type: String,
-        required: true,
-        unique: true,
-        default: UuidService.generate
-    },
-    type: {
-        type: String,
-        enum: ['lobby', 'game'],
-        required: true
-    },
-    userId: {
-        type: String,
-        required: true
-    },
-    gameId: {
-        type: String,
-        required: function() { 
-            return this.type === 'game'; 
-        }
-    },
-    username: {
-        type: String,
-        required: true
-    },
-    nickname: {
-        type: String,
-        required: true
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false
-    },
-    message: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: 500
-    },
-    timestamp: {
-        type: mongoose.Schema.Types.Mixed,
-        default: () => {
-            const now = new Date();
-            return {
-                date: now,
-                timestamp: now.getTime()
-            };
-        }
-    },
-    isPrivate: {
-        type: Boolean,
-        default: false
-    },
-    recipientId: {
-        type: String,
-        required: function() { 
-            return this.isPrivate === true; 
-        }
-    }
-};
+// The schema is now automatically generated from the Chat class
+const schemaDefinition = Chat.generateSchema();
 
 export const ChatDB = {
     _model: null,
 
     async init() {
         if (!this._model) {
-            const schema = new mongoose.Schema(schemaDefinition);
-            this._model = mongoose.model('Chat', schema);
+            this._model = await db.createModel('chats', schemaDefinition);
         }
         return this._model;
     },
@@ -132,7 +122,7 @@ export const ChatDB = {
         const model = await this.init();
         const messages = await db.getEngine().find(model, { type });
         const sortedMessages = messages
-            .sort((a, b) => a.timestamp.date - b.timestamp.date)
+            .sort((a, b) => a.createdAt - b.createdAt)
             .slice(-100)
             .map(msg => new Chat(msg));
         
@@ -142,11 +132,10 @@ export const ChatDB = {
     async findByGame(gameId) {
         const model = await this.init();
         const messages = await db.getEngine().find(model, { 
-            type: 'game',
-            gameId: gameId 
+            gameUuid: gameId 
         });
         const sortedMessages = messages
-            .sort((a, b) => a.timestamp.date - b.timestamp.date)
+            .sort((a, b) => a.createdAt - b.createdAt)
             .slice(-100)
             .map(msg => new Chat(msg));
         
@@ -155,52 +144,29 @@ export const ChatDB = {
 
     async findOne(query) {
         const model = await this.init();
-        const dbRecord = await db.getEngine().findOne(model, query);
-        return dbRecord ? new Chat(dbRecord) : null;
+        const message = await db.getEngine().findOne(model, query);
+        return message ? new Chat(message) : null;
     },
 
     async create(chatData) {
         const model = await this.init();
-
-        // Create service layer chat
         const chat = new Chat(chatData);
-        
-        // Validate chat data
         chat.validate();
 
         // Prepare data for database
-        const dbData = {
-            ...chatData,
-            chatId: chat.chatId,
-            gameId: chat.type === 'game' ? chat.gameId : undefined,
-            isDeleted: false
-        };
+        const dbData = chat.toJSON();
 
         // Remove undefined fields
         Object.keys(dbData).forEach(key => 
             dbData[key] === undefined && delete dbData[key]
         );
 
-        const dbRecord = await db.getEngine().create(model, dbData);
-        return new Chat(dbRecord);
-    },
-
-    async delete(query) {
-        const model = await this.init();
-        return await db.getEngine().delete(model, query);
-    },
-
-    async deleteByGame(gameId) {
-        const model = await this.init();
-        return await db.getEngine().delete(model, { 
-            type: 'game', 
-            gameId: gameId 
-        });
+        const result = await db.getEngine().create(model, dbData);
+        return new Chat(result);
     },
 
     async update(query, data) {
         const model = await this.init();
-        const updatedRecord = await db.getEngine().update(model, query, data);
-        return updatedRecord ? new Chat(updatedRecord) : null;
+        return await db.getEngine().update(model, query, data);
     }
 };
