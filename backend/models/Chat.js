@@ -1,9 +1,68 @@
 import mongoose from 'mongoose';
 import { db } from '../database/database.js';
 import { UuidService } from '../services/UuidService.js';
+import DateService from '../services/DateService.js';
 
-// Schema definition (but not initialization)
+// Service Layer: Chat Representation
+class Chat {
+    constructor(data = {}) {
+        this.chatId = data.chatId || UuidService.generate();
+        this.type = data.type || 'lobby';
+        this.userId = data.userId;
+        this.gameId = data.type === 'game' ? data.gameId : null;
+        this.username = data.username;
+        this.nickname = data.nickname;
+        this.message = data.message;
+        this.timestamp = data.timestamp || DateService.now();
+        this.isPrivate = data.isPrivate || false;
+        this.recipientId = data.isPrivate ? data.recipientId : null;
+        this.isDeleted = data.isDeleted || false;
+    }
+
+    toJSON() {
+        return {
+            chatId: this.chatId,
+            type: this.type,
+            userId: this.userId,
+            gameId: this.gameId,
+            username: this.username,
+            nickname: this.nickname,
+            message: this.message,
+            timestamp: this.timestamp,
+            isPrivate: this.isPrivate,
+            recipientId: this.recipientId
+        };
+    }
+
+    validate() {
+        if (!this.userId) {
+            throw new Error('User ID is required');
+        }
+        if (!this.message || this.message.trim().length === 0) {
+            throw new Error('Message cannot be empty');
+        }
+        if (this.type === 'game' && !this.gameId) {
+            throw new Error('Game ID is required for game-type messages');
+        }
+        if (this.isPrivate && !this.recipientId) {
+            throw new Error('Recipient ID is required for private messages');
+        }
+        return true;
+    }
+}
+
+// Database Layer Schema
 const schemaDefinition = {
+    _id: {
+        type: String,
+        default: UuidService.generate
+    },
+    chatId: {
+        type: String,
+        required: true,
+        unique: true,
+        default: UuidService.generate
+    },
     type: {
         type: String,
         enum: ['lobby', 'game'],
@@ -17,9 +76,6 @@ const schemaDefinition = {
         type: String,
         required: function() { 
             return this.type === 'game'; 
-        },
-        set: function(v) {
-            return this.type === 'game' ? v : undefined;
         }
     },
     username: {
@@ -30,7 +86,7 @@ const schemaDefinition = {
         type: String,
         required: true
     },
-    deleted: {
+    isDeleted: {
         type: Boolean,
         default: false
     },
@@ -41,163 +97,111 @@ const schemaDefinition = {
         maxlength: 500
     },
     timestamp: {
-        type: Date,
-        default: Date.now
+        type: mongoose.Schema.Types.Mixed,
+        default: () => {
+            const now = new Date();
+            return {
+                date: now,
+                timestamp: now.getTime()
+            };
+        }
     },
-    private: {
+    isPrivate: {
         type: Boolean,
         default: false
     },
     recipientId: {
         type: String,
         required: function() { 
-            return this.private === true; 
+            return this.isPrivate === true; 
         }
     }
 };
 
-// Firestore schema metadata
-const firestoreSchema = {
-    type: { type: 'string', required: true },
-    userId: { type: 'string', required: true },
-    gameId: { type: 'string' },
-    username: { type: 'string', required: true },
-    nickname: { type: 'string', required: true },
-    deleted: { type: 'boolean', default: false },
-    message: { type: 'string', required: true },
-    timestamp: { type: 'date', default: () => new Date() },
-    private: { type: 'boolean', default: false },
-    recipientId: { type: 'string' }
-};
-
-let Chat;
-
 export const ChatDB = {
+    _model: null,
+
     async init() {
-        if (!Chat) {
+        if (!this._model) {
             const schema = new mongoose.Schema(schemaDefinition);
-            Chat = mongoose.model('Chat', schema);
-            Chat.schema = firestoreSchema;
+            this._model = mongoose.model('Chat', schema);
         }
-        return Chat;
+        return this._model;
     },
 
     async findByType(type) {
-        console.log('Enter findByType with type:', type);
-        try {
-            const model = await this.init();
-            console.log('Getting database engine...');
-            const engine = db.getEngine();
-            console.log('Database engine obtained');
-
-            console.log('Calling find with type:', type);
-            const messages = await engine.find(model, { type });
-            console.log('Find completed, messages:', messages);
-
-            console.log('Sorting messages...');
-            const sortedMessages = messages
-                .sort((a, b) => a.timestamp - b.timestamp)
-                .slice(-100);
-            console.log('Messages sorted, count:', sortedMessages.length);
-            
-            return sortedMessages;
-        } catch (error) {
-            console.error('Error in findByType:', error);
-            throw error;
-        }
+        const model = await this.init();
+        const messages = await db.getEngine().find(model, { type });
+        const sortedMessages = messages
+            .sort((a, b) => a.timestamp.date - b.timestamp.date)
+            .slice(-100)
+            .map(msg => new Chat(msg));
+        
+        return sortedMessages;
     },
 
     async findByGame(gameId) {
-        console.log('Enter findByGame with gameId:', gameId);
-        try {
-            const model = await this.init();
-            const messages = await db.getEngine().find(model, { 
-                type: 'game',
-                gameId: gameId 
-            });
-            const sortedMessages = messages
-                .sort((a, b) => a.timestamp - b.timestamp)
-                .slice(-100);
-            
-            console.log(`Found ${sortedMessages.length} game messages`);
-            return sortedMessages;
-        } catch (error) {
-            console.error('Error in findByGame:', error);
-            throw error;
-        }
+        const model = await this.init();
+        const messages = await db.getEngine().find(model, { 
+            type: 'game',
+            gameId: gameId 
+        });
+        const sortedMessages = messages
+            .sort((a, b) => a.timestamp.date - b.timestamp.date)
+            .slice(-100)
+            .map(msg => new Chat(msg));
+        
+        return sortedMessages;
     },
 
     async findOne(query) {
-        console.log('Enter findOne with query:', query);
-        try {
-            const model = await this.init();
-            return await db.getEngine().findOne(model, query);
-        } catch (error) {
-            console.error('Error in findOne:', error);
-            throw error;
-        }
+        const model = await this.init();
+        const dbRecord = await db.getEngine().findOne(model, query);
+        return dbRecord ? new Chat(dbRecord) : null;
     },
 
     async create(chatData) {
-        console.log('Enter create with data:', chatData);
+        const model = await this.init();
 
-        // Ensure userId is generated if not provided
-        if (!chatData._id) {
-            chatData._id = UuidService.generate();
-        }
+        // Create service layer chat
+        const chat = new Chat(chatData);
+        
+        // Validate chat data
+        chat.validate();
 
-        try {
-            const model = await this.init();
-            // Remove gameId if it's a lobby message
-            const data = chatData.type === 'lobby' 
-                ? { ...chatData, gameId: undefined }
-                : chatData;
+        // Prepare data for database
+        const dbData = {
+            ...chatData,
+            chatId: chat.chatId,
+            gameId: chat.type === 'game' ? chat.gameId : undefined,
+            isDeleted: false
+        };
 
-            // Remove undefined fields before saving
-            Object.keys(data).forEach(key => 
-                data[key] === undefined && delete data[key]
-            );
+        // Remove undefined fields
+        Object.keys(dbData).forEach(key => 
+            dbData[key] === undefined && delete dbData[key]
+        );
 
-            return await db.getEngine().create(model, data);
-        } catch (error) {
-            console.error('Error in create:', error);
-            throw error;
-        }
+        const dbRecord = await db.getEngine().create(model, dbData);
+        return new Chat(dbRecord);
     },
 
     async delete(query) {
-        console.log('Enter delete with query:', query);
-        try {
-            const model = await this.init();
-            return await db.getEngine().delete(model, query);
-        } catch (error) {
-            console.error('Error in delete:', error);
-            throw error;
-        }
+        const model = await this.init();
+        return await db.getEngine().delete(model, query);
     },
 
     async deleteByGame(gameId) {
-        console.log('Enter deleteByGame with gameId:', gameId);
-        try {
-            const model = await this.init();
-            return await this.delete({ 
-                type: 'game',
-                gameId: gameId
-            });
-        } catch (error) {
-            console.error('Error in deleteByGame:', error);
-            throw error;
-        }
+        const model = await this.init();
+        return await db.getEngine().delete(model, { 
+            type: 'game', 
+            gameId: gameId 
+        });
     },
 
     async update(query, data) {
-        console.log('Enter update with query:', query, 'and data:', data);
-        try {
-            const model = await this.init();
-            return await db.getEngine().update(model, query, data);
-        } catch (error) {
-            console.error('Error in update:', error);
-            throw error;
-        }
+        const model = await this.init();
+        const updatedRecord = await db.getEngine().update(model, query, data);
+        return updatedRecord ? new Chat(updatedRecord) : null;
     }
 };

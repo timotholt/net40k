@@ -33,13 +33,12 @@
     "mongoose": "8.8.1",
     "morgan": "^1.10.0",
     "object-sizeof": "^2.6.5",
-    "uuid": "^11.0.3",
     "uuidv7": "^1.0.2"
   },
   "devDependencies": {
     "eslint": "^8.55.0",
     "nodemon": "^3.0.1",
     "prettier": "^3.1.0",
-    "vitest": "^0.34.6"
+    "uuid": "^11.0.3"
   }
 }

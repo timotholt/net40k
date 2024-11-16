@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore/lite';
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
+import { UuidService } from '../services/UuidService.js'; 
 
 dotenv.config();
 
@@ -237,43 +238,89 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
     }
 
-    async create(mongooseModel, data) {
+    async findByUuid(mongooseModel, uuid) {
         try {
-        const collectionName = this._getCollectionName(mongooseModel);
-        const collectionRef = firestoreCollection(this.db, collectionName);
-        const initializedData = this._initializeData(mongooseModel, data);
-        const flattenedData = this._flattenObject(initializedData);
-        
-        const docRef = await addDoc(collectionRef, flattenedData);
-        return {
-            ...initializedData,
-            _id: docRef.id
-        };
+            const collectionName = this._getCollectionName(mongooseModel);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            const q = query(collectionRef, where('uuid', '==', uuid), firestoreLimit(1));
+
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return null;
+
+            const document = snapshot.docs[0];
+            return this._initializeData(mongooseModel, {
+                ...this._unflattenObject(document.data()),
+                _id: document.id
+            });
         } catch (error) {
-        console.error('Firestore create error:', error);
-        throw error;
+            console.error('Firestore findByUuid error:', error);
+            throw error;
         }
     }
 
-    async update(mongooseModel, queryObj, data) {
-        try {
-        const collectionName = this._getCollectionName(mongooseModel);
-        const collectionRef = firestoreCollection(this.db, collectionName);
-        let q = this._buildQuery(collectionRef, queryObj);
-        
-        const snapshot = await getDocs(q);
-        const flattenedData = this._flattenObject(data);
-        
-        const updatePromises = snapshot.docs.map(async (document) => {
-            const docRef = doc(this.db, collectionName, document.id);
-            await updateDoc(docRef, flattenedData);
-        });
+    async create(mongooseModel, data) {
+        if (!this.db) throw new Error('Firestore not initialized');
 
-        await Promise.all(updatePromises);
-        return { modifiedCount: snapshot.size };
+        // Normalize dates first
+        const normalizedData = this._normalizeDates(data);
+
+        // Ensure UUID is generated if not provided
+        if (!normalizedData.uuid) {
+            normalizedData.uuid = UuidService.generate();
+        }
+
+        // Convert normalized dates to Firestore timestamps
+        const timestampData = this._convertDatesToTimestamps(normalizedData);
+
+        const collectionName = mongooseModel.modelName.toLowerCase();
+        const docRef = await addDoc(firestoreCollection(this.db, collectionName), timestampData);
+        
+        return { 
+            ...normalizedData, 
+            _id: docRef.id 
+        };
+    }
+
+    async update(mongooseModel, queryObj, data) {
+        if (!this.db) throw new Error('Firestore not initialized');
+
+        try {
+            // Get collection reference and build query
+            const collectionName = this._getCollectionName(mongooseModel);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            let q = this._buildQuery(collectionRef, queryObj);
+            
+            // Normalize dates first
+            const normalizedData = this._normalizeDates(data);
+
+            // Convert normalized dates to Firestore timestamps
+            const timestampData = this._convertDatesToTimestamps(normalizedData);
+            const flattenedData = this._flattenObject(timestampData);
+
+            // Get matching documents
+            const snapshot = await getDocs(q);
+            
+            // If no documents match, return 0 modifications
+            if (snapshot.empty) {
+                return { modifiedCount: 0 };
+            }
+
+            // Perform updates on all matching documents
+            const updatePromises = snapshot.docs.map(async (document) => {
+                const docRef = doc(this.db, collectionName, document.id);
+                await updateDoc(docRef, flattenedData);
+            });
+
+            // Wait for all updates to complete
+            await Promise.all(updatePromises);
+
+            return { 
+                modifiedCount: snapshot.size,
+                ...normalizedData 
+            };
         } catch (error) {
-        console.error('Firestore update error:', error);
-        throw error;
+            console.error('Firestore update error:', error);
+            throw error;
         }
     }
 
@@ -307,6 +354,18 @@ export class FirestoreDbEngine extends BaseDbEngine {
         } catch (error) {
         console.error('Firestore delete error:', error);
         throw error;
+        }
+    }
+
+    async disconnect() {
+        try {
+            console.log('Disconnecting from Firestore...');
+            // Firebase Firestore doesn't require explicit disconnection
+            // But we can perform cleanup if needed
+            this.app = null;
+            this.db = null;
+        } catch (error) {
+            console.error('Error disconnecting from Firestore:', error);
         }
     }
 }

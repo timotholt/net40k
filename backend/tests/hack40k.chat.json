@@ -6,7 +6,8 @@
   "nickname": "System",
   "message": "BIG DEER HUNTER logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:22:23.119Z"
+    "date": "2024-11-08T04:22:23.119Z",
+    "timestamp": 1731039743119
   }
 },
 {
@@ -17,7 +18,8 @@
   "nickname": "System",
   "message": "BIG DEER HUNTER created game \"123\"",
   "timestamp": {
-    "$date": "2024-11-08T04:23:14.723Z"
+    "date": "2024-11-08T04:23:14.723Z",
+    "timestamp": 1731039794723
   }
 },
 {
@@ -28,7 +30,8 @@
   "nickname": "BIG DEER HUNTER",
   "message": "hi",
   "timestamp": {
-    "$date": "2024-11-08T04:23:22.518Z"
+    "date": "2024-11-08T04:23:22.518Z",
+    "timestamp": 1731039802518
   }
 },
 {
@@ -39,7 +42,8 @@
   "nickname": "BIG DEER HUNTER",
   "message": "how are you",
   "timestamp": {
-    "$date": "2024-11-08T04:24:08.724Z"
+    "date": "2024-11-08T04:24:08.724Z",
+    "timestamp": 1731039848724
   }
 },
 {
@@ -51,7 +55,8 @@
   "nickname": "System",
   "message": "BIG DEER HUNTER joined the game",
   "timestamp": {
-    "$date": "2024-11-08T04:24:20.744Z"
+    "date": "2024-11-08T04:24:20.744Z",
+    "timestamp": 1731039860744
   }
 },
 {
@@ -63,7 +68,8 @@
   "nickname": "BIG DEER HUNTER",
   "message": "hello",
   "timestamp": {
-    "$date": "2024-11-08T04:24:25.457Z"
+    "date": "2024-11-08T04:24:25.457Z",
+    "timestamp": 1731039865457
   }
 },
 {
@@ -75,7 +81,8 @@
   "nickname": "System",
   "message": "BIG DEER HUNTER left the game",
   "timestamp": {
-    "$date": "2024-11-08T04:24:32.762Z"
+    "date": "2024-11-08T04:24:32.762Z",
+    "timestamp": 1731039872762
   }
 },
 {
@@ -86,7 +93,8 @@
   "nickname": "System",
   "message": "BIG DEER HUNTER logged out",
   "timestamp": {
-    "$date": "2024-11-08T04:25:14.674Z"
+    "date": "2024-11-08T04:25:14.674Z",
+    "timestamp": 1731039914674
   }
 },
 {
@@ -97,7 +105,8 @@
   "nickname": "System",
   "message": "The REAL BOSS logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:25:58.099Z"
+    "date": "2024-11-08T04:25:58.099Z",
+    "timestamp": 1731039958099
   }
 },
 {
@@ -108,7 +117,8 @@
   "nickname": "The REAL BOSS",
   "message": "hi big deer hunter!",
   "timestamp": {
-    "$date": "2024-11-08T04:26:11.773Z"
+    "date": "2024-11-08T04:26:11.773Z",
+    "timestamp": 1731039971773
   }
 },
 {
@@ -119,7 +129,8 @@
   "nickname": "System",
   "message": "The REAL BOSS created game \"Practice For the Deer Family\"",
   "timestamp": {
-    "$date": "2024-11-08T04:27:04.549Z"
+    "date": "2024-11-08T04:27:04.549Z",
+    "timestamp": 1731040024549
   }
 },
 {
@@ -130,7 +141,8 @@
   "nickname": "System",
   "message": "The REAL BOSS logged out",
   "timestamp": {
-    "$date": "2024-11-08T04:27:35.261Z"
+    "date": "2024-11-08T04:27:35.261Z",
+    "timestamp": 1731040055261
   }
 },
 {
@@ -141,7 +153,8 @@
   "nickname": "System",
   "message": "LITTLE SAMMY logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:37:02.102Z"
+    "date": "2024-11-08T04:37:02.102Z",
+    "timestamp": 1731040822102
   }
 },
 {
@@ -152,7 +165,8 @@
   "nickname": "System",
   "message": "LITTLE SAMMY created game \"Pretty Sammy Is Here!\"",
   "timestamp": {
-    "$date": "2024-11-08T04:37:39.074Z"
+    "date": "2024-11-08T04:37:39.074Z",
+    "timestamp": 1731040859074
   }
 },
 {
@@ -163,7 +177,8 @@
   "nickname": "LITTLE SAMMY",
   "message": "My game password is 123",
   "timestamp": {
-    "$date": "2024-11-08T04:37:52.853Z"
+    "date": "2024-11-08T04:37:52.853Z",
+    "timestamp": 1731040872853
   }
 },
 {
@@ -174,7 +189,8 @@
   "nickname": "LITTLE SAMMY",
   "message": "If you wanna join i'll let you get the best loot!",
   "timestamp": {
-    "$date": "2024-11-08T04:38:19.947Z"
+    "date": "2024-11-08T04:38:19.947Z",
+    "timestamp": 1731040899947
   }
 },
 {
@@ -185,7 +201,8 @@
   "nickname": "System",
   "message": "LITTLE SAMMY logged out",
   "timestamp": {
-    "$date": "2024-11-08T04:39:22.191Z"
+    "date": "2024-11-08T04:39:22.191Z",
+    "timestamp": 1731040962191
   }
 },
 {
@@ -196,7 +213,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:40:39.806Z"
+    "date": "2024-11-08T04:40:39.806Z",
+    "timestamp": 1731041239806
   }
 },
 {
@@ -207,7 +225,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY created game \"Lizzy Is Dizzy\"",
   "timestamp": {
-    "$date": "2024-11-08T04:40:58.928Z"
+    "date": "2024-11-08T04:40:58.928Z",
+    "timestamp": 1731041258928
   }
 },
 {
@@ -218,7 +237,8 @@
   "nickname": "LIZZY IS BIZZY2",
   "message": "Im ready to powerup and stream on twitch!",
   "timestamp": {
-    "$date": "2024-11-08T04:41:15.043Z"
+    "date": "2024-11-08T04:41:15.043Z",
+    "timestamp": 17310412715043
   }
 },
 {
@@ -229,7 +249,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:50:07.714Z"
+    "date": "2024-11-08T04:50:07.714Z",
+    "timestamp": 1731042607714
   }
 },
 {
@@ -240,7 +261,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY changed their nickname to LIZZY IS BIZZY2",
   "timestamp": {
-    "$date": "2024-11-08T04:50:34.791Z"
+    "date": "2024-11-08T04:50:34.791Z",
+    "timestamp": 1731042634791
   }
 },
 {
@@ -252,7 +274,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY2 joined the game",
   "timestamp": {
-    "$date": "2024-11-08T04:55:47.167Z"
+    "date": "2024-11-08T04:55:47.167Z",
+    "timestamp": 1731042947167
   }
 },
 {
@@ -264,7 +287,8 @@
   "nickname": "System",
   "message": "LIZZY IS BIZZY2 left the game",
   "timestamp": {
-    "$date": "2024-11-08T04:55:51.931Z"
+    "date": "2024-11-08T04:55:51.931Z",
+    "timestamp": 1731042951931
   }
 },
 {
@@ -275,7 +299,8 @@
   "nickname": "System",
   "message": "LIZZY BORDEN logged in",
   "timestamp": {
-    "$date": "2024-11-08T04:56:50.182Z"
+    "date": "2024-11-08T04:56:50.182Z",
+    "timestamp": 1731043010182
   }
 },
 {
@@ -286,7 +311,8 @@
   "nickname": "System",
   "message": "LIZZY BORDEN logged out",
   "timestamp": {
-    "$date": "2024-11-08T04:57:22.808Z"
+    "date": "2024-11-08T04:57:22.808Z",
+    "timestamp": 1731043042808
   }
 },
 {
@@ -297,7 +323,8 @@
   "nickname": "System",
   "message": "LIZZY BORDEN logged in",
   "timestamp": {
-    "$date": "2024-11-08T05:15:53.872Z"
+    "date": "2024-11-08T05:15:53.872Z",
+    "timestamp": 1731043753872
   }
 },
 {
@@ -308,7 +335,8 @@
   "nickname": "System",
   "message": "LIZZY BORDEN created game \"Another Game Bro\"",
   "timestamp": {
-    "$date": "2024-11-08T05:26:48.222Z"
+    "date": "2024-11-08T05:26:48.222Z",
+    "timestamp": 1731044408222
   }
 },
 {
@@ -319,7 +347,8 @@
   "nickname": "System",
   "message": "LIZZY BORDEN logged out",
   "timestamp": {
-    "$date": "2024-11-08T05:27:12.668Z"
+    "date": "2024-11-08T05:27:12.668Z",
+    "timestamp": 1731044432668
   }
 },
 {
@@ -330,7 +359,8 @@
   "nickname": "System",
   "message": "JoshIsTheBoss logged in",
   "timestamp": {
-    "$date": "2024-11-08T05:27:53.993Z"
+    "date": "2024-11-08T05:27:53.993Z",
+    "timestamp": 17310444753993
   }
 },
 {
@@ -341,7 +371,8 @@
   "nickname": "System",
   "message": "JoshIsTheBoss created game \"SBA319 Is Due Tonight\"",
   "timestamp": {
-    "$date": "2024-11-08T05:28:12.556Z"
+    "date": "2024-11-08T05:28:12.556Z",
+    "timestamp": 1731044492556
   }
 },
 {
@@ -352,6 +383,7 @@
   "nickname": "System",
   "message": "JoshIsTheBoss logged out",
   "timestamp": {
-    "$date": "2024-11-08T05:30:03.328Z"
+    "date": "2024-11-08T05:30:03.328Z",
+    "timestamp": 1731044603328
   }
 }]

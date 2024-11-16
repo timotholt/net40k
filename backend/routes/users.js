@@ -7,6 +7,7 @@ import { ChatDB } from '../models/Chat.js';
 import { APIError } from '../middleware/errorHandling.js';
 import { SystemMessages } from '../models/SystemMessages.js';
 import dotenv from 'dotenv';
+import { validateUuid } from '../middleware/uuidValidation.js';
 
 dotenv.config();
 const router = express.Router();
@@ -86,7 +87,7 @@ router.get('/admin-url', (req, res) => {
     res.json({ url: process.env.MONGO_ADMIN_URL });
 });
 
-router.post('/logout', validateUserId, async (req, res, next) => {
+router.post('/logout', validateUserId, validateUuid('userId'), async (req, res, next) => {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] POST /logout - Parameters:`, {
         userId : req.body.userId
@@ -117,7 +118,7 @@ router.post('/logout', validateUserId, async (req, res, next) => {
     }
 });
 
-router.patch('/change-nickname', validateNickname, async (req, res, next) => {
+router.patch('/change-nickname', validateNickname, validateUuid('userId'), async (req, res, next) => {
     try {
         const { userId, nickname } = req.body;
       

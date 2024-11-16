@@ -41,6 +41,20 @@ class Database {
         }
     }
 
+    async disconnect() {
+        if (this.dbEngine) {
+            try {
+                console.log('Disconnecting from database...');
+                if (typeof this.dbEngine.disconnect === 'function') {
+                    await this.dbEngine.disconnect();
+                }
+                this.dbEngine = null;
+            } catch (error) {
+                console.error('Error disconnecting from database:', error);
+            }
+        }
+    }
+
     getEngine() {
         return this.dbEngine;
     }

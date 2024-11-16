@@ -1,0 +1,187 @@
+# New Backend API Requirements
+
+## 1. Authentication Enhancements
+- Implement session validation endpoint
+- Add new user profile management endpoints:
+  a) Change Nickname
+     - Endpoint: POST /user/change-nickname
+     - Request Body: 
+       {
+         "userId": "string",
+         "newNickname": "string"
+       }
+  b) Change Password
+     - Endpoint: POST /user/change-password
+     - Request Body:
+       {
+         "userId": "string",
+         "currentPassword": "string", 
+         "newPassword": "string"
+       }
+  c) Delete Account
+     - Endpoint: DELETE /user/:userId
+     - Requires authentication and user confirmation
+
+## 2. Game Lobby Improvements
+- Enhance existing lobby management:
+  a) Create Game
+     - Endpoint: POST /lobby
+     - Request Body:
+       {
+         "gameType": "string",
+         "maxPlayers": "number",
+         "creatorId": "string"
+       }
+  b) Join Game
+     - Endpoint: POST /lobby/:id/join
+     - Request Body:
+       {
+         "userId": "string"
+       }
+  c) Leave Game
+     - Endpoint: POST /lobby/:id/leave
+     - Request Body:
+       {
+         "userId": "string"
+       }
+  d) Delete Game
+     - Endpoint: DELETE /lobby/:id
+     - Requires game creator authentication
+
+## 3. Chat System
+- Implement chat-related endpoints:
+  a) Send Chat Message
+     - Endpoint: POST /chat
+     - Request Body:
+       {
+         "gameId": "string",
+         "userId": "string", 
+         "message": "string"
+       }
+  b) Get Game Chat History
+     - Endpoint: GET /chat/:gameId
+  c) Delete Game Chat
+     - Endpoint: DELETE /chat/game/:gameId
+     - Requires game creator authentication
+
+## 4. User Moderation System
+- Comprehensive user interaction control:
+  a) Block User
+     - Endpoint: POST /user/block
+     - Request Body:
+       {
+         "blockerId": "string",
+         "blockedUserId": "string"
+       }
+     - Prevents blocked user from:
+       * Sending direct messages
+       * Joining same game lobbies
+       * Interacting in shared chat spaces
+
+  b) Mute User
+     - Endpoint: POST /user/mute
+     - Request Body:
+       {
+         "muterId": "string",
+         "mutedUserId": "string",
+         "duration": "number" // minutes, optional
+       }
+     - Prevents muted user from:
+       * Sending chat messages
+       * Voice communications
+
+  c) Report User
+     - Endpoint: POST /user/report
+     - Request Body:
+       {
+         "reporterId": "string",
+         "reportedUserId": "string",
+         "reason": "string",
+         "evidenceUrls": ["string"],
+         "gameId": "string" // optional
+       }
+     - Tracking and escalation features:
+       * Automatic report logging
+       * Admin review system
+       * Potential temporary/permanent account sanctions
+
+  d) Get User Moderation Status
+     - Endpoint: GET /user/:userId/moderation-status
+     - Returns:
+       {
+         "isBlocked": "boolean",
+         "isMuted": "boolean",
+         "muteExpiresAt": "timestamp",
+         "activeReports": "number",
+         "accountStanding": "string" // "good", "warning", "restricted"
+       }
+
+## 5. Moderation Policies
+- Implement graduated punishment system:
+  1. First offense: Warning
+  2. Repeated offenses: Temporary mute (escalating durations)
+  3. Severe violations: Account suspension/ban
+
+- Automatic chat filtering:
+  * Detect and auto-mute for:
+    - Explicit language
+    - Hate speech
+    - Personal attacks
+    - Spam
+
+- Reporting workflow:
+  * Instant user isolation upon multiple reports
+  * Admin review within 24-48 hours
+  * Transparent communication about report outcomes
+
+## 6. Technical Implementation Considerations
+- Persistent storage of:
+  * Block lists
+  * Mute records
+  * User report history
+- Efficient query mechanisms for real-time moderation checks
+- Secure, anonymized reporting system
+- Performance-optimized blocking/muting mechanisms
+
+## 7. Compliance and Privacy
+- Ensure user data protection
+- Provide clear moderation policy documentation
+- Allow users to appeal moderation actions
+- Maintain detailed, secure audit logs of all moderation actions
+
+## 8. Admin Functionality
+- Add admin-specific endpoints:
+  a) Generate Admin URL
+     - Endpoint: GET /user/admin-url
+     - Returns a temporary admin access URL
+  b) Database Management
+     - Endpoint: POST /admin/createdb
+     - Allows admin to trigger database creation/reset
+
+## 9. Error Handling Improvements
+- Consistent error response structure:
+  {
+    "success": false,
+    "errorCode": "string",
+    "message": "string"
+  }
+
+## 10. Security Considerations
+- Implement robust authentication middleware
+- Add rate limiting for sensitive endpoints
+- Validate and sanitize all input data
+- Implement proper CORS configuration
+
+## 11. Performance Optimizations
+- Add caching mechanisms for frequently accessed data
+- Implement efficient database queries
+- Add pagination for list endpoints
+
+## 12. Logging and Monitoring
+- Add comprehensive logging for all API interactions
+- Include request tracing and performance metrics
+
+## Additional Notes
+- Ensure all new endpoints follow existing authentication patterns
+- Maintain consistent error handling across all endpoints
+- Implement proper input validation for all endpoints

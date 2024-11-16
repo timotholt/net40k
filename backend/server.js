@@ -75,22 +75,32 @@ process.on('SIGTERM', async () => {
     setTimeout(() => process.exit(0), 5000);
 });
 
-// Start the database and system user
-try {
-    while (!db.isConnected()) {
-      console.log(`Calling db.connect()`);
-      await db.connect();
+import { buildInfo } from './buildInfo.js';
+import { testAllDatabaseFunctions } from './tests/databaseTest.js';
+
+async function startServer() {
+    try {
+        console.log('Initializing server...');
+
+        // Connect to the database
+        if (!db.isConnected()) {
+            await db.connect();
+        }
+
+        // Run database tests
+        await testAllDatabaseFunctions();
+
+        console.log('Server initialization complete.');
+    } catch (error) {
+        console.error('Server initialization failed:', error);
+        process.exit(1);
     }
-    await SystemMessages.initialize();
-} catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
 }
 
 // Start the server
-import { buildInfo } from './buildInfo.js';
+startServer();
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
     console.log(`Game Server Version: ${buildInfo.version} (Built: ${buildInfo.buildDate})`);
-});
+}); 

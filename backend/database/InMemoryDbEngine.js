@@ -114,4 +114,13 @@ export class InMemoryDbEngine extends BaseDbEngine {
             Object.entries(query).every(([key, value]) => item[key] === value)
         ).length;
     }
+
+    async disconnect() {
+        try {
+            console.log('Clearing in-memory storage...');
+            this.storage.clear();
+        } catch (error) {
+            console.error('Error clearing in-memory storage:', error);
+        }
+    }
 }

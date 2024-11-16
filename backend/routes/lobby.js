@@ -5,6 +5,7 @@ import { ChatDB } from '../models/Chat.js';
 import { APIError } from '../middleware/errorHandling.js';
 import { SystemMessages } from '../models/SystemMessages.js';
 import dotenv from 'dotenv';
+import { validateUuid, validateMultipleUuids } from '../middleware/uuidValidation.js';
 
 dotenv.config();
 const router = express.Router();
@@ -82,7 +83,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Update the join route to check password
-router.post('/:id/join', async (req, res, next) => {
+router.post('/:id/join', validateMultipleUuids(['userId']), async (req, res, next) => {
     const { userId, password } = req.body;
     const { id } = req.params;
 
@@ -127,7 +128,7 @@ router.post('/:id/join', async (req, res, next) => {
 router.patch('/:id/change', async (req, res, next) => {
 });
 
-router.post('/:id/leave', async (req, res, next) => {
+router.post('/:id/leave', validateMultipleUuids(['userId']), async (req, res, next) => {
     const { userId } = req.body;
     const { id } = req.params;
 

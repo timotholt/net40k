@@ -1,6 +1,7 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { MongoClient } from 'mongodb';
 import { UuidService } from '../services/UuidService.js';
+import DateService from '../services/DateService.js';
 
 export class MongoDbEngine extends BaseDbEngine {
     constructor() {
@@ -40,66 +41,88 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async find(collection, query) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
         const result = await this.db.collection(collectionName).find(query).toArray();
 
         return {
-        sort: (sortCriteria) => {
-            if (typeof sortCriteria === 'function') {
-            result.sort(sortCriteria);
-            } else {
-            const [field, order] = Object.entries(sortCriteria)[0];
-            result.sort((a, b) => order * (a[field] > b[field] ? 1 : -1));
-            }
-            return {
-            limit: (n) => result.slice(0, n)
-            };
-        },
-        limit: (n) => result.slice(0, n),
-        then: (resolve) => resolve(result)
+            sort: (sortCriteria) => {
+                if (typeof sortCriteria === 'function') {
+                    result.sort(sortCriteria);
+                } else {
+                    const [field, order] = Object.entries(sortCriteria)[0];
+                    result.sort((a, b) => order * (a[field] > b[field] ? 1 : -1));
+                }
+                return {
+                    limit: (n) => result.slice(0, n)
+                };
+            },
+            limit: (n) => result.slice(0, n),
+            then: (resolve) => resolve(result)
         };
     }
 
     async findOne(collection, query) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
         return await this.db.collection(collectionName).findOne(query);
     }
 
-    async create(collection, data) {
+    async findByUuid(collection, uuid) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
-        }
-
-        // If an _id is not provided, make one from a UUID
-        if (!data._id) {
-            data._id = UuidService.generate();
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).insertOne(data);
-        return { ...data, _id: result.insertedId };
+        return await this.db.collection(collectionName).findOne({ uuid });
+    }
+
+    async create(collection, data) {
+        if (!await this.isHealthy()) {
+            throw new Error('Database connection is not healthy');
+        }
+
+        // Normalize dates 
+        const normalizedData = this._normalizeDates(data);
+
+        // Ensure UUID is generated if not provided
+        if (!normalizedData.uuid) {
+            normalizedData.uuid = UuidService.generate();
+        }
+
+        // Generate internal _id
+        normalizedData._id = UuidService.generate();
+
+        const collectionName = collection.modelName.toLowerCase();
+        const result = await this.db.collection(collectionName).insertOne(normalizedData);
+        
+        return { 
+            ...normalizedData,
+            _id: result.insertedId 
+        };
     }
 
     async update(collection, query, data) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
+        // Normalize dates
+        const normalizedData = this._normalizeDates(data);
+
         const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).updateMany(query, { $set: data });
+        const result = await this.db.collection(collectionName).updateMany(query, { $set: normalizedData });
         return { modifiedCount: result.modifiedCount };
     }
 
     async delete(collection, query) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
@@ -109,7 +132,7 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async clear(collection) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
@@ -118,7 +141,7 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async count(collection, query = {}) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
@@ -127,7 +150,7 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async aggregate(collection, pipeline) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const collectionName = collection.modelName.toLowerCase();
@@ -136,14 +159,32 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async withTransaction(callback) {
         if (!await this.isHealthy()) {
-        throw new Error('Database connection is not healthy');
+            throw new Error('Database connection is not healthy');
         }
 
         const session = this.client.startSession();
         try {
-        await session.withTransaction(callback);
+            await session.withTransaction(callback);
         } finally {
-        await session.endSession();
+            await session.endSession();
         }
+    }
+
+    async disconnect() {
+        try {
+            console.log('Disconnecting from MongoDB...');
+            if (this.client) {
+                await this.client.close();
+                this.client = null;
+                this.db = null;
+            }
+        } catch (error) {
+            console.error('Error disconnecting from MongoDB:', error);
+        }
+    }
+
+    _normalizeDates(data) {
+        // TO DO: implement date normalization logic
+        return data;
     }
 }

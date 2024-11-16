@@ -1,81 +1,70 @@
-// testData.js
+import { UuidService } from '../services/UuidService.js';
+
 export const testUsers = [
-  {
-    username: 'player1',
-    nickname: 'Pro Gamer',
-    password: 'password123'
-  },
-  {
-    username: 'player2',
-    nickname: 'Casual Gamer',
-    password: 'password456'
-  },
-  {
-    username: 'player3',
-    nickname: 'Speed Runner',
-    password: 'password789'
-  }
+    {
+        username: 'player1',
+        nickname: 'Player One',
+        password: 'password123'
+    },
+    {
+        username: 'player2',
+        nickname: 'Player Two',
+        password: 'password456'
+    },
+    {
+        username: 'player3',
+        nickname: 'Player Three',
+        password: 'password789'
+    }
 ];
 
 export const testGames = [
-  {
-    name: 'Casual Match',
-    maxPlayers: 2,
-    password: ''
-  },
-  {
-    name: 'Pro Tournament',
-    maxPlayers: 4,
-    password: 'secret'
-  },
-  {
-    name: 'Practice Room',
-    maxPlayers: 3,
-    password: ''
-  }
+    {
+        name: 'Test Game 1',
+        maxPlayers: 4,
+        status: 'waiting'
+    },
+    {
+        name: 'Test Game 2',
+        maxPlayers: 6,
+        status: 'in_progress'
+    },
+    {
+        name: 'Test Game 3',
+        maxPlayers: 2,
+        status: 'completed'
+    }
 ];
 
-export const createTestChats = (userId, gameId, username, nickname) => {
-  // Create Date objects for messages
-  const now = new Date();
-  const oneMinuteAgo = new Date(now - 60000);  // 1 minute ago
-  const fiveMinutesAgo = new Date(now - 300000);  // 5 minutes ago
+export function createTestChats(userId, gameId, username, nickname) {
+    return [
+        {
+            type: 'lobby',
+            userId: userId,
+            username: username,
+            nickname: nickname,
+            message: 'Hello from lobby!'
+        },
+        {
+            type: 'game',
+            userId: userId,
+            gameId: gameId,
+            username: username,
+            nickname: nickname,
+            message: 'Game strategy discussion'
+        },
+        {
+            type: 'private',
+            userId: userId,
+            username: username,
+            nickname: nickname,
+            message: 'Private message test'
+        }
+    ];
+}
 
-  return [
-    {
-      type: 'lobby',
-      userId,
-      username,
-      nickname,
-      message: 'Hello everyone!',
-      private: false,
-      timestamp: fiveMinutesAgo,
-      created: fiveMinutesAgo,
-      createdAt: fiveMinutesAgo
-    },
-    {
-      type: 'game',
-      userId,
-      gameId: gameId,
-      username,
-      nickname,
-      message: 'Good game!',
-      private: false,
-      timestamp: oneMinuteAgo,
-      created: oneMinuteAgo,
-      createdAt: oneMinuteAgo
-    },
-    {
-      type: 'lobby',
-      userId,
-      username,
-      nickname,
-      message: 'Private message',
-      private: true,
-      recipientId: userId,
-      timestamp: now,
-      created: now,
-      createdAt: now
-    }
-  ];
+export const testDates = {
+    'today': new Date(),
+    'yesterday': new Date(Date.now() - 24 * 60 * 60 * 1000),
+    'lastWeek': new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 };

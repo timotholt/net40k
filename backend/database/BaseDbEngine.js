@@ -1,3 +1,5 @@
+import DateService from '../services/DateService.js';
+
 // This is the base class for all database engines
 //
 // Most important is that you HAVE to have a schema for Firebase,
@@ -21,6 +23,30 @@ export class BaseDbEngine {
         });
         
         return initialized;
+    }
+
+    // Normalize dates across different database types
+    _normalizeDates(data) {
+        if (!data || typeof data !== 'object') return data;
+
+        const normalized = Array.isArray(data) ? [] : {};
+
+        for (const [key, value] of Object.entries(data)) {
+            if (value instanceof Date) {
+                // Convert Date to our standard format
+                normalized[key] = {
+                    date: value,
+                    timestamp: value.getTime()
+                };
+            } else if (value && typeof value === 'object') {
+                // Recursively normalize nested objects
+                normalized[key] = this._normalizeDates(value);
+            } else {
+                normalized[key] = value;
+            }
+        }
+
+        return normalized;
     }
 
     async connect() {

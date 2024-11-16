@@ -5,7 +5,10 @@
   "maxPlayers": 2,
   "password": "",
   "players": [],
-  "created": 1731039794499,
+  "created": {
+    "date": "2024-07-08T12:03:14.499Z",
+    "timestamp": 1731039794499
+  },
   "id": "5f648e8c-5079-4bea-b872-45e51c98c4ad"
 },
 {
@@ -15,7 +18,10 @@
   "maxPlayers": 4,
   "password": "",
   "players": [],
-  "created": 1731040024389,
+  "created": {
+    "date": "2024-07-08T12:07:04.389Z",
+    "timestamp": 1731040024389
+  },
   "id": "2ba11ef1-4826-4d73-8e21-7386d3aeac1d"
 },
 {
@@ -25,7 +31,10 @@
   "maxPlayers": 2,
   "password": "123",
   "players": [],
-  "created": 1731040658871,
+  "created": {
+    "date": "2024-07-08T12:17:38.871Z",
+    "timestamp": 1731040658871
+  },
   "id": "e01b91f6-bcb9-4d28-909a-f67cf9f85232"
 },
 {
@@ -35,7 +44,10 @@
   "maxPlayers": 4,
   "password": "",
   "players": [],
-  "created": 1731040856372,
+  "created": {
+    "date": "2024-07-08T12:20:56.372Z",
+    "timestamp": 1731040856372
+  },
   "id": "f6092002-4787-4a7b-b068-ef1a71c54ba4"
 },
 {
@@ -45,7 +57,10 @@
   "maxPlayers": 2,
   "password": "",
   "players": [],
-  "created": 1731043608004,
+  "created": {
+    "date": "2024-07-08T13:00:08.004Z",
+    "timestamp": 1731043608004
+  },
   "id": "062af77c-9ffe-47fb-9c0b-3b2cebb15060"
 },
 {
@@ -55,6 +70,9 @@
   "maxPlayers": 4,
   "password": "",
   "players": [],
-  "created": 1731043692329,
+  "created": {
+    "date": "2024-07-08T13:01:32.329Z",
+    "timestamp": 1731043692329
+  },
   "id": "37d11d2f-6481-4acc-92c1-a2fd9885e7de"
 }]

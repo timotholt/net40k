@@ -4,6 +4,8 @@
 // Automatic lock management with built-in cleanup
 ////////////////////////////////////////////////////
 
+import DateService from '../services/DateService.js';
+
 const DEFAULT_LOCK_CLEANUP_INTERVAL = 60000;
 
 export class Lock {
@@ -37,7 +39,7 @@ export class Lock {
     }
 
     this.locks.set(resourceId, {
-      timestamp: Date.now(),
+      timestamp: DateService.now().timestamp,
       timeout: timeoutMs
     });
 
@@ -63,7 +65,7 @@ export class Lock {
   }
 
   static cleanup() {
-    const now = Date.now();
+    const now = DateService.now().timestamp;
     let cleaned = 0;
     for (const [resourceId, lock] of this.locks.entries()) {
       if (now - lock.timestamp > lock.timeout) {
