@@ -15,21 +15,20 @@ function log(message, type = 'info') {
 }
 
 async function runTest(testName, testFn) {
-    log(`Starting test: ${testName}`);
+    log(`Running: ${testName}`);
     try {
         await testFn();
-        log(`Test passed: ${testName}`, 'success');
+        log(`Passed: ${testName}`, 'success');
         return true;
     } catch (error) {
-        log(`Test failed: ${testName}`, 'error');
-        console.error('Error details:', error);
+        log(`Failed: ${testName}`, 'error');
+        console.error('Error:', error);
         return false;
     }
 }
 
 // Cleanup utility
 async function cleanupCollections() {
-    log('Cleaning up test collections...');
     const collections = [
         'test_collection',
         'test_dates',
@@ -50,30 +49,21 @@ async function cleanupCollections() {
     for (const collection of collections) {
         try {
             await db.deleteCollection(collection);
-            
-            // Verify deletion by attempting to find documents
             const remainingDocs = await db.find(collection, {});
             if (remainingDocs && remainingDocs.length > 0) {
-                throw new Error(`Collection ${collection} was not fully deleted. ${remainingDocs.length} documents remain.`);
+                throw new Error(`Collection ${collection} not fully deleted`);
             }
-            log(`✓ Verified ${collection} is empty`);
         } catch (error) {
-            console.error(`Error cleaning up collection ${collection}:`, error);
+            console.error(`Error cleaning up ${collection}:`, error);
         }
     }
-    log('Cleanup complete');
 }
 
 // Database clear function for external use
 export async function clearDatabase() {
     try {
-        log('Initializing database connection...');
         await db.init();
-        
-        log('Starting database cleanup...');
         await cleanupCollections();
-        
-        log('Database cleanup completed successfully');
         return true;
     } catch (error) {
         console.error('Failed to clear database:', error);
@@ -82,7 +72,7 @@ export async function clearDatabase() {
         try {
             await db.disconnect();
         } catch (error) {
-            console.error('Error disconnecting from database:', error);
+            console.error('Error disconnecting:', error);
         }
     }
 }
@@ -262,37 +252,53 @@ async function testConcurrentOperations() {
 
 // Cache consistency test
 async function testCacheConsistency() {
-    const testDoc = {
-        _id: 'cache-test',
+    const testData = {
+        _id: 'cache-test-1',
         value: 'original'
     };
-    
-    // Create test document
-    await db.create('test_cache', testDoc);
-    
-    // Simulate multiple clients updating the same document
-    const client1Update = async () => {
-        const doc = await db.findOne('test_cache', { _id: 'cache-test' });
-        doc.value = 'client1';
-        await db.update('test_cache', { _id: 'cache-test' }, doc);
+
+    // Create initial document
+    await db.create('test_cache', testData);
+
+    // First read should populate cache
+    const firstRead = await db.findOne('test_cache', { _id: testData._id });
+    assert(firstRead.value === 'original', 'Initial read should return original value');
+
+    // Update document
+    await db.update('test_cache', { _id: testData._id }, { value: 'updated' });
+
+    // Second read should reflect update
+    const secondRead = await db.findOne('test_cache', { _id: testData._id });
+    assert(secondRead.value === 'updated', 'Cache should be invalidated after update');
+
+    // Test document replacement
+    const replacementData = {
+        _id: testData._id,
+        value: 'replaced',
+        newField: 'new'
     };
-    
-    const client2Update = async () => {
-        const doc = await db.findOne('test_cache', { _id: 'cache-test' });
-        doc.value = 'client2';
-        await db.update('test_cache', { _id: 'cache-test' }, doc);
-    };
-    
-    // Execute updates with slight delay
-    await client1Update();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await client2Update();
-    
-    // Verify cache and database consistency
-    const cachedDoc = await db.findOne('test_cache', { _id: 'cache-test' });
-    const dbDoc = await db.findOne('test_cache', { _id: 'cache-test' }, { bypassCache: true });
-    
-    assert(cachedDoc.value === dbDoc.value, 'Cache and database values should match');
+    await db.update('test_cache', { _id: testData._id }, replacementData);
+
+    // Third read should show complete replacement
+    const thirdRead = await db.findOne('test_cache', { _id: testData._id });
+    assert(thirdRead.value === 'replaced', 'Cache should reflect document replacement');
+    assert(thirdRead.newField === 'new', 'New fields should be added');
+    assert(Object.keys(thirdRead).length === 3, 'Document should only have _id, value, and newField');
+
+    // Test partial update
+    await db.update('test_cache', { _id: testData._id }, { value: 'partial' });
+
+    // Fourth read should show partial update
+    const fourthRead = await db.findOne('test_cache', { _id: testData._id });
+    assert(fourthRead.value === 'partial', 'Cache should reflect partial update');
+    assert(fourthRead.newField === 'new', 'Unmodified fields should remain');
+
+    // Delete document
+    await db.delete('test_cache', { _id: testData._id });
+
+    // Fifth read should return null
+    const fifthRead = await db.findOne('test_cache', { _id: testData._id });
+    assert(!fifthRead, 'Cache should be invalidated after delete');
 }
 
 // Performance and load testing
@@ -441,59 +447,67 @@ export async function testRaceConditions() {
 // Main test runner
 export async function testDatabaseEngine() {
     try {
-        // Ensure database is disconnected before starting tests
-        try {
-            await db.disconnect();
-        } catch (error) {
-            // Ignore disconnect errors
-        }
+        log('Starting database tests...');
+        
+        // First run: Cache disabled
+        process.env.ENABLE_CACHE = 'false';
+        log('Running tests with cache DISABLED');
+        let allTestsPassed = true;
         
         const tests = [
-            { name: 'Database Initialization', fn: testDatabaseInitialization },
-            { name: 'Basic CRUD Operations', fn: testBasicCRUD },
-            { name: 'Date Handling', fn: testDateHandling },
-            { name: 'Array Handling', fn: testArrayHandling },
-            { name: 'Query Operations', fn: testQueryOperations },
-            { name: 'Cache Consistency', fn: testCacheConsistency },
-            { name: 'Performance Tests', fn: testPerformance },
-            { name: 'Error Recovery', fn: testErrorRecovery },
-            { name: 'Data Integrity', fn: testDataIntegrity }
+            ['Database Initialization', testDatabaseInitialization],
+            ['Basic CRUD Operations', testBasicCRUD],
+            ['Date Handling', testDateHandling],
+            ['Array Handling', testArrayHandling],
+            ['Query Operations', testQueryOperations],
+            ['Data Integrity', testDataIntegrity],
+            ['Cache Consistency', testCacheConsistency],
+            ['Performance', testPerformance],
+            ['Error Recovery', testErrorRecovery]
         ];
 
         // Run initialization test first
-        const initTest = tests[0];
-        const initPassed = await runTest(initTest.name, initTest.fn);
-        const results = [{ name: initTest.name, passed: initPassed }];
+        const [initName, initTest] = tests[0];
+        const initPassed = await runTest(initName, initTest);
+        if (!initPassed) allTestsPassed = false;
 
-        if (initPassed) {
-            // Now that initialization test is done, clean up collections
-            await cleanupCollections();
-            
-            // Run remaining tests
-            for (let i = 1; i < tests.length; i++) {
-                const test = tests[i];
-                const passed = await runTest(test.name, test.fn);
-                results.push({ name: test.name, passed });
-            }
-
-            // Final cleanup after tests
+        // Run remaining tests after database is initialized
+        await db.init();
+        for (let i = 1; i < tests.length; i++) {
+            const [name, testFn] = tests[i];
+            const passed = await runTest(name, testFn);
+            if (!passed) allTestsPassed = false;
             await cleanupCollections();
         }
+        await db.disconnect();
+        
+        // Second run: Cache enabled
+        process.env.ENABLE_CACHE = 'true';
+        log('\nRunning tests with cache ENABLED');
+        
+        // Run initialization test first again
+        const initPassedCached = await runTest(initName, initTest);
+        if (!initPassedCached) allTestsPassed = false;
 
-        // Summary
-        const totalTests = results.length;
-        const passedTests = results.filter(r => r.passed).length;
-        log(`Test Summary: ${passedTests}/${totalTests} tests passed`);
-
-        if (passedTests !== totalTests) {
-            const failedTests = results.filter(r => !r.passed).map(r => r.name);
-            log(`Failed tests: ${failedTests.join(', ')}`, 'error');
-            throw new Error('Not all tests passed');
+        // Run remaining tests after database is initialized
+        await db.init();
+        for (let i = 1; i < tests.length; i++) {
+            const [name, testFn] = tests[i];
+            const passed = await runTest(name, testFn);
+            if (!passed) allTestsPassed = false;
+            await cleanupCollections();
         }
-
-        return true;
+        await db.disconnect();
+        
+        if (allTestsPassed) {
+            log('All tests completed successfully! 🎉');
+            process.exit(0);
+        } else {
+            log('Some tests failed. Check the logs above for details.');
+            process.exit(1);
+        }
     } catch (error) {
-        console.error('Error running database engine tests:', error);
-        throw error;
+        console.error('Test suite failed:', error);
+        process.exit(1);
     }
 }

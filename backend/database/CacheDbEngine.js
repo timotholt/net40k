@@ -215,12 +215,10 @@ export class CacheDbEngine extends BaseDbEngine {
       stats.bytesServedFromCache += resultSize;
       stats.totalReadBytes += resultSize;
       stats.recordRead(resultSize);
-      console.log('Cache: HIT -', collection, 'Size:', resultSize, 'bytes');
       return cachedResult;
     }
 
     stats.misses++;
-    console.log('Cache: MISS -', collection);
     const result = await this.baseEngine.find(collection, query);
     const resultSize = this._getObjectSize(result);
     stats.bytesServedFromDb += resultSize;
@@ -231,9 +229,7 @@ export class CacheDbEngine extends BaseDbEngine {
     if (resultSize <= this.maxBytes) {
       this.cache.set(cacheKey, result);
       this.currentSize += resultSize;
-      console.log('Cache: Stored result for', collection, 'Size:', resultSize, 'bytes');
     } else {
-      console.log('Cache: Result too large to cache:', resultSize, 'bytes');
     }
 
     return result;
@@ -251,12 +247,10 @@ export class CacheDbEngine extends BaseDbEngine {
       stats.bytesServedFromCache += resultSize;
       stats.totalReadBytes += resultSize;
       stats.recordRead(resultSize);
-      console.log('Cache: HIT (findOne) -', collection, 'Size:', resultSize, 'bytes');
       return cachedResult;
     }
 
     stats.misses++;
-    console.log('Cache: MISS (findOne) -', collection);
     const result = await this.baseEngine.findOne(collection, query);
     const resultSize = this._getObjectSize(result || {});
     stats.bytesServedFromDb += resultSize;
@@ -267,9 +261,7 @@ export class CacheDbEngine extends BaseDbEngine {
     if (resultSize <= this.maxBytes) {
       this.cache.set(cacheKey, result);
       this.currentSize += resultSize;
-      console.log('Cache: Stored findOne result for', collection, 'Size:', resultSize, 'bytes');
     } else {
-      console.log('Cache: FindOne result too large to cache:', resultSize, 'bytes');
     }
 
     return result;
@@ -278,7 +270,6 @@ export class CacheDbEngine extends BaseDbEngine {
   async create(collection, data) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
-    console.log('Cache: Create operation -', collection);
     const result = await this.baseEngine.create(collection, data);
     const resultSize = this._getObjectSize(data);
     stats.totalWriteBytes += resultSize;
@@ -290,7 +281,6 @@ export class CacheDbEngine extends BaseDbEngine {
   async update(collection, query, data) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
-    console.log('Cache: Update operation -', collection);
     
     // Invalidate cache before update to ensure fresh reads
     await this._invalidateCollection(collection);
@@ -306,7 +296,6 @@ export class CacheDbEngine extends BaseDbEngine {
   async delete(collection, query) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
-    console.log('Cache: Delete operation -', collection);
     
     // Invalidate cache before delete to ensure consistency
     await this._invalidateCollection(collection);
@@ -320,13 +309,11 @@ export class CacheDbEngine extends BaseDbEngine {
   }
 
   async deleteCollection(collection) {
-    console.log('Cache: Delete collection -', collection);
     await this._invalidateCollection(collection);
     return await this.baseEngine.deleteCollection(collection);
   }
 
   async disconnect() {
-    console.log('Cache: Disconnecting...');
     // Clear all cache data
     this.cache.clear();
     this.collectionStats.clear();
@@ -336,11 +323,9 @@ export class CacheDbEngine extends BaseDbEngine {
     if (this.baseEngine && typeof this.baseEngine.disconnect === 'function') {
       await this.baseEngine.disconnect();
     }
-    console.log('Cache: Disconnected');
   }
 
   _invalidateCollection(collection) {
-    console.log('Cache: Invalidating collection -', collection);
     const stats = this._getCollectionStats(collection);
     stats.invalidations++;
     
@@ -358,8 +343,6 @@ export class CacheDbEngine extends BaseDbEngine {
     // Update stats
     stats.bytesInvalidated += totalInvalidatedSize;
     this.currentSize -= totalInvalidatedSize;
-    
-    console.log('Cache: Invalidated', collection, '- Freed:', totalInvalidatedSize, 'bytes');
   }
 
   getCacheStats() {

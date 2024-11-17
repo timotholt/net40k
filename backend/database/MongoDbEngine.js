@@ -12,30 +12,17 @@ export class MongoDbEngine extends BaseDbEngine {
     }
 
     async connect() {
-        if (this.connectionPromise) {
-            return this.connectionPromise;
-        }
-
-        this.connectionPromise = (async () => {
-            try {
-                console.log('Attempting to connect to MongoDB...');
+        try {
+            if (!this.client) {
                 this.client = new MongoClient(process.env.MONGODB_URI);
-                await this.client.connect();
-                this.db = this.client.db();
-
-                // Test connection
-                await this.db.command({ ping: 1 });
-                console.log('Connected to MongoDB');
-                
-                return this.client;
-            } catch (error) {
-                console.error('MongoDB connection error:', error.message);
-                this.connectionPromise = null;
-                throw error;
+                this.connectionPromise = this.client.connect();
             }
-        })();
-
-        return this.connectionPromise;
+            await this.connectionPromise;
+            return true;
+        } catch (error) {
+            console.error('MongoDbEngine: Connection failed:', error);
+            throw error;
+        }
     }
 
     async _ensureConnected() {
