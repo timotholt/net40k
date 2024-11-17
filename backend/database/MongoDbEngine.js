@@ -18,6 +18,7 @@ export class MongoDbEngine extends BaseDbEngine {
                 this.connectionPromise = this.client.connect();
             }
             await this.connectionPromise;
+            this.db = this.client.db(process.env.MONGODB_DATABASE);
             return true;
         } catch (error) {
             console.error('MongoDbEngine: Connection failed:', error);
