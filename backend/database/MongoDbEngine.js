@@ -119,10 +119,17 @@ export class MongoDbEngine extends BaseDbEngine {
             return { modifiedCount: result.modifiedCount };
         }
         
-        // Otherwise, it's a partial update using $set
-        const result = await db.collection(collection.toLowerCase()).updateOne(
+        // For partial updates, get the existing document first
+        const existing = await this.findOne(collection, query);
+        if (!existing) {
+            throw new Error('Document not found for update');
+        }
+
+        // Merge the update data with existing document
+        const mergedData = { ...existing, ...data };
+        const result = await db.collection(collection.toLowerCase()).replaceOne(
             query,
-            { $set: data }
+            mergedData
         );
         
         return { modifiedCount: result.modifiedCount };

@@ -285,6 +285,17 @@ export class CacheDbEngine extends BaseDbEngine {
     // Invalidate cache before update to ensure fresh reads
     await this._invalidateCollection(collection);
     
+    // If data has _id, it's a document replacement
+    if (data._id) {
+      const { _id, ...updateData } = data;
+      const result = await this.baseEngine.update(collection, query, { _id, ...updateData });
+      const resultSize = this._getObjectSize(data);
+      stats.totalWriteBytes += resultSize;
+      stats.recordWrite(resultSize);
+      return result;
+    }
+    
+    // Otherwise, it's a partial update
     const result = await this.baseEngine.update(collection, query, data);
     const resultSize = this._getObjectSize(data);
     stats.totalWriteBytes += resultSize;
