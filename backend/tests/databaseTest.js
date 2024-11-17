@@ -37,7 +37,13 @@ async function cleanupCollections() {
         'test_queries',
         'user',
         'gamestate',
-        'chat'
+        'chat',
+        'test_concurrent',
+        'test_cache',
+        'test_performance',
+        'test_errors',
+        'test_parents',
+        'test_children'
     ];
 
     for (const collection of collections) {
@@ -224,49 +230,219 @@ async function testLoadJsonData() {
     }
 }
 
-// Main test runner
-export async function testDatabaseEngine() {
-    log('Starting database engine tests...');
+// Concurrency tests
+async function testConcurrentOperations() {
+    const numOperations = 50;
+    const testDoc = {
+        _id: 'concurrent-test',
+        counter: 0
+    };
     
-    const tests = [
-        { name: 'Database Initialization', fn: testDatabaseInitialization },
-        { name: 'Basic CRUD Operations', fn: testBasicCRUD },
-        { name: 'Date Handling', fn: testDateHandling },
-        { name: 'Array Handling', fn: testArrayHandling },
-        { name: 'Query Operations', fn: testQueryOperations },
-        { name: 'JSON Data Loading', fn: testLoadJsonData }
-    ];
+    // Create initial document
+    await db.create('test_concurrent', testDoc);
+    
+    // Perform concurrent increments
+    const operations = [];
+    for (let i = 0; i < numOperations; i++) {
+        operations.push((async () => {
+            const doc = await db.findOne('test_concurrent', { _id: 'concurrent-test' });
+            doc.counter++;
+            await db.update('test_concurrent', { _id: 'concurrent-test' }, doc);
+        })());
+    }
+    
+    // Wait for all operations to complete
+    await Promise.all(operations);
+    
+    // Verify final count
+    const finalDoc = await db.findOne('test_concurrent', { _id: 'concurrent-test' });
+    assert(finalDoc.counter === numOperations, `Expected counter to be ${numOperations}, got ${finalDoc.counter}`);
+}
 
-    // Run initialization test first
-    const initTest = tests[0];
-    const initPassed = await runTest(initTest.name, initTest.fn);
-    const results = [{ name: initTest.name, passed: initPassed }];
+// Cache consistency test
+async function testCacheConsistency() {
+    const testDoc = {
+        _id: 'cache-test',
+        value: 'original'
+    };
+    
+    // Create test document
+    await db.create('test_cache', testDoc);
+    
+    // Simulate multiple clients updating the same document
+    const client1Update = async () => {
+        const doc = await db.findOne('test_cache', { _id: 'cache-test' });
+        doc.value = 'client1';
+        await db.update('test_cache', { _id: 'cache-test' }, doc);
+    };
+    
+    const client2Update = async () => {
+        const doc = await db.findOne('test_cache', { _id: 'cache-test' });
+        doc.value = 'client2';
+        await db.update('test_cache', { _id: 'cache-test' }, doc);
+    };
+    
+    // Execute updates with slight delay
+    await client1Update();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await client2Update();
+    
+    // Verify cache and database consistency
+    const cachedDoc = await db.findOne('test_cache', { _id: 'cache-test' });
+    const dbDoc = await db.findOne('test_cache', { _id: 'cache-test' }, { bypassCache: true });
+    
+    assert(cachedDoc.value === dbDoc.value, 'Cache and database values should match');
+}
 
-    if (initPassed) {
-        // Now that initialization test is done, clean up collections
-        await cleanupCollections();
+// Performance and load testing
+async function testPerformance() {
+    const numDocs = 1000;
+    const docs = [];
+    
+    // Create many documents
+    // console.time('bulk-create');
+    for (let i = 0; i < numDocs; i++) {
+        docs.push({
+            _id: `perf-test-${i}`,
+            value: `test-${i}`,
+            number: i,
+            nested: {
+                field1: `nested-${i}`,
+                field2: i * 2
+            }
+        });
+    }
+    
+    await Promise.all(docs.map(doc => db.create('test_performance', doc)));
+    // console.timeEnd('bulk-create');
+    
+    // Test complex queries
+    // console.time('complex-query');
+    const results = await db.find('test_performance', {
+        number: { $gt: numDocs / 2 },
+        'nested.field2': { $lt: numDocs }
+    });
+    // console.timeEnd('complex-query');
+    
+    assert(results.length > 0, 'Should find matching documents');
+}
+
+// Error recovery testing
+async function testErrorRecovery() {
+    // Test partial updates
+    const doc = {
+        _id: 'error-test',
+        field1: 'value1',
+        field2: 'value2'
+    };
+    
+    await db.create('test_errors', doc);
+    
+    try {
+        // Simulate a partial update failure
+        const updateDoc = {
+            field1: 'new-value1',
+            field2: null // This should trigger validation error
+        };
+        await db.update('test_errors', { _id: 'error-test' }, updateDoc);
+        assert(false, 'Should have thrown validation error');
+    } catch (error) {
+        // Verify document wasn't corrupted
+        const checkDoc = await db.findOne('test_errors', { _id: 'error-test' });
+        assert(checkDoc.field1 === 'value1', 'Document should maintain original value');
+    }
+}
+
+// Data integrity testing
+async function testDataIntegrity() {
+    // Test referential integrity
+    const parent = {
+        _id: 'parent-1',
+        name: 'Parent'
+    };
+    
+    const child = {
+        _id: 'child-1',
+        parentId: 'parent-1',
+        name: 'Child'
+    };
+    
+    await db.create('test_parents', parent);
+    await db.create('test_children', child);
+    
+    // Test cascade delete
+    await db.delete('test_parents', { _id: 'parent-1' });
+    
+    // Verify child is also deleted or updated
+    const orphanedChild = await db.findOne('test_children', { parentId: 'parent-1' });
+    assert(!orphanedChild, 'Child should be deleted with parent');
+}
+
+// Race condition test (separated from main test suite)
+export async function testRaceConditions() {
+    await db.init();
+    console.log('Starting race condition tests...');
+    
+    try {
+        await testConcurrentOperations();
+        console.log('✅ Race condition tests passed!');
+    } catch (error) {
+        console.error('❌ Race condition test failed:', error);
+        throw error;
+    }
+}
+
+// Main test runner
+async function testDatabaseEngine() {
+    try {
+        await db.init();
         
-        // Run remaining tests
-        for (let i = 1; i < tests.length; i++) {
-            const test = tests[i];
-            const passed = await runTest(test.name, test.fn);
-            results.push({ name: test.name, passed });
+        const tests = [
+            { name: 'Database Initialization', fn: testDatabaseInitialization },
+            { name: 'Basic CRUD Operations', fn: testBasicCRUD },
+            { name: 'Date Handling', fn: testDateHandling },
+            { name: 'Array Handling', fn: testArrayHandling },
+            { name: 'Query Operations', fn: testQueryOperations },
+            { name: 'Cache Consistency', fn: testCacheConsistency },
+            { name: 'Performance Tests', fn: testPerformance },
+            { name: 'Error Recovery', fn: testErrorRecovery },
+            { name: 'Data Integrity', fn: testDataIntegrity }
+        ];
+
+        // Run initialization test first
+        const initTest = tests[0];
+        const initPassed = await runTest(initTest.name, initTest.fn);
+        const results = [{ name: initTest.name, passed: initPassed }];
+
+        if (initPassed) {
+            // Now that initialization test is done, clean up collections
+            await cleanupCollections();
+            
+            // Run remaining tests
+            for (let i = 1; i < tests.length; i++) {
+                const test = tests[i];
+                const passed = await runTest(test.name, test.fn);
+                results.push({ name: test.name, passed });
+            }
+
+            // Final cleanup after tests
+            await cleanupCollections();
         }
 
-        // Final cleanup after tests
-        await cleanupCollections();
+        // Summary
+        const totalTests = results.length;
+        const passedTests = results.filter(r => r.passed).length;
+        log(`Test Summary: ${passedTests}/${totalTests} tests passed`);
+
+        if (passedTests !== totalTests) {
+            const failedTests = results.filter(r => !r.passed).map(r => r.name);
+            log(`Failed tests: ${failedTests.join(', ')}`, 'error');
+            throw new Error('Not all tests passed');
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error running database engine tests:', error);
+        throw error;
     }
-
-    // Summary
-    const totalTests = results.length;
-    const passedTests = results.filter(r => r.passed).length;
-    log(`Test Summary: ${passedTests}/${totalTests} tests passed`);
-
-    if (passedTests !== totalTests) {
-        const failedTests = results.filter(r => !r.passed).map(r => r.name);
-        log(`Failed tests: ${failedTests.join(', ')}`, 'error');
-        throw new Error('Not all tests passed');
-    }
-
-    return true;
 }

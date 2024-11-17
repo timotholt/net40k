@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 import readline from 'readline';
 import { buildInfo } from './buildInfo.js';
 // import { testAllDatabaseFunctions } from './tests/serviceTest.js';
-import { testDatabaseEngine, clearDatabase } from './tests/databaseTest.js'; 
+import { testDatabaseEngine, clearDatabase, testRaceConditions } from './tests/databaseTest.js'; 
 import { ChatDB } from './models/Chat.js';
 import { UserDB } from './models/User.js';
 import { GameStateDB } from './models/GameState.js';
@@ -44,6 +44,11 @@ async function main() {
             case 'test':
                 await testDatabaseEngine();
                 break;
+            case 'r':
+            case 'race':
+                console.log('Running race condition tests...');
+                await testRaceConditions();
+                break;
             case 'c':
             case 'clear':
                 console.log('Clearing database...');
@@ -56,6 +61,7 @@ async function main() {
                     console.log('\n🚀 Net40k Server Interactive Mode');
                     console.log('Commands:');
                     console.log('  t - Run tests');
+                    console.log('  r - Run race condition tests');
                     console.log('  s - Start server');
                     console.log('  c - Clear database');
                     console.log('  q - Quit');
@@ -68,6 +74,15 @@ async function main() {
                                 try {
                                     await testDatabaseEngine();
                                     // await testAllDatabaseFunctions();
+                                    console.log('✅ All tests passed!');
+                                } catch (error) {
+                                    console.error('❌ Test failed:', error);
+                                }
+                                break;
+                            case 'r':
+                                console.log('\nRunning race condition tests...');
+                                try {
+                                    await testRaceConditions();
                                     console.log('✅ All tests passed!');
                                 } catch (error) {
                                     console.error('❌ Test failed:', error);
