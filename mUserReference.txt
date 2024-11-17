@@ -1,0 +1,433 @@
+# Net40k User System Reference Guide
+
+## What is a User?
+A user in Net40k has:
+- A unique ID (userUuid)
+- A nickname (display name)
+- A username (for login)
+- An online status
+- A verified email
+- Lists of muted and blocked players
+- Active game sessions
+- WebSocket connections
+- REST fallback capability
+- Admin privileges (if applicable)
+- User preferences
+- Creation timestamp
+- Last modified timestamp
+- Activity status
+
+## Implementation Methods
+
+The system supports two methods of communication:
+
+1. **WebSocket (Primary)**
+   - Real-time bidirectional communication
+   - Efficient for frequent updates
+   - Maintains persistent connection
+   - Better for gaming features
+
+2. **REST API (Fallback)**
+   - Traditional HTTP requests
+   - Works through TOR
+   - Better for authentication
+   - Suitable for infrequent operations
+
+## User Functions
+
+### Basic User Management
+- Create a new user account
+- Login/Logout
+- Change nickname
+- Update email
+- Verify email
+- Change password
+- Get user status
+- Set user status
+- Update preferences
+- View account history
+- Delete account (soft/permanent)
+
+### Social Features
+- Mute a player
+- Unmute a player
+- Block a player
+- Unblock a player
+- Get list of muted players
+- Get list of blocked players
+- Get online users
+- Get user profile
+
+### Session Management
+- Join a game room
+- Leave a game room
+- View active games
+- View current sessions
+- End specific session
+- Heartbeat/keep-alive
+
+### Administrative Features
+
+#### REST Endpoints
+GET /api/v1/admin/users
+- List all users
+- Required: admin token
+- Returns: array of user objects
+
+GET /api/v1/admin/users/active
+- List active users
+- Required: admin token
+- Returns: array of active users
+
+POST /api/v1/admin/users/{userUuid}/ban
+- Ban a user
+- Required: admin token, reason, duration (optional)
+- Returns: updated user object
+
+POST /api/v1/admin/users/{userUuid}/unban
+- Unban a user
+- Required: admin token
+- Returns: updated user object
+
+DELETE /api/v1/admin/users/{userUuid}
+- Permanently delete user
+- Required: admin token
+- Returns: success status
+
+GET /api/v1/admin/users/activity
+- Get user activity log
+- Required: admin token
+- Returns: activity log
+
+#### WebSocket Events
+client:admin:users:list
+- Get user list
+- Payload: {filter}
+- Response: {users[]}
+
+client:admin:user:ban
+- Ban user
+- Payload: {userUuid, reason, duration}
+- Response: {success, user}
+
+client:admin:user:unban
+- Unban user
+- Payload: {userUuid}
+- Response: {success, user}
+
+server:admin:user:updated
+- Broadcasted when user is updated by admin
+- Payload: {userUuid, changes}
+
+## API Implementation
+
+Each feature is implemented in both WebSocket and REST for maximum compatibility.
+
+### Authentication
+
+#### REST Endpoints
+POST /api/v1/user/register
+- Create new user account
+- Required: username, email, password
+- Returns: user object, session token
+
+POST /api/v1/user/login
+- Login with credentials
+- Required: username/email, password
+- Returns: session token
+
+POST /api/v1/user/logout
+- Logout current session
+- Required: session token
+- Returns: success status
+
+#### WebSocket Events
+client:auth:login
+- Login via WebSocket
+- Payload: {username/email, password}
+- Response: {success, sessionToken, userData}
+
+client:auth:logout
+- Logout via WebSocket
+- Payload: {sessionToken}
+- Response: {success}
+
+### Profile Management
+
+#### REST Endpoints
+GET /api/v1/user/profile
+- Get user profile
+- Required: session token
+- Returns: user profile data
+
+PUT /api/v1/user/profile
+- Update user profile
+- Required: session token, fields to update
+- Returns: updated profile
+
+POST /api/v1/user/email/verify
+- Verify email address
+- Required: verification token
+- Returns: success status
+
+PUT /api/v1/user/password
+- Change password
+- Required: session token, old password, new password
+- Returns: success status
+
+#### WebSocket Events
+client:profile:update
+- Update profile
+- Payload: {fields to update}
+- Response: {success, updatedProfile}
+
+client:profile:get
+- Get profile
+- Payload: {userUuid}
+- Response: {userData}
+
+server:profile:updated
+- Broadcasted when profile changes
+- Payload: {userUuid, updatedFields}
+
+### Social Features
+
+#### REST Endpoints
+POST /api/v1/user/mute/{targetUserUuid}
+- Mute a player
+- Required: session token, target user ID
+- Returns: updated muted list
+
+DELETE /api/v1/user/mute/{targetUserUuid}
+- Unmute a player
+- Required: session token, target user ID
+- Returns: updated muted list
+
+POST /api/v1/user/block/{targetUserUuid}
+- Block a player
+- Required: session token, target user ID
+- Returns: updated blocked list
+
+DELETE /api/v1/user/block/{targetUserUuid}
+- Unblock a player
+- Required: session token, target user ID
+- Returns: updated blocked list
+
+GET /api/v1/user/muted
+- Get list of muted players
+- Required: session token
+- Returns: array of muted user IDs
+
+GET /api/v1/user/blocked
+- Get list of blocked players
+- Required: session token
+- Returns: array of blocked user IDs
+
+#### WebSocket Events
+client:social:mute
+- Mute player
+- Payload: {targetUserUuid}
+- Response: {success, mutedList}
+
+client:social:unmute
+- Unmute player
+- Payload: {targetUserUuid}
+- Response: {success, mutedList}
+
+client:social:block
+- Block player
+- Payload: {targetUserUuid}
+- Response: {success, blockedList}
+
+client:social:unblock
+- Unblock player
+- Payload: {targetUserUuid}
+- Response: {success, blockedList}
+
+server:social:mute_updated
+- Broadcasted when mute list changes
+- Payload: {userUuid, mutedList}
+
+server:social:block_updated
+- Broadcasted when block list changes
+- Payload: {userUuid, blockedList}
+
+### Session Management
+
+#### REST Endpoints
+GET /api/v1/user/sessions
+- List active sessions
+- Required: session token
+- Returns: array of active sessions
+
+DELETE /api/v1/user/sessions/{sessionId}
+- End specific session
+- Required: session token, session ID
+- Returns: success status
+
+POST /api/v1/user/sessions/heartbeat
+- Keep session alive
+- Required: session token
+- Returns: success status
+
+#### WebSocket Events
+client:session:list
+- Get active sessions
+- Response: {sessions[]}
+
+client:session:end
+- End specific session
+- Payload: {sessionId}
+- Response: {success}
+
+server:session:ended
+- Broadcasted when session ends
+- Payload: {sessionId}
+
+client:heartbeat
+- Keep WebSocket connection alive
+- Payload: {timestamp}
+- Response: {timestamp}
+
+### Status Management
+
+#### REST Endpoints
+GET /api/v1/user/status/{userUuid}
+- Get user's status
+- Required: session token
+- Returns: user status
+
+PUT /api/v1/user/status
+- Update user's status
+- Required: session token, new status
+- Returns: updated status
+
+#### WebSocket Events
+client:status:update
+- Update user status
+- Payload: {status}
+- Response: {success, newStatus}
+
+server:status:updated
+- Broadcasted when user status changes
+- Payload: {userUuid, newStatus}
+
+### User Preferences
+
+#### REST Endpoints
+GET /api/v1/user/preferences
+- Get user preferences
+- Required: session token
+- Returns: preferences object
+
+PUT /api/v1/user/preferences
+- Update user preferences
+- Required: session token, preferences object
+- Returns: updated preferences
+
+#### WebSocket Events
+client:preferences:get
+- Get preferences
+- Response: {preferences}
+
+client:preferences:update
+- Update preferences
+- Payload: {preferences}
+- Response: {success, preferences}
+
+server:preferences:updated
+- Broadcasted when preferences change
+- Payload: {userUuid, preferences}
+
+### Account Management
+
+#### REST Endpoints
+DELETE /api/v1/user/account
+- Soft delete account
+- Required: session token
+- Returns: success status
+
+GET /api/v1/user/activity
+- Get account activity
+- Required: session token
+- Returns: activity log
+
+#### WebSocket Events
+client:account:delete
+- Request account deletion
+- Response: {success}
+
+client:account:activity
+- Get account activity
+- Response: {activity[]}
+
+## Error Handling
+
+### HTTP Status Codes (REST)
+200-299: Success
+- 200: OK
+- 201: Created (new user/session)
+
+400-499: Client Errors
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 409: Conflict (e.g., username taken)
+
+500-599: Server Errors
+- 500: Internal Server Error
+- 503: Service Unavailable
+
+### WebSocket Error Events
+server:error
+- Payload: {
+    code: number,
+    message: string,
+    details: object
+  }
+
+Common error codes:
+- 1000: Normal closure
+- 1001: Going away
+- 1002: Protocol error
+- 1003: Unsupported data
+- 1008: Policy violation
+- 1011: Internal error
+
+## Connection Management
+
+### WebSocket Connection
+1. Establish WebSocket connection
+2. Authenticate using client:auth:login
+3. Maintain connection with client:heartbeat
+4. Handle disconnections gracefully
+
+### REST Fallback
+1. Obtain session token via /api/v1/user/login
+2. Include token in Authorization header
+3. Refresh session via /api/v1/user/sessions/heartbeat
+4. Handle session expiration appropriately
+
+## Data Validation
+All endpoints enforce:
+- Username: minimum 3 characters, unique
+- Email: valid format, unique
+- Password: minimum 8 characters
+- Input sanitization for all string fields
+- Schema validation for all objects
+
+## Security Features
+- Password hashing with bcrypt
+- Rate limiting on sensitive operations
+- Locking mechanism for critical operations
+- Input sanitization
+- Schema validation
+- Proper error handling with specific types
+
+## Error Types
+- ValidationError: Invalid input data
+- AuthError: Authentication/authorization issues
+- DatabaseError: Database operation failures
+- RateLimitError: Too many requests
+- LockError: Resource locking issues

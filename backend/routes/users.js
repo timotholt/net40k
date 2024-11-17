@@ -1,231 +1,326 @@
 import express from 'express';
-import { validateUsername, validateNickname, validateUserId } from '../middleware/validation.js';
-import { validation } from '../utils/validation.js';
-import { UserDB } from '../models/User.js';
-import { GameStateDB } from '../models/GameState.js';
-import { ChatDB } from '../models/Chat.js';
-import { APIError } from '../middleware/errorHandling.js';
-import { SystemMessages } from '../models/SystemMessages.js';
-import dotenv from 'dotenv';
-import { validateUuid } from '../middleware/uuidValidation.js';
+import UserService from '../services/UserService.js';
+import { authenticateUser, authenticateAdmin } from '../middleware/auth.js';
+import { ValidationError } from '../utils/errors.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 
-dotenv.config();
 const router = express.Router();
 
-router.post('/register', async (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] POST /register - Parameters:`, { 
-        username: req.body.username,
-        nickname: req.body.nickname,
-        passwordLength: req.body.password?.length || 0
-    });
-
+// Authentication routes
+router.post('/user/register', rateLimit('register'), async (req, res) => {
     try {
-        const { username, password, nickname } = req.body;
-
-        if (!username || !password) {
-            throw new APIError('Username and password are required', 400);
-        }
-
-        // The consequence of using findOne over fineOneActive is that
-        // new users can't reuse login names of deleted users. This is actually
-        // a positive -- it eliminates the use of deleted users that were hacked,
-        // phished, etc.
-        const existingUser = await UserDB.findOne({ username });
-        if (existingUser) {
-            throw new APIError('Username already exists', 400);
-        }
-
-        await UserDB.create({ 
-            username, 
-            password,
-            nickname: nickname || username 
-        });
-        console.log(`[${timestamp}] Registration successful for user: ${username}`);
-
-        res.json({
-            success: true,
-            message: 'Registration successful'
-        });
+        const user = await UserService.register(req.body);
+        res.json({ success: true, user });
     } catch (error) {
-        next(error);
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-router.post('/login', validateUsername, async (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] POST /login - Parameters:`, {
-        username: req.body.username,
-        password: req.body.password,
-        passwordLength: req.body.password?.length || 0
-    });
-
+router.post('/user/login', rateLimit('login'), async (req, res) => {
     try {
-        const { username, password } = req.body;
-
-        // Use findOneActive to exclude deleted users
-        const user = await UserDB.findOneActive({ username });
-        if (!user || user.password !== password) {
-            throw new APIError('Invalid username or password', 401);
-        }
-
-        // Send system message about user login
-        await SystemMessages.userLoggedIn(user.nickname);
-
-        console.log(`[${timestamp}] Login successful for user: ${username}`);
+        const { username, password, deviceInfo } = req.body;
+        const result = await UserService.login(username, password, deviceInfo);
         res.json({ 
-            success: true,
-            nickname: user.nickname,
-            userId: user.userId
+            success: true, 
+            user: result.user,
+            sessionToken: result.sessionToken,
+            device: result.device
         });
     } catch (error) {
-        next(error);
+        res.status(401).json({ success: false, error: error.message });
     }
 });
 
-router.get('/admin-url', (req, res) => {
-    res.json({ url: process.env.MONGO_ADMIN_URL });
+router.post('/user/logout', authenticateUser, async (req, res) => {
+    try {
+        await UserService.logout(req.sessionToken);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
 });
 
-router.post('/logout', validateUserId, validateUuid('userId'), async (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] POST /logout - Parameters:`, {
-        userId : req.body.userId
-    });
-
+// Session management
+router.post('/user/session/validate', async (req, res) => {
     try {
-        const { userId } = req.body;
-        
-        // Get user before removing from games
-        const user = await UserDB.findById(userId);
-        if (!user) {
-            throw new APIError('User not found', 404);
-        }
+        const { sessionToken } = req.body;
+        const session = await UserService.validateSession(sessionToken);
+        const user = await UserService.getProfile(session.userUuid);
+        res.json({ 
+            success: true, 
+            user,
+            session: {
+                createdAt: session.createdAt,
+                lastActive: session.lastActive,
+                deviceInfo: session.deviceInfo
+            }
+        });
+    } catch (error) {
+        res.status(401).json({ success: false, error: error.message });
+    }
+});
 
-        // Send system message about user logout
-        await SystemMessages.userLoggedOut(user.nickname);
+router.get('/user/sessions', authenticateUser, async (req, res) => {
+    try {
+        const sessions = await UserService.getUserSessions(req.user.userUuid);
+        res.json({ 
+            success: true, 
+            sessions: sessions.map(s => ({
+                token: s.token,
+                createdAt: s.createdAt,
+                lastActive: s.lastActive,
+                deviceInfo: s.deviceInfo,
+                current: s.token === req.sessionToken
+            }))
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
 
-        const games = await GameStateDB.findAll();
-        for (const game of games) {
-            if (await GameStateDB.isPlayerInGame(game.id, userId)) {
-                await GameStateDB.removePlayer(game.id, userId);
+router.post('/user/session/terminate', authenticateUser, async (req, res) => {
+    try {
+        const { sessionToken } = req.body;
+        // Only allow terminating own sessions unless admin
+        if (!req.user.isAdmin) {
+            const session = await UserService.validateSession(sessionToken);
+            if (session.userUuid !== req.user.userUuid) {
+                throw new ValidationError('Cannot terminate other users\' sessions');
             }
         }
-      
+        await UserService.terminateSession(sessionToken);
         res.json({ success: true });
     } catch (error) {
-        next(error);
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-router.patch('/change-nickname', validateNickname, validateUuid('userId'), async (req, res, next) => {
+router.post('/user/sessions/terminate-all', authenticateUser, async (req, res) => {
     try {
-        const { userId, nickname } = req.body;
-      
-        // Get user before updating nickname
-        const user = await UserDB.findById(userId);
-        if (!user) {
-            throw new APIError('User not found', 404);
-        }
-
-        // Trim the nickname
-        const trimmedNickname = validation.trim.nickname(nickname);
-        
-        if (!trimmedNickname) {
-            throw new APIError('Nickname cannot be empty', 400);
-        }
-
-        // Update user's nickname
-        await UserDB.update({ userId }, { nickname: trimmedNickname });
-
-        // Update all chat messages from this user
-        await ChatDB.update(
-            { userId }, // Find all messages by this user
-            { nickname: trimmedNickname } // Update their nickname
+        const { exceptCurrent = true } = req.body;
+        await UserService.terminateAllUserSessions(
+            req.user.userUuid, 
+            exceptCurrent ? req.sessionToken : null
         );
-
-        // Send system message about nickname change
-        await SystemMessages.nicknameChanged(user.nickname, trimmedNickname);
-
         res.json({ success: true });
     } catch (error) {
-        next(error);
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-router.patch('/change-password', validateUserId, async (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] PATCH /change-password - UserId: ${req.body.userId}`);
-
+// Profile and account management
+router.get('/user/profile', authenticateUser, async (req, res) => {
     try {
-        const { userId, currentPassword, newPassword } = req.body;
-        const user = await UserDB.findById(userId);
-
-        if (!user || user.password !== currentPassword) {
-            throw new APIError('Current password is incorrect', 401);
-        }
-
-        await UserDB.updateById(userId, { password: newPassword });
-        res.json({ success: true });
+        const profile = await UserService.getProfile(req.user.userUuid);
+        res.json({ success: true, profile });
     } catch (error) {
-        next(error);
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-// Delete is very complicated. We don't actually delete users from the
-// database! That would be too easy.  We mark them as soft deleted
-// so that any games they created, any chat messages they wrote, etc,
-// will still show up in the games list, in chat windows, etc. Otherwise
-// other players on the serveer will have a weird expeerience with 
-// missing games they are still playing in, chat logs missing part of
-// a conversation, etc.
-
-router.delete('/:userId', validateUserId, async (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    const userId = req.params.userId;
-    console.log(`[${timestamp}] DELETE /${userId}`);
-
+router.put('/user/profile', authenticateUser, async (req, res) => {
     try {
-        const user = await UserDB.findById(userId);
-        if (!user) {
-            throw new APIError('User not found', 404);
-        }
-
-        // Check for active games
-        const games = await GameStateDB.findAll();
-        const activeGames = games.filter(game => 
-            game.creator === userId && 
-            game.players.length > 0 &&
-            game.players.some(player => player !== userId)
-        );
-
-        if (activeGames.length > 0) {
-            throw new APIError(
-                'Cannot delete account while you have active games with other players. Please delete your games first.',
-                400
-            );
-        }
-
-        // Send system message before deleting
-        await SystemMessages.userDeleted(user.nickname);
-
-        // Soft delete the user
-        await UserDB.softDelete(userId);
-
-        // Remove from active games
-        for (const game of games) {
-            if (await GameStateDB.isPlayerInGame(game.id, userId)) {
-                await GameStateDB.removePlayer(game.id, userId);
-            }
-        }
-
-        // Update all chat messages from this user as 'user deleted'
-        await ChatDB.markUserDeleted(userId);
-
-        res.json({ success: true });
+        const updatedUser = await UserService.updateProfile(req.user.userUuid, req.body);
+        res.json({ success: true, user: updatedUser });
     } catch (error) {
-        next(error);
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-export { router };
+// Security features
+router.post('/user/password/change', authenticateUser, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        await UserService.changePassword(req.user.userUuid, oldPassword, newPassword);
+        // Optionally terminate other sessions for security
+        if (req.body.terminateOtherSessions) {
+            await UserService.terminateAllUserSessions(req.user.userUuid, req.sessionToken);
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/password/reset/request', rateLimit('passwordReset'), async (req, res) => {
+    try {
+        const { email } = req.body;
+        await UserService.requestPasswordReset(email);
+        // Always return success to prevent email enumeration
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: true });
+    }
+});
+
+router.post('/user/password/reset/confirm', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        await UserService.resetPassword(token, newPassword);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// Device management
+router.post('/user/device/register', authenticateUser, async (req, res) => {
+    try {
+        const { deviceName, deviceType, pushToken } = req.body;
+        const device = await UserService.registerDevice(req.user.userUuid, {
+            deviceName,
+            deviceType,
+            pushToken,
+            sessionToken: req.sessionToken
+        });
+        res.json({ success: true, device });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/user/devices', authenticateUser, async (req, res) => {
+    try {
+        const devices = await UserService.getUserDevices(req.user.userUuid);
+        res.json({ success: true, devices });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.delete('/user/device', authenticateUser, async (req, res) => {
+    try {
+        const { deviceId } = req.body;
+        await UserService.removeDevice(req.user.userUuid, deviceId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// Social features
+router.post('/user/mute', authenticateUser, async (req, res) => {
+    try {
+        const { targetUserUuid } = req.body;
+        await UserService.muteUser(req.user.userUuid, targetUserUuid);
+        const mutedList = UserService.getMutedUsers(req.user.userUuid);
+        res.json({ success: true, mutedUsers: mutedList });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/unmute', authenticateUser, async (req, res) => {
+    try {
+        const { targetUserUuid } = req.body;
+        await UserService.unmuteUser(req.user.userUuid, targetUserUuid);
+        const mutedList = UserService.getMutedUsers(req.user.userUuid);
+        res.json({ success: true, mutedUsers: mutedList });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/block', authenticateUser, async (req, res) => {
+    try {
+        const { targetUserUuid } = req.body;
+        await UserService.blockUser(req.user.userUuid, targetUserUuid);
+        const blockedList = UserService.getBlockedUsers(req.user.userUuid);
+        res.json({ success: true, blockedUsers: blockedList });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/unblock', authenticateUser, async (req, res) => {
+    try {
+        const { targetUserUuid } = req.body;
+        await UserService.unblockUser(req.user.userUuid, targetUserUuid);
+        const blockedList = UserService.getBlockedUsers(req.user.userUuid);
+        res.json({ success: true, blockedUsers: blockedList });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// TODO: Game and Room REST Endpoints
+// - Add POST /user/room/join for HTTP room joins
+// - Add POST /user/room/leave for leaving rooms
+// - Add GET /user/games for fetching active games
+// - Add GET /user/rooms for fetching joined rooms
+// - Add rate limiting for room/game operations
+
+// Admin routes
+router.get('/user/list', authenticateAdmin, async (req, res) => {
+    try {
+        const { page, limit, filter } = req.query;
+        const users = await UserService.getActiveUsers({
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || 50,
+            filter
+        });
+        res.json({ success: true, users });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/ban', authenticateAdmin, async (req, res) => {
+    try {
+        const { userUuid, reason, duration } = req.body;
+        await UserService.banUser(userUuid, reason, duration);
+        // Terminate all user sessions when banned
+        await UserService.terminateAllUserSessions(userUuid);
+        await UserService.logSecurityEvent(userUuid, 'ban', {
+            adminUuid: req.user.userUuid,
+            reason,
+            duration
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/unban', authenticateAdmin, async (req, res) => {
+    try {
+        const { userUuid } = req.body;
+        await UserService.unbanUser(userUuid);
+        await UserService.logSecurityEvent(userUuid, 'unban', {
+            adminUuid: req.user.userUuid
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/user/security-log', authenticateAdmin, async (req, res) => {
+    try {
+        const { userUuid, startDate, endDate, type } = req.query;
+        const logs = await UserService.getSecurityLogs(userUuid, {
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            type
+        });
+        res.json({ success: true, logs });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/user/force-logout', authenticateAdmin, async (req, res) => {
+    try {
+        const { userUuid, reason } = req.body;
+        await UserService.terminateAllUserSessions(userUuid);
+        await UserService.logSecurityEvent(userUuid, 'force-logout', {
+            adminUuid: req.user.userUuid,
+            reason
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+export default router;

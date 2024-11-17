@@ -1,6 +1,9 @@
 import express from 'express';
 import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
+import { WebSocketServer } from 'ws';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import { router as userRoutes } from './routes/users.js';
 import { router as lobbyRoutes } from './routes/lobby.js';
 import { router as adminRoutes } from './routes/admin.js';
@@ -10,6 +13,7 @@ import { db } from './database/database.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandling.js';
 import { SystemMessages } from './models/SystemMessages.js';
+import UserWebSocketHandler from './services/UserWebSocketHandler.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -48,6 +52,28 @@ async function startServer() {
         next();
     });
 
+    // Session middleware
+    app.use(session({
+        secret: process.env.SESSION_SECRET || 'your-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({ 
+            mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/net40k',
+            ttl: 24 * 60 * 60 // 24 hours
+        }),
+        cookie: {
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 1000 * 60 * 60 * 24 // 24 hours
+        }
+    }));
+
+    // Rate limiting
+    const userLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+        message: 'Too many requests from this IP, please try again after 15 minutes'
+    });
+
     // Custom middleware
     app.use(requestLogger);
 
@@ -59,8 +85,8 @@ async function startServer() {
         res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
     });
 
-    // Routes
-    app.use('/user', userRoutes);
+    // Routes with rate limiting
+    app.use('/user', userLimiter, userRoutes);
     app.use('/lobby', lobbyRoutes);
     app.use('/admin', adminRoutes);
     app.use('/chat', chatRoutes);
@@ -75,11 +101,16 @@ async function startServer() {
     app.use(notFoundHandler);
     app.use(errorHandler);
 
-    // Start server
-    app.listen(port, () => {
+    // Start HTTP server
+    const server = app.listen(port, () => {
         console.log(`🚀 Server is running on port ${port}`);
         console.log('Build Info:', buildInfo);
     });
+
+    // Setup WebSocket server
+    const wss = new WebSocketServer({ server });
+    wss.on('connection', UserWebSocketHandler.handleConnection);
+    UserWebSocketHandler.startHeartbeat(wss);
 }
 
 async function main() {

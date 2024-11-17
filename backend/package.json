@@ -22,12 +22,14 @@
     "@firebase/firestore": "^4.7.5",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "express": "^4.21.1",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.1.5",
+    "express-session": "^1.18.1",
     "firebase": "^11.0.2",
     "firebase-admin": "^12.7.0",
     "flat": "^6.0.1",
@@ -35,7 +37,8 @@
     "mongoose": "8.8.1",
     "morgan": "^1.10.0",
     "object-sizeof": "^2.6.5",
-    "uuidv7": "^1.0.2"
+    "uuidv7": "^1.0.2",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "eslint": "^8.55.0",
