@@ -203,34 +203,18 @@ export class CacheDbEngine extends BaseDbEngine {
     }
   }
 
-  async find(collection, query) {
+  async find(collection, query, options = {}) {
     const stats = this._getCollectionStats(collection);
-    const cacheKey = this._getCacheKey(collection, query);
     stats.totalReads++;
 
-    if (this.cache.has(cacheKey)) {
-      const cachedResult = this.cache.get(cacheKey);
-      const resultSize = this._getObjectSize(cachedResult);
-      stats.hits++;
-      stats.bytesServedFromCache += resultSize;
-      stats.totalReadBytes += resultSize;
-      stats.recordRead(resultSize);
-      return cachedResult;
-    }
-
+    // For find operations that might need sorting/limiting, bypass cache
+    // This ensures consistent behavior with the MongoDB implementation
     stats.misses++;
-    const result = await this.baseEngine.find(collection, query);
+    const result = await this.baseEngine.find(collection, query, options);
     const resultSize = this._getObjectSize(result);
     stats.bytesServedFromDb += resultSize;
     stats.totalReadBytes += resultSize;
     stats.recordRead(resultSize);
-
-    this._evictIfNeeded(resultSize);
-    if (resultSize <= this.maxBytes) {
-      this.cache.set(cacheKey, result);
-      this.currentSize += resultSize;
-    } else {
-    }
 
     return result;
   }
@@ -261,7 +245,6 @@ export class CacheDbEngine extends BaseDbEngine {
     if (resultSize <= this.maxBytes) {
       this.cache.set(cacheKey, result);
       this.currentSize += resultSize;
-    } else {
     }
 
     return result;
@@ -282,9 +265,6 @@ export class CacheDbEngine extends BaseDbEngine {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
     
-    // Invalidate cache before update to ensure fresh reads
-    await this._invalidateCollection(collection);
-    
     // If data has _id, it's a document replacement
     if (data._id) {
       const { _id, ...updateData } = data;
@@ -292,14 +272,37 @@ export class CacheDbEngine extends BaseDbEngine {
       const resultSize = this._getObjectSize(data);
       stats.totalWriteBytes += resultSize;
       stats.recordWrite(resultSize);
+      
+      // Invalidate and refetch into cache
+      await this._invalidateCollection(collection);
+      const cacheKey = this._getCacheKey(collection, query);
+      const updated = await this.baseEngine.findOne(collection, query);
+      if (updated) {
+        const size = this._getObjectSize(updated);
+        this._evictIfNeeded(size);
+        this.cache.set(cacheKey, updated);
+        this.currentSize += size;
+      }
+      
       return result;
     }
     
-    // Otherwise, it's a partial update
+    // For partial updates
     const result = await this.baseEngine.update(collection, query, data);
     const resultSize = this._getObjectSize(data);
     stats.totalWriteBytes += resultSize;
     stats.recordWrite(resultSize);
+    
+    // Invalidate and refetch into cache
+    await this._invalidateCollection(collection);
+    const cacheKey = this._getCacheKey(collection, query);
+    const updated = await this.baseEngine.findOne(collection, query);
+    if (updated) {
+      const size = this._getObjectSize(updated);
+      this._evictIfNeeded(size);
+      this.cache.set(cacheKey, updated);
+      this.currentSize += size;
+    }
     
     return result;
   }
@@ -308,13 +311,22 @@ export class CacheDbEngine extends BaseDbEngine {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
     
-    // Invalidate cache before delete to ensure consistency
-    await this._invalidateCollection(collection);
-    
+    // Delete from database first
     const result = await this.baseEngine.delete(collection, query);
     const resultSize = this._getObjectSize(query);
     stats.totalWriteBytes += resultSize;
     stats.recordWrite(resultSize);
+    
+    // Remove specific cache entry for this query
+    const cacheKey = this._getCacheKey(collection, query);
+    if (this.cache.has(cacheKey)) {
+      const size = this._getObjectSize(this.cache.get(cacheKey));
+      this.cache.delete(cacheKey);
+      this.currentSize -= size;
+    }
+    
+    // Also invalidate the collection cache since indexes might be affected
+    await this._invalidateCollection(collection);
     
     return result;
   }

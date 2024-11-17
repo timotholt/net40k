@@ -107,6 +107,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        console.log('MongoDB Update - Before:', { collection, query, data });
         
         // If data has _id, it's a document replacement
         if (data._id) {
@@ -116,21 +117,19 @@ export class MongoDbEngine extends BaseDbEngine {
                 query,
                 { _id, ...updateData }
             );
+            console.log('MongoDB Full Replace Result:', result);
             return { modifiedCount: result.modifiedCount };
         }
         
-        // For partial updates, get the existing document first
-        const existing = await this.findOne(collection, query);
-        if (!existing) {
-            throw new Error('Document not found for update');
-        }
-
-        // Merge the update data with existing document
-        const mergedData = { ...existing, ...data };
-        const result = await db.collection(collection.toLowerCase()).replaceOne(
+        // For partial updates, use $set to only update specified fields
+        const result = await db.collection(collection.toLowerCase()).updateOne(
             query,
-            mergedData
+            { $set: data }
         );
+        
+        // Verify the update
+        const updated = await db.collection(collection.toLowerCase()).findOne(query);
+        console.log('MongoDB Update Result:', { result, updated });
         
         return { modifiedCount: result.modifiedCount };
     }
