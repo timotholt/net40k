@@ -44,8 +44,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).find(query).toArray();
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const result = await this.db.collection(collection.toLowerCase()).find(query).toArray();
 
         return {
             sort: (sortCriteria) => {
@@ -69,8 +72,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        return await this.db.collection(collectionName).findOne(query);
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        return await this.db.collection(collection.toLowerCase()).findOne(query);
     }
 
     async findByUuid(collection, uuid) {
@@ -78,13 +84,20 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        return await this.db.collection(collectionName).findOne({ uuid });
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        return await this.db.collection(collection.toLowerCase()).findOne({ uuid });
     }
 
     async create(collection, data) {
         if (!await this.isHealthy()) {
             throw new Error('Database connection is not healthy');
+        }
+
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
         }
 
         // Normalize dates 
@@ -95,16 +108,14 @@ export class MongoDbEngine extends BaseDbEngine {
             normalizedData.uuid = UuidService.generate();
         }
 
-        // Generate internal _id
-        normalizedData._id = UuidService.generate();
+        // Use provided _id or generate one
+        if (!normalizedData._id) {
+            normalizedData._id = UuidService.generate();
+        }
 
-        const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).insertOne(normalizedData);
+        const result = await this.db.collection(collection.toLowerCase()).insertOne(normalizedData);
         
-        return { 
-            ...normalizedData,
-            _id: result.insertedId 
-        };
+        return normalizedData;
     }
 
     async update(collection, query, data) {
@@ -112,11 +123,14 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
         // Normalize dates
         const normalizedData = this._normalizeDates(data);
 
-        const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).updateMany(query, { $set: normalizedData });
+        const result = await this.db.collection(collection.toLowerCase()).updateMany(query, { $set: normalizedData });
         return { modifiedCount: result.modifiedCount };
     }
 
@@ -125,8 +139,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        const result = await this.db.collection(collectionName).deleteOne(query);
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const result = await this.db.collection(collection.toLowerCase()).deleteOne(query);
         return { deletedCount: result.deletedCount };
     }
 
@@ -135,8 +152,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        return await this.db.collection(collectionName).deleteMany({});
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        return await this.db.collection(collection.toLowerCase()).deleteMany({});
     }
 
     async count(collection, query = {}) {
@@ -144,8 +164,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        return await this.db.collection(collectionName).countDocuments(query);
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        return await this.db.collection(collection.toLowerCase()).countDocuments(query);
     }
 
     async aggregate(collection, pipeline) {
@@ -153,8 +176,11 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Database connection is not healthy');
         }
 
-        const collectionName = collection.modelName.toLowerCase();
-        return await this.db.collection(collectionName).aggregate(pipeline).toArray();
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        return await this.db.collection(collection.toLowerCase()).aggregate(pipeline).toArray();
     }
 
     async withTransaction(callback) {
@@ -180,6 +206,27 @@ export class MongoDbEngine extends BaseDbEngine {
             }
         } catch (error) {
             console.error('Error disconnecting from MongoDB:', error);
+        }
+    }
+
+    async deleteCollection(collection) {
+        if (!await this.isHealthy()) {
+            throw new Error('Database connection is not healthy');
+        }
+
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        try {
+            await this.db.collection(collection.toLowerCase()).drop();
+            return true;
+        } catch (error) {
+            // Collection might not exist, which is fine
+            if (error.code === 26) {
+                return true;
+            }
+            throw error;
         }
     }
 
