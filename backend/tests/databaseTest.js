@@ -393,9 +393,14 @@ export async function testRaceConditions() {
 }
 
 // Main test runner
-async function testDatabaseEngine() {
+export async function testDatabaseEngine() {
     try {
-        await db.init();
+        // Ensure database is disconnected before starting tests
+        try {
+            await db.disconnect();
+        } catch (error) {
+            // Ignore disconnect errors
+        }
         
         const tests = [
             { name: 'Database Initialization', fn: testDatabaseInitialization },
