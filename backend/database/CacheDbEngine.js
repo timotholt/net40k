@@ -299,6 +299,19 @@ export class CacheDbEngine extends BaseDbEngine {
     return result;
   }
 
+  async deleteCollection(collection) {
+    // First delete from the base engine
+    await this.baseEngine.deleteCollection(collection);
+    
+    // Then invalidate the cache for this collection
+    this._invalidateCollection(collection);
+    
+    // Clear collection stats
+    this.collectionStats.delete(collection);
+    
+    return true;
+  }
+
   _invalidateCollection(collection) {
     const stats = this._getCollectionStats(collection);
     const collectionPrefix = `${collection.modelName}:`;

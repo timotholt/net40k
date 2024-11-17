@@ -2,22 +2,22 @@ import { BaseDbEngine } from './BaseDbEngine.js';
 import { initializeApp } from 'firebase/app';
 import { 
     getFirestore, 
-    collection as firestoreCollection, 
-    query, 
-    where, 
-    orderBy, 
-    limit as firestoreLimit,
+    collection as firestoreCollection,
     doc,
     getDoc,
     getDocs,
-    addDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
-    setDoc,
+    query,
+    where,
+    orderBy,
+    limit,
+    writeBatch,
+    connectFirestoreEmulator,
     setLogLevel,
-    Timestamp,
-    connectFirestoreEmulator
-} from 'firebase/firestore/lite';
+    Timestamp
+} from 'firebase/firestore';
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
 import { UuidService } from '../services/UuidService.js'; 
@@ -60,17 +60,46 @@ const firebaseConfig = {
 export class FirestoreDbEngine extends BaseDbEngine {
     constructor() {
         super();
+        this.initialized = false;
         try {
-        validateDotEnv();
-        this.app = initializeApp(firebaseConfig);
-        this.db = getFirestore(this.app);
-        
-        if (process.env.NODE_ENV === 'development') {
-            connectFirestoreEmulator(this.db, 'localhost', 8080);
-        }
+            validateDotEnv();
         } catch (error) {
-        console.error('Firebase initialization error:', error);
-        throw error;
+            console.error('Firebase env validation error:', error);
+            throw error;
+        }
+    }
+
+    async connect() {
+        console.log('FirestoreDbEngine: Attempting to connect...');
+        try {
+            if (!this.app) {
+                console.log('FirestoreDbEngine: Initializing Firebase app...');
+                this.app = initializeApp(firebaseConfig);
+            }
+
+            if (!this.db) {
+                console.log('FirestoreDbEngine: Initializing new Firestore instance...');
+                this.db = getFirestore(this.app);
+                
+                if (process.env.NODE_ENV === 'development') {
+                    connectFirestoreEmulator(this.db, 'localhost', 8080);
+                }
+                
+                // Suppress BloomFilter warnings
+                setLogLevel('error');
+                
+                console.log('FirestoreDbEngine: Firestore instance created successfully');
+            } else {
+                console.log('FirestoreDbEngine: Reusing existing Firestore instance');
+            }
+            
+            this.initialized = true;
+            console.log('FirestoreDbEngine: Connection successful, initialized =', this.initialized);
+            return true;
+        } catch (error) {
+            console.error('FirestoreDbEngine: Connection failed:', error);
+            this.initialized = false;
+            throw error;
         }
     }
 
@@ -100,47 +129,70 @@ export class FirestoreDbEngine extends BaseDbEngine {
         return normalized;
     }
 
-    _convertDatesToTimestamps(obj) {
-        if (obj === undefined) return null;
-        if (obj === null) return null;
-        if (typeof obj !== 'object') return obj;
-        if (obj instanceof Date) return Timestamp.fromDate(obj);
-        if (obj instanceof Timestamp) return obj;
+    _convertToFirestoreData(data) {
+        if (!data) return data;
 
-        // Handle arrays
-        if (Array.isArray(obj)) {
-            return obj.map(item => this._convertDatesToTimestamps(item));
-        }
-
-        // Handle objects
-        const converted = {};
-        for (const [key, value] of Object.entries(obj)) {
-            converted[key] = this._convertDatesToTimestamps(value);
+        const converted = { ...data };
+        for (const [key, value] of Object.entries(converted)) {
+            if (value instanceof Date) {
+                converted[key] = Timestamp.fromDate(value);
+            } else if (Array.isArray(value)) {
+                // Handle nested arrays by flattening them with a special format
+                converted[key] = this._convertArrayToFirestore(value);
+            } else if (value && typeof value === 'object') {
+                converted[key] = this._convertToFirestoreData(value);
+            }
         }
         return converted;
     }
 
-    _convertTimestampsToDates(obj) {
-        if (obj === undefined) return null;
-        if (obj === null) return null;
-        if (typeof obj !== 'object') return obj;
-        
-        // Convert Timestamp to Date
-        if (obj?.seconds !== undefined && obj?.nanoseconds !== undefined) {
-            return new Date(obj.seconds * 1000 + obj.nanoseconds / 1000000);
-        }
+    _convertArrayToFirestore(arr) {
+        return arr.map(item => {
+            if (Array.isArray(item)) {
+                // Convert nested array to object with special format
+                return {
+                    _type: 'array',
+                    value: this._convertArrayToFirestore(item)
+                };
+            } else if (item instanceof Date) {
+                return Timestamp.fromDate(item);
+            } else if (item && typeof item === 'object') {
+                return this._convertToFirestoreData(item);
+            }
+            return item;
+        });
+    }
 
-        // Handle arrays
-        if (Array.isArray(obj)) {
-            return obj.map(item => this._convertTimestampsToDates(item));
-        }
+    _convertFromFirestoreData(data) {
+        if (!data) return data;
 
-        // Handle objects
-        const converted = {};
-        for (const [key, value] of Object.entries(obj)) {
-            converted[key] = this._convertTimestampsToDates(value);
+        const converted = { ...data };
+        for (const [key, value] of Object.entries(converted)) {
+            if (value instanceof Timestamp) {
+                converted[key] = value.toDate();
+            } else if (Array.isArray(value)) {
+                converted[key] = this._convertArrayFromFirestore(value);
+            } else if (value && typeof value === 'object') {
+                converted[key] = this._convertFromFirestoreData(value);
+            }
         }
         return converted;
+    }
+
+    _convertArrayFromFirestore(arr) {
+        return arr.map(item => {
+            if (item && typeof item === 'object') {
+                if (item._type === 'array') {
+                    // Convert back from our special format to a real array
+                    return this._convertArrayFromFirestore(item.value);
+                } else if (item instanceof Timestamp) {
+                    return item.toDate();
+                } else {
+                    return this._convertFromFirestoreData(item);
+                }
+            }
+            return item;
+        });
     }
 
     _flattenObject(obj) {
@@ -284,7 +336,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
             const results = snapshot.docs.map(doc => {
                 const data = doc.data();
                 const unflattened = this._unflattenObject(data);
-                const withDates = this._convertTimestampsToDates(unflattened);
+                const withDates = this._convertFromFirestoreData(unflattened);
                 return {
                     ...withDates,
                     _id: doc.id
@@ -314,42 +366,32 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     async findOne(collection, queryObj) {
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
+
         try {
+            // If querying by _id, use direct document reference
             if (queryObj._id) {
                 const collectionName = this._getCollectionName(collection);
-                const docRef = doc(this.db, collectionName, queryObj._id);
+                const docRef = doc(this.db, collectionName, queryObj._id.toString());
                 const docSnap = await getDoc(docRef);
                 
                 if (!docSnap.exists()) {
-                    console.log(`Could not find document ${queryObj._id}`);
                     return null;
                 }
-
+                
                 const data = docSnap.data();
-                const unflattened = this._unflattenObject(data);
-                const withDates = this._convertTimestampsToDates(unflattened);
-                return {
-                    ...withDates,
+                return this._convertFromFirestoreData({
+                    ...data,
                     _id: docSnap.id
-                };
+                });
             }
 
-            const collectionName = this._getCollectionName(collection);
-            const collectionRef = firestoreCollection(this.db, collectionName);
-            let q = this._buildQuery(collectionRef, queryObj);
-            q = query(q, firestoreLimit(1));
-
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) return null;
-
-            const document = snapshot.docs[0];
-            const data = document.data();
-            const unflattened = this._unflattenObject(data);
-            const withDates = this._convertTimestampsToDates(unflattened);
-            return {
-                ...withDates,
-                _id: document.id
-            };
+            // Otherwise, use query to find first matching document
+            const results = await this.find(collection, queryObj, 1);
+            return results.length > 0 ? results[0] : null;
         } catch (error) {
             console.error('Error in findOne:', error);
             throw error;
@@ -360,7 +402,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
         try {
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
-            const q = query(collectionRef, where('uuid', '==', uuid), firestoreLimit(1));
+            const q = query(collectionRef, where('uuid', '==', uuid), limit(1));
 
             const snapshot = await getDocs(q);
             if (snapshot.empty) return null;
@@ -368,7 +410,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
             const document = snapshot.docs[0];
             const data = document.data();
             const unflattened = this._unflattenObject(data);
-            const withDates = this._convertTimestampsToDates(unflattened);
+            const withDates = this._convertFromFirestoreData(unflattened);
             return {
                 ...withDates,
                 _id: document.id
@@ -379,163 +421,190 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
     }
 
-    async create(collection, data) {
-        if (!this.db) throw new Error('Firestore not initialized');
+    async update(collection, queryObj, data) {
+        console.log('FirestoreDbEngine: Updating document in collection:', collection);
+        console.log('FirestoreDbEngine: Query:', queryObj);
+        console.log('FirestoreDbEngine: Data:', data);
+        
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
 
         try {
-            console.log('Creating document with data:', JSON.stringify(data, null, 2));
-            
-            // Normalize dates first
-            const normalizedData = this._normalizeDates(data);
-            console.log('Normalized data:', JSON.stringify(normalizedData, null, 2));
-
-            // Ensure UUID is generated if not provided
-            if (!normalizedData.uuid) {
-                normalizedData.uuid = UuidService.generate();
-            }
-
-            // Convert normalized dates to Firestore timestamps and flatten
-            const timestampData = this._convertDatesToTimestamps(normalizedData);
-            console.log('Data with timestamps:', JSON.stringify(timestampData, null, 2));
-            
-            const flattenedData = this._flattenObject(timestampData);
-            console.log('Flattened data:', JSON.stringify(flattenedData, null, 2));
-
-            const collectionName = this._getCollectionName(collection);
-            
-            // If _id is provided, use setDoc to create document with that ID
-            if (normalizedData._id) {
-                const docRef = doc(this.db, collectionName, normalizedData._id);
-                await setDoc(docRef, flattenedData);
+            // If updating by _id, use direct document reference
+            if (queryObj._id) {
+                const collectionName = this._getCollectionName(collection);
+                const docRef = doc(this.db, collectionName, queryObj._id.toString());
+                
+                // Get current document data
                 const docSnap = await getDoc(docRef);
-                const savedData = docSnap.data();
-                console.log('Saved data:', JSON.stringify(savedData, null, 2));
+                if (!docSnap.exists()) {
+                    console.log('Document not found for update');
+                    return { modifiedCount: 0 };
+                }
                 
-                const unflattened = this._unflattenObject(savedData);
-                console.log('Unflattened data:', JSON.stringify(unflattened, null, 2));
-                
-                const withDates = this._convertTimestampsToDates(unflattened);
-                console.log('Data with dates:', JSON.stringify(withDates, null, 2));
-                
-                return {
-                    ...withDates,
-                    _id: docRef.id
-                };
+                // Merge new data with existing data
+                await updateDoc(docRef, this._convertToFirestoreData(data));
+                console.log('Document updated successfully');
+                return { modifiedCount: 1 };
             }
-            
-            // Otherwise use addDoc to generate a new ID
-            const docRef = await addDoc(firestoreCollection(this.db, collectionName), flattenedData);
-            const docSnap = await getDoc(docRef);
-            const savedData = docSnap.data();
-            console.log('Saved data:', JSON.stringify(savedData, null, 2));
-            
-            const unflattened = this._unflattenObject(savedData);
-            console.log('Unflattened data:', JSON.stringify(unflattened, null, 2));
-            
-            const withDates = this._convertTimestampsToDates(unflattened);
-            console.log('Data with dates:', JSON.stringify(withDates, null, 2));
-            
-            return {
-                ...withDates,
-                _id: docRef.id
-            };
+
+            // For other queries, find matching documents and update them
+            const results = await this.find(collection, queryObj);
+            const collectionName = this._getCollectionName(collection);
+            let modifiedCount = 0;
+
+            for (const result of results) {
+                const docRef = doc(this.db, collectionName, result._id.toString());
+                await updateDoc(docRef, this._convertToFirestoreData(data));
+                modifiedCount++;
+            }
+
+            return { modifiedCount };
         } catch (error) {
-            console.error('Error in create:', error);
+            console.error('Error in update:', error);
             throw error;
         }
     }
 
-    async update(collection, queryObj, data) {
-        if (!this.db) throw new Error('Firestore not initialized');
+    async create(collection, data) {
+        console.log('FirestoreDbEngine: Creating document in collection:', collection);
+        console.log('FirestoreDbEngine: Current initialization state:', this.initialized);
+        
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
 
         try {
-            // Get collection reference and build query
+            console.log('Creating document with data:', JSON.stringify(data, null, 2));
+            
+            // Convert data to Firestore-compatible format
+            const firestoreData = this._convertToFirestoreData(data);
+            
+            // Get collection reference
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
-            let q = this._buildQuery(collectionRef, queryObj);
             
-            // Normalize dates first
-            const normalizedData = this._normalizeDates(data);
-
-            // Convert normalized dates to Firestore timestamps
-            const timestampData = this._convertDatesToTimestamps(normalizedData);
-            const flattenedData = this._flattenObject(timestampData);
-
-            // Get matching documents
-            const snapshot = await getDocs(q);
+            // Create a new document with the specified ID
+            const docRef = doc(collectionRef, firestoreData._id.toString());
             
-            // If no documents match, return 0 modifications
-            if (snapshot.empty) {
-                return { modifiedCount: 0 };
-            }
-
-            // Perform updates on all matching documents
-            const updatePromises = snapshot.docs.map(async (document) => {
-                const docRef = doc(this.db, collectionName, document.id);
-                await updateDoc(docRef, flattenedData);
-            });
-
-            // Wait for all updates to complete
-            await Promise.all(updatePromises);
-
-            return { 
-                modifiedCount: snapshot.size,
-                ...normalizedData 
-            };
+            // Remove _id from the data since it's used as the document ID
+            const { _id, ...docData } = firestoreData;
+            
+            // Set the document data
+            await setDoc(docRef, docData);
+            
+            // Return the created document data with dates converted back
+            return this._convertFromFirestoreData({ _id, ...docData });
         } catch (error) {
-            console.error('Firestore update error:', error);
+            console.error('Error creating document:', error);
             throw error;
         }
     }
 
     async delete(collection, queryObj) {
-        try {
-            const collectionName = this._getCollectionName(collection);
-            const collectionRef = firestoreCollection(this.db, collectionName);
-            let q = this._buildQuery(collectionRef, queryObj);
-            
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                return { deletedCount: 0 };
-            }
+        console.log('FirestoreDbEngine: Deleting documents in collection:', collection);
+        console.log('FirestoreDbEngine: Query:', queryObj);
+        
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
 
-            let deletedCount = 0;
-            
-            // Process deletions sequentially to avoid hanging
-            for (const document of snapshot.docs) {
-                try {
-                    const docRef = doc(this.db, collectionName, document.id);
-                    // Call deleteDoc without await and increment counter immediately
-                    deleteDoc(docRef);
-                    deletedCount++;
-                } catch (error) {
-                    console.error(`Failed to delete document ${document.id}:`, error);
+        try {
+            // If deleting by _id, use direct document reference
+            if (queryObj._id) {
+                const collectionName = this._getCollectionName(collection);
+                const docRef = doc(this.db, collectionName, queryObj._id.toString());
+                
+                // Check if document exists before deletion
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    console.log('Document not found for deletion');
+                    return { deletedCount: 0 };
+                }
+                
+                // Attempt to delete the document
+                await deleteDoc(docRef);
+                
+                // Verify deletion by checking if document still exists
+                const verifySnap = await getDoc(docRef);
+                if (!verifySnap.exists()) {
+                    console.log('Document deleted successfully');
+                    return { deletedCount: 1 };
+                } else {
+                    console.error('Document still exists after deletion attempt');
+                    return { deletedCount: 0 };
                 }
             }
 
-            // Return the count of attempted deletions
+            // For other queries, find matching documents and delete them
+            const results = await this.find(collection, queryObj);
+            const collectionName = this._getCollectionName(collection);
+            let deletedCount = 0;
+
+            for (const result of results) {
+                const docRef = doc(this.db, collectionName, result._id.toString());
+                await deleteDoc(docRef);
+                
+                // Verify each deletion
+                const verifySnap = await getDoc(docRef);
+                if (!verifySnap.exists()) {
+                    deletedCount++;
+                }
+            }
+
+            console.log(`Deleted ${deletedCount} documents`);
             return { deletedCount };
         } catch (error) {
-            console.error('Firestore delete error:', error);
+            console.error('Error in delete:', error);
             throw error;
         }
     }
 
     async deleteCollection(collection) {
-        if (!this.db) throw new Error('Firestore not initialized');
+        console.log('FirestoreDbEngine: Deleting collection:', collection);
+        console.log('FirestoreDbEngine: Current initialization state:', this.initialized);
+        
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
 
         try {
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
-            const snapshot = await getDocs(collectionRef);
-
-            // Delete each document individually since writeBatch has limits
-            const deletePromises = snapshot.docs.map(doc => 
-                deleteDoc(doc.ref)
-            );
             
-            await Promise.all(deletePromises);
-            console.log(`Deleted collection: ${collectionName}`);
+            // Get all documents in the collection
+            const snapshot = await getDocs(collectionRef);
+            
+            if (snapshot.empty) {
+                console.log(`Collection ${collectionName} is already empty`);
+                return true;
+            }
+
+            // Delete documents in batches (Firestore limit is 500 operations per batch)
+            const batchSize = 500;
+            const docs = snapshot.docs;
+            let count = 0;
+
+            for (let i = 0; i < docs.length; i += batchSize) {
+                const batch = writeBatch(this.db);
+                const chunk = docs.slice(i, i + batchSize);
+                
+                chunk.forEach(doc => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+
+                await batch.commit();
+                console.log(`Deleted batch of ${chunk.length} documents from ${collectionName}`);
+            }
+
+            console.log(`Deleted collection: ${collectionName} (${count} documents)`);
+            return true;
         } catch (error) {
             console.error(`Error deleting collection ${collection}:`, error);
             throw error;
@@ -543,14 +612,13 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     async disconnect() {
-        try {
-            console.log('Disconnecting from Firestore...');
-            // Firebase Firestore doesn't require explicit disconnection
-            // But we can perform cleanup if needed
-            this.app = null;
+        console.log('FirestoreDbEngine: Disconnecting...');
+        if (this.db) {
+            // Firebase doesn't have a direct disconnect method, but we can clean up our state
             this.db = null;
-        } catch (error) {
-            console.error('Error disconnecting from Firestore:', error);
+            this.app = null;
+            this.initialized = false;
+            console.log('FirestoreDbEngine: Disconnected and cleaned up');
         }
     }
 }

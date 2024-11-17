@@ -35,9 +35,9 @@ async function cleanupCollections() {
         'test_dates',
         'test_arrays',
         'test_queries',
-        'users',
-        'game_states',
-        'chat_messages'
+        'user',
+        'gamestate',
+        'chat'
     ];
 
     for (const collection of collections) {
@@ -226,6 +226,8 @@ async function testLoadJsonData() {
 
 // Main test runner
 export async function testDatabaseEngine() {
+    log('Starting database engine tests...');
+    
     const tests = [
         { name: 'Database Initialization', fn: testDatabaseInitialization },
         { name: 'Basic CRUD Operations', fn: testBasicCRUD },
@@ -235,20 +237,25 @@ export async function testDatabaseEngine() {
         { name: 'JSON Data Loading', fn: testLoadJsonData }
     ];
 
-    log('Starting database engine tests...');
-    
-    // Clean up collections before running tests
-    await cleanupCollections();
-    
-    const results = [];
+    // Run initialization test first
+    const initTest = tests[0];
+    const initPassed = await runTest(initTest.name, initTest.fn);
+    const results = [{ name: initTest.name, passed: initPassed }];
 
-    for (const test of tests) {
-        const passed = await runTest(test.name, test.fn);
-        results.push({ name: test.name, passed });
+    if (initPassed) {
+        // Now that initialization test is done, clean up collections
+        await cleanupCollections();
+        
+        // Run remaining tests
+        for (let i = 1; i < tests.length; i++) {
+            const test = tests[i];
+            const passed = await runTest(test.name, test.fn);
+            results.push({ name: test.name, passed });
+        }
+
+        // Final cleanup after tests
+        await cleanupCollections();
     }
-
-    // Final cleanup after tests
-    await cleanupCollections();
 
     // Summary
     const totalTests = results.length;
