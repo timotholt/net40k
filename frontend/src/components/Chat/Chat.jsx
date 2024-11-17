@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useSocket } from '../../context/SocketContext';
+// import { useSocket } from '../../context/SocketContext'; // Socket.io removed
 import { SYSTEM_IDS } from '../../config/systemIds';
 import ChatMessage from './ChatMessage';
 import EmptyState from './components/EmptyState';
@@ -22,7 +22,7 @@ export default function Chat({
   const [isFilterMode, setIsFilterMode] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
-  const socket = useSocket();
+  // const socket = useSocket(); // Socket.io removed
 
   const isLobbyChat = endpoint.includes('lobby');
   const isWhisperChat = endpoint.includes('whisper');
@@ -49,6 +49,7 @@ export default function Chat({
 
     fetchMessages();
 
+    /* Socket.io removed
     // Socket.io event handlers
     if (socket) {
       // Join the chat room
@@ -79,7 +80,8 @@ export default function Chat({
         socket.off(`message_delete_${chatRoom}`);
       };
     }
-  }, [endpoint, initialMessages, socket, chatRoom]);
+    */
+  }, [endpoint, initialMessages, chatRoom]);
 
   useEffect(() => {
     scrollToBottom();
@@ -110,6 +112,7 @@ export default function Chat({
     }
 
     try {
+      /* Socket.io removed
       if (socket) {
         // Emit message through socket
         socket.emit('chat_message', {
@@ -118,22 +121,24 @@ export default function Chat({
           userId: user.id
         });
       } else {
-        // Fallback to HTTP if socket isn't available
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            message: messageContent
-          })
-        });
+      */
+      // HTTP-only implementation
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          message: messageContent
+        })
+      });
 
-        if (!response.ok) throw new Error('Failed to send message');
-        const data = await response.json();
-        setMessages(prev => [...prev, data]);
+      if (!response.ok) throw new Error('Failed to send message');
+      const data = await response.json();
+      setMessages(prev => [...prev, data]);
+      /* Socket.io removed
       }
+      */
     } catch (err) {
-      // Optionally show an error to the user
       console.error('Failed to send message:', err);
     }
   };
