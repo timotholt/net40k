@@ -43,13 +43,50 @@ class Database {
         }
     }
 
-    async find(collection, query) {
+    async find(collection, query, options = {}) {
         if (!this.#initialized) {
             throw new Error('Database not initialized');
         }
         console.log('Database: Finding documents in collection:', collection);
         console.log('Database: Query:', query);
-        const result = await this.#dbEngine.find(collection, query);
+        let result = await this.#dbEngine.find(collection, query);
+        
+        // Handle the chainable methods from MongoDB engine
+        if (options.sort && result && typeof result.sort === 'function') {
+            // Convert MongoDB-style sort object to comparison function
+            if (typeof options.sort === 'object') {
+                const [field, order] = Object.entries(options.sort)[0];
+                result = result.sort((a, b) => {
+                    if (order === -1) {
+                        return b[field] - a[field];
+                    }
+                    return a[field] - b[field];
+                });
+            } else {
+                // If it's already a function, use it directly
+                result = result.sort(options.sort);
+            }
+            
+            // Apply limit if needed
+            if (options.limit && result && typeof result.limit === 'function') {
+                result = result.limit(options.limit);
+            }
+            
+            // Resolve the final result if it's a promise
+            if (result && typeof result.then === 'function') {
+                result = await result;
+            }
+        } else if (options.limit && result && typeof result.limit === 'function') {
+            result = result.limit(options.limit);
+            
+            // Resolve the final result if it's a promise
+            if (result && typeof result.then === 'function') {
+                result = await result;
+            }
+        } else if (result && typeof result.then === 'function') {
+            result = await result;
+        }
+        
         console.log('Database: Find result:', result);
         return result;
     }
