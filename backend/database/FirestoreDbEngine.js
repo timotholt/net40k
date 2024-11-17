@@ -444,24 +444,28 @@ export class FirestoreDbEngine extends BaseDbEngine {
                     return { modifiedCount: 0 };
                 }
                 
-                // Merge new data with existing data
-                await updateDoc(docRef, this._convertToFirestoreData(data));
+                // If data has _id, treat it as a document replacement
+                if (data._id) {
+                    const { _id, ...updateData } = data;
+                    await setDoc(docRef, this._convertToFirestoreData(updateData));
+                } else {
+                    // Otherwise, merge the update
+                    await updateDoc(docRef, this._convertToFirestoreData(data));
+                }
+                
                 console.log('Document updated successfully');
                 return { modifiedCount: 1 };
             }
 
-            // For other queries, find matching documents and update them
-            const results = await this.find(collection, queryObj);
-            const collectionName = this._getCollectionName(collection);
-            let modifiedCount = 0;
-
-            for (const result of results) {
-                const docRef = doc(this.db, collectionName, result._id.toString());
-                await updateDoc(docRef, this._convertToFirestoreData(data));
-                modifiedCount++;
+            // For non-_id queries, find and update first matching document
+            const result = await this.findOne(collection, queryObj);
+            if (!result) {
+                console.log('No document found matching query');
+                return { modifiedCount: 0 };
             }
 
-            return { modifiedCount };
+            // Update the found document
+            return this.update(collection, { _id: result._id }, data);
         } catch (error) {
             console.error('Error in update:', error);
             throw error;

@@ -43,7 +43,8 @@ async function cleanupCollections() {
         'test_performance',
         'test_errors',
         'test_parents',
-        'test_children'
+        'test_children',
+        'test_integrity'
     ];
 
     for (const collection of collections) {
@@ -344,39 +345,83 @@ async function testErrorRecovery() {
 
 // Data integrity testing
 async function testDataIntegrity() {
-    // Test with a single game state document
-    const gameState = {
-        _id: 'test-game-1',
-        name: 'Test Game',
-        player: {
-            id: 'player1',
-            units: [{
-                id: 'unit1',
-                type: 'infantry',
-                position: [0, 0]
-            }],
-            resources: {
-                gold: 100
-            }
-        }
+    // Test 1: Partial Updates
+    const doc1 = {
+        _id: 'integrity-test-1',
+        field1: 'value1',
+        field2: 'value2',
+        nested: {
+            a: 1,
+            b: 2
+        },
+        array: [1, 2, 3]
     };
-
-    // Test create and retrieve
-    await db.create('gamestate', gameState);
-    const saved = await db.findOne('gamestate', { _id: 'test-game-1' });
-    assert(saved.player.units[0].type === 'infantry', 'Should preserve nested unit data');
-    assert(saved.player.resources.gold === 100, 'Should preserve nested resource data');
     
-    // Test partial nested update
-    const updateDoc = {
-        'player.resources.gold': 150
+    await db.create('test_integrity', doc1);
+    
+    // Test 1.1: Update single field
+    await db.update('test_integrity', { _id: 'integrity-test-1' }, { field1: 'updated1' });
+    let updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    assert(updated.field1 === 'updated1', 'Single field should be updated');
+    assert(updated.field2 === 'value2', 'Untouched field should remain unchanged');
+    assert(updated.nested.a === 1, 'Nested objects should be preserved');
+    assert(updated.array.length === 3, 'Arrays should be preserved');
+    
+    // Test 1.2: Update nested field
+    await db.update('test_integrity', { _id: 'integrity-test-1' }, { 'nested.a': 10 });
+    updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    assert(updated.nested.a === 10, 'Nested field should be updated');
+    assert(updated.nested.b === 2, 'Other nested fields should be preserved');
+    
+    // Test 1.3: Update array
+    await db.update('test_integrity', { _id: 'integrity-test-1' }, { array: [4, 5, 6] });
+    updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    assert(updated.array.length === 3, 'Array length should match');
+    assert(updated.array[0] === 4, 'Array should be updated');
+    assert(updated.field1 === 'updated1', 'Previous updates should be preserved');
+    
+    // Test 2: Document Replacement
+    const doc2 = {
+        _id: 'integrity-test-2',
+        original: true,
+        count: 1
     };
-    await db.update('gamestate', { _id: 'test-game-1' }, updateDoc);
     
-    // Verify update preserved structure
-    const updated = await db.findOne('gamestate', { _id: 'test-game-1' });
-    assert(updated.player.resources.gold === 150, 'Should update nested resource');
-    assert(updated.player.units[0].type === 'infantry', 'Should preserve untouched data');
+    await db.create('test_integrity', doc2);
+    
+    // Test 2.1: Replace with new fields
+    const replacement = {
+        _id: 'integrity-test-2',
+        new: true,
+        data: { x: 1 }
+    };
+    
+    await db.update('test_integrity', { _id: 'integrity-test-2' }, replacement);
+    updated = await db.findOne('test_integrity', { _id: 'integrity-test-2' });
+    assert(updated.new === true, 'New fields should be added');
+    assert(updated.data.x === 1, 'New nested objects should be added');
+    assert(updated.original === undefined, 'Old fields should be removed');
+    
+    // Test 3: Multiple Updates
+    const doc3 = {
+        _id: 'integrity-test-3',
+        counter: 0,
+        history: []
+    };
+    
+    await db.create('test_integrity', doc3);
+    
+    // Test 3.1: Sequential updates
+    for (let i = 1; i <= 5; i++) {
+        await db.update('test_integrity', { _id: 'integrity-test-3' }, {
+            counter: i,
+            history: Array(i).fill(true)
+        });
+        
+        updated = await db.findOne('test_integrity', { _id: 'integrity-test-3' });
+        assert(updated.counter === i, `Counter should be ${i}`);
+        assert(updated.history.length === i, `History length should be ${i}`);
+    }
 }
 
 // Race condition test (separated from main test suite)

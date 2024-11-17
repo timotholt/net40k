@@ -203,10 +203,6 @@ export class CacheDbEngine extends BaseDbEngine {
     }
   }
 
-//   async isHealthy() {
-//       return true;
-//   }
-
   async find(collection, query) {
     const stats = this._getCollectionStats(collection);
     const cacheKey = this._getCacheKey(collection, query);
@@ -219,10 +215,12 @@ export class CacheDbEngine extends BaseDbEngine {
       stats.bytesServedFromCache += resultSize;
       stats.totalReadBytes += resultSize;
       stats.recordRead(resultSize);
+      console.log('Cache: HIT -', collection, 'Size:', resultSize, 'bytes');
       return cachedResult;
     }
 
     stats.misses++;
+    console.log('Cache: MISS -', collection);
     const result = await this.baseEngine.find(collection, query);
     const resultSize = this._getObjectSize(result);
     stats.bytesServedFromDb += resultSize;
@@ -233,6 +231,9 @@ export class CacheDbEngine extends BaseDbEngine {
     if (resultSize <= this.maxBytes) {
       this.cache.set(cacheKey, result);
       this.currentSize += resultSize;
+      console.log('Cache: Stored result for', collection, 'Size:', resultSize, 'bytes');
+    } else {
+      console.log('Cache: Result too large to cache:', resultSize, 'bytes');
     }
 
     return result;
@@ -250,10 +251,12 @@ export class CacheDbEngine extends BaseDbEngine {
       stats.bytesServedFromCache += resultSize;
       stats.totalReadBytes += resultSize;
       stats.recordRead(resultSize);
+      console.log('Cache: HIT (findOne) -', collection, 'Size:', resultSize, 'bytes');
       return cachedResult;
     }
 
     stats.misses++;
+    console.log('Cache: MISS (findOne) -', collection);
     const result = await this.baseEngine.findOne(collection, query);
     const resultSize = this._getObjectSize(result || {});
     stats.bytesServedFromDb += resultSize;
@@ -264,6 +267,9 @@ export class CacheDbEngine extends BaseDbEngine {
     if (resultSize <= this.maxBytes) {
       this.cache.set(cacheKey, result);
       this.currentSize += resultSize;
+      console.log('Cache: Stored findOne result for', collection, 'Size:', resultSize, 'bytes');
+    } else {
+      console.log('Cache: FindOne result too large to cache:', resultSize, 'bytes');
     }
 
     return result;
@@ -272,8 +278,9 @@ export class CacheDbEngine extends BaseDbEngine {
   async create(collection, data) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
+    console.log('Cache: Create operation -', collection);
     const result = await this.baseEngine.create(collection, data);
-    const resultSize = this._getObjectSize(result);
+    const resultSize = this._getObjectSize(data);
     stats.totalWriteBytes += resultSize;
     stats.recordWrite(resultSize);
     this._invalidateCollection(collection);
@@ -283,48 +290,76 @@ export class CacheDbEngine extends BaseDbEngine {
   async update(collection, query, data) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
+    console.log('Cache: Update operation -', collection);
+    
+    // Invalidate cache before update to ensure fresh reads
+    await this._invalidateCollection(collection);
+    
     const result = await this.baseEngine.update(collection, query, data);
     const resultSize = this._getObjectSize(data);
     stats.totalWriteBytes += resultSize;
     stats.recordWrite(resultSize);
-    this._invalidateCollection(collection);
+    
     return result;
   }
 
   async delete(collection, query) {
     const stats = this._getCollectionStats(collection);
     stats.totalWrites++;
+    console.log('Cache: Delete operation -', collection);
+    
+    // Invalidate cache before delete to ensure consistency
+    await this._invalidateCollection(collection);
+    
     const result = await this.baseEngine.delete(collection, query);
-    this._invalidateCollection(collection);
+    const resultSize = this._getObjectSize(query);
+    stats.totalWriteBytes += resultSize;
+    stats.recordWrite(resultSize);
+    
     return result;
   }
 
   async deleteCollection(collection) {
-    // First delete from the base engine
-    await this.baseEngine.deleteCollection(collection);
-    
-    // Then invalidate the cache for this collection
-    this._invalidateCollection(collection);
-    
-    // Clear collection stats
-    this.collectionStats.delete(collection);
-    
-    return true;
+    console.log('Cache: Delete collection -', collection);
+    await this._invalidateCollection(collection);
+    return await this.baseEngine.deleteCollection(collection);
+  }
+
+  async disconnect() {
+    console.log('Cache: Disconnecting...');
+    // Clear all cache data
+    this.cache.clear();
+    this.collectionStats.clear();
+    this.currentSize = 0;
+
+    // Disconnect underlying engine
+    if (this.baseEngine && typeof this.baseEngine.disconnect === 'function') {
+      await this.baseEngine.disconnect();
+    }
+    console.log('Cache: Disconnected');
   }
 
   _invalidateCollection(collection) {
+    console.log('Cache: Invalidating collection -', collection);
     const stats = this._getCollectionStats(collection);
-    const collectionPrefix = `${collection.modelName}:`;
+    stats.invalidations++;
     
+    // Calculate total size of invalidated entries
+    let totalInvalidatedSize = 0;
+    
+    // Remove all cache entries for this collection
     for (const [key, value] of this.cache.entries()) {
-      if (key.startsWith(collectionPrefix)) {
-        stats.invalidations++;
-        const size = this._getObjectSize(value);
-        stats.bytesInvalidated += size;
-        this.currentSize -= size;
+      if (key.startsWith(`${collection}:`)) {
+        totalInvalidatedSize += this._getObjectSize(value);
         this.cache.delete(key);
       }
     }
+    
+    // Update stats
+    stats.bytesInvalidated += totalInvalidatedSize;
+    this.currentSize -= totalInvalidatedSize;
+    
+    console.log('Cache: Invalidated', collection, '- Freed:', totalInvalidatedSize, 'bytes');
   }
 
   getCacheStats() {

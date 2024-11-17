@@ -8,59 +8,76 @@ export class MongoDbEngine extends BaseDbEngine {
         super();
         this.client = null;
         this.db = null;
+        this.connectionPromise = null;
     }
 
     async connect() {
-        try {
-        console.log('Attempting to connect to MongoDB...');
-        this.client = new MongoClient(process.env.MONGODB_URI);
-        await this.client.connect();
-        this.db = this.client.db();
-
-        // Test connection
-        await this.db.command({ ping: 1 });
-        console.log('Connected to MongoDB');
-        
-        return this.client;
-        } catch (error) {
-        console.error('MongoDB connection error:', error.message);
-        throw error;
+        if (this.connectionPromise) {
+            return this.connectionPromise;
         }
+
+        this.connectionPromise = (async () => {
+            try {
+                console.log('Attempting to connect to MongoDB...');
+                this.client = new MongoClient(process.env.MONGODB_URI);
+                await this.client.connect();
+                this.db = this.client.db();
+
+                // Test connection
+                await this.db.command({ ping: 1 });
+                console.log('Connected to MongoDB');
+                
+                return this.client;
+            } catch (error) {
+                console.error('MongoDB connection error:', error.message);
+                this.connectionPromise = null;
+                throw error;
+            }
+        })();
+
+        return this.connectionPromise;
     }
 
-    async isHealthy() {
-        try {
-        if (!this.client || !this.db) return false;
-        await this.db.command({ ping: 1 });
-        return true;
-        } catch (error) {
-        console.error('MongoDB health check failed:', error);
-        return false;
+    async _ensureConnected() {
+        if (!this.client || !this.db) {
+            await this.connect();
+        }
+        return this.db;
+    }
+
+    async disconnect() {
+        if (this.client) {
+            console.log('Disconnecting from MongoDB...');
+            await this.client.close();
+            this.client = null;
+            this.db = null;
+            this.connectionPromise = null;
+            console.log('Disconnected from MongoDB');
         }
     }
 
     async find(collection, query) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        const result = await this.db.collection(collection.toLowerCase()).find(query).toArray();
-
+        const db = await this._ensureConnected();
+        const result = await db.collection(collection.toLowerCase()).find(query).toArray();
         return {
             sort: (sortCriteria) => {
                 if (typeof sortCriteria === 'function') {
                     result.sort(sortCriteria);
-                } else {
-                    const [field, order] = Object.entries(sortCriteria)[0];
-                    result.sort((a, b) => order * (a[field] > b[field] ? 1 : -1));
+                    return {
+                        limit: (n) => result.slice(0, n)
+                    };
                 }
-                return {
-                    limit: (n) => result.slice(0, n)
-                };
+                return result.sort((a, b) => {
+                    const [field, order] = Object.entries(sortCriteria)[0];
+                    if (order === -1) {
+                        return b[field] - a[field];
+                    }
+                    return a[field] - b[field];
+                });
             },
             limit: (n) => result.slice(0, n),
             then: (resolve) => resolve(result)
@@ -68,165 +85,129 @@ export class MongoDbEngine extends BaseDbEngine {
     }
 
     async findOne(collection, query) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        return await this.db.collection(collection.toLowerCase()).findOne(query);
-    }
-
-    async findByUuid(collection, uuid) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
-        if (typeof collection !== 'string') {
-            throw new Error('Invalid collection: must be a string');
-        }
-
-        return await this.db.collection(collection.toLowerCase()).findOne({ uuid });
+        const db = await this._ensureConnected();
+        return await db.collection(collection.toLowerCase()).findOne(query);
     }
 
     async create(collection, data) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
-        }
-
-        // Normalize dates 
-        const normalizedData = this._normalizeDates(data);
-
-        // Ensure UUID is generated if not provided
-        if (!normalizedData.uuid) {
-            normalizedData.uuid = UuidService.generate();
         }
 
         // Use provided _id or generate one
-        if (!normalizedData._id) {
-            normalizedData._id = UuidService.generate();
+        if (!data._id) {
+            data._id = UuidService.generate();
         }
 
-        const result = await this.db.collection(collection.toLowerCase()).insertOne(normalizedData);
-        
-        return normalizedData;
+        // Ensure UUID is generated if not provided
+        if (!data.uuid) {
+            data.uuid = UuidService.generate();
+        }
+
+        const db = await this._ensureConnected();
+        const result = await db.collection(collection.toLowerCase()).insertOne(data);
+        return data;
     }
 
     async update(collection, query, data) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        // Normalize dates
-        const normalizedData = this._normalizeDates(data);
-
-        const result = await this.db.collection(collection.toLowerCase()).updateMany(query, { $set: normalizedData });
+        const db = await this._ensureConnected();
+        
+        // If data has _id, it's a document replacement
+        if (data._id) {
+            // Remove _id from update data to avoid MongoDB error
+            const { _id, ...updateData } = data;
+            const result = await db.collection(collection.toLowerCase()).replaceOne(
+                query,
+                { _id, ...updateData }
+            );
+            return { modifiedCount: result.modifiedCount };
+        }
+        
+        // Otherwise, it's a partial update using $set
+        const result = await db.collection(collection.toLowerCase()).updateOne(
+            query,
+            { $set: data }
+        );
+        
         return { modifiedCount: result.modifiedCount };
     }
 
     async delete(collection, query) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        const result = await this.db.collection(collection.toLowerCase()).deleteOne(query);
+        const db = await this._ensureConnected();
+        const result = await db.collection(collection.toLowerCase()).deleteMany(query);
         return { deletedCount: result.deletedCount };
     }
 
-    async clear(collection) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
+    async deleteCollection(collection) {
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        return await this.db.collection(collection.toLowerCase()).deleteMany({});
+        const db = await this._ensureConnected();
+        const result = await db.collection(collection.toLowerCase()).drop().catch(err => {
+            if (err.code === 26) { // Collection doesn't exist
+                return true;
+            }
+            throw err;
+        });
+        return result;
+    }
+
+    async clear(collection) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const db = await this._ensureConnected();
+        return await db.collection(collection.toLowerCase()).deleteMany({});
     }
 
     async count(collection, query = {}) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        return await this.db.collection(collection.toLowerCase()).countDocuments(query);
+        const db = await this._ensureConnected();
+        return await db.collection(collection.toLowerCase()).countDocuments(query);
     }
 
     async aggregate(collection, pipeline) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
         if (typeof collection !== 'string') {
             throw new Error('Invalid collection: must be a string');
         }
 
-        return await this.db.collection(collection.toLowerCase()).aggregate(pipeline).toArray();
+        const db = await this._ensureConnected();
+        return await db.collection(collection.toLowerCase()).aggregate(pipeline).toArray();
+    }
+
+    async findByUuid(collection, uuid) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const db = await this._ensureConnected();
+        return await db.collection(collection.toLowerCase()).findOne({ uuid });
     }
 
     async withTransaction(callback) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
+        const db = await this._ensureConnected();
         const session = this.client.startSession();
         try {
             await session.withTransaction(callback);
         } finally {
             await session.endSession();
-        }
-    }
-
-    async disconnect() {
-        try {
-            console.log('Disconnecting from MongoDB...');
-            if (this.client) {
-                await this.client.close();
-                this.client = null;
-                this.db = null;
-            }
-        } catch (error) {
-            console.error('Error disconnecting from MongoDB:', error);
-        }
-    }
-
-    async deleteCollection(collection) {
-        if (!await this.isHealthy()) {
-            throw new Error('Database connection is not healthy');
-        }
-
-        if (typeof collection !== 'string') {
-            throw new Error('Invalid collection: must be a string');
-        }
-
-        try {
-            await this.db.collection(collection.toLowerCase()).drop();
-            return true;
-        } catch (error) {
-            // Collection might not exist, which is fine
-            if (error.code === 26) {
-                return true;
-            }
-            throw error;
         }
     }
 
