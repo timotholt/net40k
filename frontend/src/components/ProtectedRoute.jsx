@@ -1,12 +1,12 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '../store/authSlice';
 
-export default function ProtectedRoute() {
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <Outlet />;
+// Protected Route component that checks Redux auth state
+function ProtectedRoute({ children }) {
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  
+  return isAuthenticated ? children : <Navigate to="/" />;
 }
+
+export default ProtectedRoute;

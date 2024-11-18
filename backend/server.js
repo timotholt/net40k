@@ -66,8 +66,9 @@ async function startServer() {
     await chatCommandService.initialize();
     console.log('✓ ChatCommandService initialized');
 
-    // Add this near the top of server.js, after creating the app
-    app.set('trust proxy', true);
+    // Configure trust proxy more securely
+    // Only trust reverse proxies on your infrastructure
+    app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 0);
 
     // View engine setup
     app.set('views', path.join(__dirname, 'views'));
@@ -77,11 +78,16 @@ async function startServer() {
     app.use(express.json({ limit: '10kb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // Security middleware
-    app.use(function (req, res, next) {
+    // CORS middleware configuration
+    app.use((req, res, next) => {
         res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
+        res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        
+        // Handle OPTIONS method
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
         next();
     });
 
@@ -89,7 +95,10 @@ async function startServer() {
     const userLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 100, // limit each IP to 100 requests per windowMs
-        message: 'Too many requests from this IP, please try again after 15 minutes'
+        message: 'Too many requests from this IP, please try again after 15 minutes',
+        standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+        legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+        trustProxy: false // Explicitly disable trust proxy for rate limiting
     });
 
     // Custom middleware

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { registerUser, selectAuthError, selectAuthStatus } from '../../store/authSlice';
 import InputField from '../../components/FormFields/InputField';
 import PasswordField from '../../components/FormFields/PasswordField';
 import styles from './Register.module.css';
@@ -36,7 +37,11 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const status = useSelector(selectAuthStatus);
+  const authError = useSelector(selectAuthError);
+
+  const isLoading = status === 'loading';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,27 +55,27 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
+    // Validate all fields
+    const usernameError = validateUsername(formData.username);
+    const nicknameError = validateNickname(formData.nickname);
+    const passwordError = validatePassword(formData.password);
+
+    if (usernameError || nicknameError || passwordError) {
+      setError(usernameError || nicknameError || passwordError);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-
-      const data = await response.json();
-      login(data);
+      await dispatch(registerUser(formData)).unwrap();
       navigate('/lobby');
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error('Registration failed:', err);
+      setError(err);
     }
   };
 
@@ -109,6 +114,7 @@ export default function Register() {
           leftIcon={userIcon}
           required
           validate={validateUsername}
+          disabled={isLoading}
         />
 
         <InputField
@@ -119,6 +125,7 @@ export default function Register() {
           leftIcon={nicknameIcon}
           required
           validate={validateNickname}
+          disabled={isLoading}
         />
 
         <PasswordField
@@ -128,6 +135,7 @@ export default function Register() {
           onChange={handleChange}
           required
           validate={validatePassword}
+          disabled={isLoading}
         />
 
         <PasswordField
@@ -137,12 +145,21 @@ export default function Register() {
           onChange={handleChange}
           required
           validate={validatePassword}
+          disabled={isLoading}
         />
 
-        {error && <div className={styles.error}>{error}</div>}
+        {(error || authError) && (
+          <div className={styles.error}>
+            {error || authError}
+          </div>
+        )}
 
-        <button type="submit" className={styles.registerButton}>
-          Register
+        <button 
+          type="submit" 
+          className={styles.registerButton}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Registering...' : 'Register'}
         </button>
 
         <div className={styles.links}>

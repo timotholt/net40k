@@ -14,36 +14,40 @@ class UserService {
 
     // Authentication methods
     async register(userData) {
-        const { username, email, password } = userData;
+        const { username, nickname, password } = userData;
 
-        email = 'TESTING TESTING TESTING';
+        console.log('🚀 UserService: Starting registration process...');
+        console.log('📝 Registration details:');
+        console.log('   - Username:', username);
+        console.log('   - Nickname:', nickname || username);
+        console.log('   - Password length:', password?.length || 'missing');
 
-        console.log('UserService: Registering new user...');
-        console.log('Username:', username);
-        console.log('Email:', email);
-        console.log('Password:', password);
-        
         // Validate input
-        if (!username || !email || !password) {
+        if (!username || !password) {
+            console.log('❌ Registration failed: Missing required fields');
             throw new ValidationError('Missing required fields');
         }
         
         // Check for existing user
-        const existingUser = await UserDB.findOne({ $or: [{ username }, { email }] });
+        console.log('🔍 Checking for existing user...');
+        const existingUser = await UserDB.findOne({ username });
         if (existingUser) {
-            throw new ValidationError('Username or email already exists');
+            console.log('❌ Registration failed: Username already exists');
+            throw new ValidationError('Username already exists');
         }
 
         // Hash password
+        console.log('🔒 Hashing password...');
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
+        console.log('👤 Creating new user...');
         const userUuid = UuidService.generate();
         const user = await UserDB.create({
             userUuid,
             username,
-            email,
+            nickname: nickname || username,
             password: hashedPassword,
 
             // TEMPORARY MODIFICATION - START

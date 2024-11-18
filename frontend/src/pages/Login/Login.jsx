@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../../store/authSlice';
 import { InputField, PasswordField } from '../../components/FormFields';
 import { validation } from '../../utils/validation';
 import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -66,7 +67,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       console.log('Attempting login...');
-      await login(formData.username, formData.password);
+      await dispatch(loginUser(formData.username, formData.password));
       console.log('Login successful');
       navigate('/lobby');
     } catch (error) {

@@ -1,6 +1,12 @@
 // API configuration
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// Log the environment variable and final API URL
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('Final API URL:', API_URL);
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://sba319-d6cn.onrender.com',
+  BASE_URL: API_URL,
   ENDPOINTS: {
     // Authentication
     LOGIN: '/user/login',
@@ -28,14 +34,15 @@ export const API_CONFIG = {
   }
 };
 
-export const buildApiUrl = (endpoint, params = {}) => {
+// Helper function to build API URLs with parameters
+export function buildApiUrl(endpoint, params = {}) {
   let url = `${API_CONFIG.BASE_URL}${endpoint}`;
   
   // Replace URL parameters
-  Object.entries(params).forEach(([key, value]) => {
-    url = url.replace(`:${key}`, value);
+  Object.keys(params).forEach(key => {
+    url = url.replace(`:${key}`, params[key]);
   });
-
+  
   console.log('Building API URL:', url);
   return url;
-};
+}

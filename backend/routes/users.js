@@ -24,7 +24,7 @@ router.post('/user/register', createRateLimit('register'), async (req, res) => {
         });
         res.json({ success: true, user });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -34,7 +34,7 @@ router.post('/user/login', createRateLimit('login'), async (req, res) => {
         const result = await userService.login(username, password);
         res.json({ success: true, ...result });
     } catch (error) {
-        res.status(401).json({ success: false, error: error.message });
+        res.status(401).json({ success: false, message: error.message });
     }
 });
 
@@ -44,7 +44,7 @@ router.post('/user/logout', authenticateUser, async (req, res) => {
         await userService.logout(token);
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -54,7 +54,7 @@ router.get('/user/profile', authenticateUser, async (req, res) => {
         const user = await userService.getProfile(req.user.userUuid);
         res.json({ success: true, user });
     } catch (error) {
-        res.status(404).json({ success: false, error: error.message });
+        res.status(404).json({ success: false, message: error.message });
     }
 });
 
@@ -63,7 +63,7 @@ router.put('/user/profile', authenticateUser, async (req, res) => {
         const user = await userService.updateProfile(req.user.userUuid, req.body);
         res.json({ success: true, user });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -73,7 +73,7 @@ router.post('/user/password/reset-request', createRateLimit('passwordReset'), as
         await userService.requestPasswordReset(req.body.email);
         res.json({ success: true, message: 'If an account exists, a reset email has been sent' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -83,7 +83,7 @@ router.post('/user/password/reset', async (req, res) => {
         await userService.resetPassword(token, newPassword);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -93,7 +93,7 @@ router.post('/user/password/change', authenticateUser, async (req, res) => {
         await userService.changePassword(req.user.userUuid, oldPassword, newPassword);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -109,7 +109,7 @@ router.post('/user/verify-email', async (req, res) => {
         await userService.verifyEmail(req.body.token);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -118,7 +118,7 @@ router.post('/user/verify-email/resend', authenticateUser, async (req, res) => {
         await userService.sendVerificationEmail(req.user);
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 */
@@ -130,7 +130,7 @@ router.post('/user/mute', authenticateUser, async (req, res) => {
         await userService.muteUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -139,7 +139,7 @@ router.post('/user/unmute', authenticateUser, async (req, res) => {
         await userService.unmuteUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -148,7 +148,7 @@ router.post('/user/block', authenticateUser, async (req, res) => {
         await userService.blockUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -157,7 +157,7 @@ router.post('/user/unblock', authenticateUser, async (req, res) => {
         await userService.unblockUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -166,7 +166,7 @@ router.get('/user/muted', authenticateUser, async (req, res) => {
         const mutedUsers = await userService.getMutedUsers(req.user.userUuid);
         res.json({ success: true, mutedUsers });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -175,7 +175,7 @@ router.get('/user/blocked', authenticateUser, async (req, res) => {
         const blockedUsers = await userService.getBlockedUsers(req.user.userUuid);
         res.json({ success: true, blockedUsers });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -190,7 +190,7 @@ router.get('/user/list', authenticateAdmin, async (req, res) => {
         });
         res.json({ success: true, users });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -200,7 +200,7 @@ router.post('/user/ban', authenticateAdmin, async (req, res) => {
         await userService.banUser(userUuid, reason, duration);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 
@@ -209,7 +209,7 @@ router.post('/user/unban', authenticateAdmin, async (req, res) => {
         await userService.unbanUser(req.body.userUuid);
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 

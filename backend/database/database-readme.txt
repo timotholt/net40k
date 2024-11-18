@@ -1,4 +1,4 @@
-I got the idea for this modular database engine when I was
+I got the idea for this database adapter when I was
 in class wanting to build this game server, but not knowing
 enough about MongoDb to make the server work.
 
@@ -9,10 +9,10 @@ fact a few hours into building the server (and hard coding
 arrays into the server code), it was apparent it was a
 a future nightmare.
 
-Thus the idea of a modular database engine was born.
+Thus the idea of a database adapter was born.
 
 This server uses a modular system for storing data, by having
-seperate database "engines" (really adapters) that are selected
+seperate database "adapters" that are selected
 by the .env file at server start.
 
 InMemoryDbEngine.js is an in-memory database implementation that
