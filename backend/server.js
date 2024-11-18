@@ -1,9 +1,8 @@
+// This is a train wreck
 import express from 'express';
-import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
 import { WebSocketServer } from 'ws';
 import session from 'express-session';
-import MongoStore from 'connect-mongo';
 import { router as userRoutes } from './routes/users.js';
 import { router as lobbyRoutes } from './routes/lobby.js';
 import { router as adminRoutes } from './routes/admin.js';
@@ -14,6 +13,7 @@ import { requestLogger } from './middleware/requestLogger.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandling.js';
 import { SystemMessages } from './models/SystemMessages.js';
 import UserWebSocketHandler from './services/UserWebSocketHandler.js';
+import { DatabaseSessionStore } from './services/SessionStore.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -44,7 +44,6 @@ async function startServer() {
     app.use(express.urlencoded({ extended: true }));
 
     // Security middleware
-    app.use(mongoSanitize());
     app.use(function (req, res, next) {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
@@ -54,11 +53,10 @@ async function startServer() {
 
     // Session middleware
     app.use(session({
-        secret: process.env.SESSION_SECRET || 'your-secret-key',
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({ 
-            mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/net40k',
+        store: new DatabaseSessionStore({
             ttl: 24 * 60 * 60 // 24 hours
         }),
         cookie: {
@@ -80,21 +78,21 @@ async function startServer() {
     // Static files
     app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-    // Catch-all route to serve React's index.html for client-side routing
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-    });
-
     // Routes with rate limiting
     app.use('/user', userLimiter, userRoutes);
-    app.use('/lobby', lobbyRoutes);
-    app.use('/admin', adminRoutes);
-    app.use('/chat', chatRoutes);
-    app.use('/cache', cacheRoutes);
+    //app.use('/lobby', lobbyRoutes);
+    //app.use('/admin', adminRoutes);
+    //app.use('/chat', chatRoutes);
+    //app.use('/cache', cacheRoutes);
 
     // Root route
     app.get('/about', (req, res) => {
         res.json({ message: 'Hello World!' });
+    });
+
+    // Catch-all route to serve React's index.html for client-side routing
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
     });
 
     // Error handling

@@ -18,3 +18,10 @@ export class AuthError extends Error {
         this.name = 'AuthError';
     }
 }
+
+export class NotFoundError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'NotFoundError';
+    }
+}

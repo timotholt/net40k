@@ -2,12 +2,12 @@ import express from 'express';
 import UserService from '../services/UserService.js';
 import { authenticateUser, authenticateAdmin } from '../middleware/auth.js';
 import { ValidationError } from '../utils/errors.js';
-import { rateLimit } from '../middleware/rateLimit.js';
+import { createRateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
 // Authentication routes
-router.post('/user/register', rateLimit('register'), async (req, res) => {
+router.post('/user/register', createRateLimit('register'), async (req, res) => {
     try {
         const user = await UserService.register(req.body);
         res.json({ success: true, user });
@@ -16,7 +16,7 @@ router.post('/user/register', rateLimit('register'), async (req, res) => {
     }
 });
 
-router.post('/user/login', rateLimit('login'), async (req, res) => {
+router.post('/user/login', createRateLimit('login'), async (req, res) => {
     try {
         const { username, password, deviceInfo } = req.body;
         const result = await UserService.login(username, password, deviceInfo);
@@ -142,7 +142,7 @@ router.post('/user/password/change', authenticateUser, async (req, res) => {
     }
 });
 
-router.post('/user/password/reset/request', rateLimit('passwordReset'), async (req, res) => {
+router.post('/user/password/reset/request', createRateLimit('passwordReset'), async (req, res) => {
     try {
         const { email } = req.body;
         await UserService.requestPasswordReset(email);
@@ -323,4 +323,4 @@ router.post('/user/force-logout', authenticateAdmin, async (req, res) => {
     }
 });
 
-export default router;
+export { router };

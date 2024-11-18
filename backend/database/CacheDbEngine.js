@@ -176,6 +176,35 @@ export class CacheDbEngine extends BaseDbEngine {
     this.currentSize = 0;
     this.cache = new Map();
     this.collectionStats = new Map();
+    console.log('CacheDbEngine: Initialized with base engine:', {
+      type: baseEngine.constructor.name,
+      maxSizeMb
+    });
+  }
+
+  get initialized() {
+    return this.baseEngine.initialized;
+  }
+
+  async connect() {
+    console.log('CacheDbEngine: Connecting to base engine...');
+    const result = await this.baseEngine.connect();
+    console.log('CacheDbEngine: Base engine connection result:', result);
+    return result;
+  }
+
+  async disconnect() {
+    console.log('CacheDbEngine: Disconnecting...');
+    // Clear cache
+    this.cache.clear();
+    this.collectionStats.clear();
+    this.currentSize = 0;
+    
+    // Disconnect base engine
+    if (this.baseEngine && typeof this.baseEngine.disconnect === 'function') {
+      await this.baseEngine.disconnect();
+    }
+    console.log('CacheDbEngine: Disconnected');
   }
 
   _getCollectionStats(collection) {
@@ -334,18 +363,6 @@ export class CacheDbEngine extends BaseDbEngine {
   async deleteCollection(collection) {
     await this._invalidateCollection(collection);
     return await this.baseEngine.deleteCollection(collection);
-  }
-
-  async disconnect() {
-    // Clear all cache data
-    this.cache.clear();
-    this.collectionStats.clear();
-    this.currentSize = 0;
-
-    // Disconnect underlying engine
-    if (this.baseEngine && typeof this.baseEngine.disconnect === 'function') {
-      await this.baseEngine.disconnect();
-    }
   }
 
   _invalidateCollection(collection) {

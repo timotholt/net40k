@@ -18,27 +18,51 @@ class Database {
     }
 
     async init() {
-        console.log('Database: Initializing database...');
-        console.log('Database: Current initialization state:', this.#initialized);
+        console.log('Database: Init called, current state:', {
+            initialized: this.#initialized,
+            hasEngine: !!this.#dbEngine
+        });
         
-        if (this.#initialized) {
+        if (this.#initialized && this.#dbEngine && this.#dbEngine.initialized) {
             console.log('Database: Already initialized, reusing existing engine');
             return this.#dbEngine;
         }
 
         try {
             const dbType = process.env.DB_TYPE || 'memory';
-            console.log(`Database: Connecting to database type: ${dbType}`);
+            console.log(`Database: Using database type: ${dbType}`);
             
-            this.#dbEngine = getDbEngine(dbType);
-            console.log('Database: Engine instance created, connecting...');
-            await this.#dbEngine.connect();
+            if (!this.#dbEngine) {
+                console.log('Database: Creating new database engine instance');
+                this.#dbEngine = getDbEngine(dbType);
+            } else {
+                console.log('Database: Reusing existing database engine instance');
+            }
             
-            this.#initialized = true;
-            console.log('Database: Initialization complete, initialized =', this.#initialized);
+            console.log('Database: Connecting to engine...');
+            const connected = await this.#dbEngine.connect();
+            
+            if (!connected || !this.#dbEngine.initialized) {
+                throw new Error('Database engine failed to initialize');
+            }
+            
+            // Sync initialization state with engine
+            this.#initialized = this.#dbEngine.initialized;
+            console.log('Database: Connection complete, state:', {
+                initialized: this.#initialized,
+                hasEngine: !!this.#dbEngine,
+                engineInitialized: this.#dbEngine.initialized
+            });
+            
             return this.#dbEngine;
         } catch (error) {
             console.error('Database: Initialization failed:', error);
+            this.#initialized = false;
+            console.log('Database: Failed state:', {
+                initialized: this.#initialized,
+                hasEngine: !!this.#dbEngine,
+                engineInitialized: this.#dbEngine?.initialized
+            });
             throw error;
         }
     }
@@ -137,28 +161,48 @@ class Database {
     }
 
     async deleteCollection(collection) {
-        if (!this.#initialized) {
+        console.log('Database: DeleteCollection called, current state:', {
+            initialized: this.#initialized,
+            hasEngine: !!this.#dbEngine
+        });
+        
+        if (!this.#initialized || !this.#dbEngine) {
+            console.error('Database: Cannot delete collection - not initialized');
             throw new Error('Database not initialized');
         }
-        console.log('Database: Deleting collection:', collection);
-        const result = await this.#dbEngine.deleteCollection(collection);
-        console.log('Database: Delete collection result:', result);
-        return result;
+        
+        console.log(`Database: Deleting collection: ${collection}`);
+        return await this.#dbEngine.deleteCollection(collection);
     }
 
     async disconnect() {
-        console.log('Database: Disconnecting...');
-        console.log('Database: Current initialization state:', this.#initialized);
+        console.log('Database: Disconnect called, current state:', {
+            initialized: this.#initialized,
+            hasEngine: !!this.#dbEngine
+        });
         
         if (!this.#initialized) {
             console.log('Database: Already disconnected');
             return;
         }
         
-        try {
-            await this.#dbEngine.disconnect();
+        if (!this.#dbEngine) {
+            console.log('Database: No engine instance to disconnect');
             this.#initialized = false;
-            console.log('Database: Disconnection complete, initialized =', this.#initialized);
+            return;
+        }
+        
+        try {
+            console.log('Database: Disconnecting engine...');
+            await this.#dbEngine.disconnect();
+            
+            // Sync initialization state with engine
+            this.#initialized = this.#dbEngine.initialized;
+            console.log('Database: Disconnection complete, state:', {
+                initialized: this.#initialized,
+                hasEngine: !!this.#dbEngine,
+                engineInitialized: this.#dbEngine.initialized
+            });
         } catch (error) {
             console.error('Database: Disconnection failed:', error);
             throw error;

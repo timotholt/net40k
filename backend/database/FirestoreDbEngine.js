@@ -14,7 +14,6 @@ import {
     orderBy,
     limit,
     writeBatch,
-    connectFirestoreEmulator,
     setLogLevel,
     Timestamp
 } from 'firebase/firestore';
@@ -61,8 +60,11 @@ export class FirestoreDbEngine extends BaseDbEngine {
     constructor() {
         super();
         this.initialized = false;
+        this.initializationPromise = null;
+        console.log('FirestoreDbEngine: Constructor called, initialized =', this.initialized);
         try {
             validateDotEnv();
+            //console.log('FirestoreDbEngine: Environment validation successful');
         } catch (error) {
             console.error('Firebase env validation error:', error);
             throw error;
@@ -70,37 +72,68 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     async connect() {
-        console.log('FirestoreDbEngine: Attempting to connect...');
-        try {
-            if (!this.app) {
-                console.log('FirestoreDbEngine: Initializing Firebase app...');
-                this.app = initializeApp(firebaseConfig);
-            }
+        console.log('FirestoreDbEngine: Connect called, current state:', {
+            initialized: this.initialized,
+            hasApp: !!this.app,
+            hasDb: !!this.db,
+            hasInitPromise: !!this.initializationPromise
+        });
+        
+        if (this.initialized && this.db) {
+            console.log('FirestoreDbEngine: Already initialized and connected');
+            return true;
+        }
 
-            if (!this.db) {
-                console.log('FirestoreDbEngine: Initializing new Firestore instance...');
-                this.db = getFirestore(this.app);
-                
-                if (process.env.NODE_ENV === 'development') {
-                    connectFirestoreEmulator(this.db, 'localhost', 8080);
+        if (this.initializationPromise) {
+            console.log('FirestoreDbEngine: Initialization already in progress, waiting...');
+            await this.initializationPromise;
+            return this.initialized;
+        }
+
+        this.initializationPromise = (async () => {
+            try {
+                if (!this.app) {
+                    console.log('FirestoreDbEngine: Creating new Firebase app instance...');
+                    this.app = initializeApp(firebaseConfig);
+                    console.log('FirestoreDbEngine: Firebase app created successfully');
+                } else {
+                    console.log('FirestoreDbEngine: Reusing existing Firebase app instance');
+                }
+
+                if (!this.db) {
+                    console.log('FirestoreDbEngine: Creating new Firestore instance...');
+                    this.db = getFirestore(this.app);
+                    setLogLevel('error');
+                    console.log('FirestoreDbEngine: Firestore instance created successfully');
+                } else {
+                    console.log('FirestoreDbEngine: Reusing existing Firestore instance');
                 }
                 
-                // Suppress BloomFilter warnings
-                setLogLevel('error');
-                
-                console.log('FirestoreDbEngine: Firestore instance created successfully');
-            } else {
-                console.log('FirestoreDbEngine: Reusing existing Firestore instance');
+                this.initialized = true;
+                console.log('FirestoreDbEngine: Initialization complete, final state:', {
+                    initialized: this.initialized,
+                    hasApp: !!this.app,
+                    hasDb: !!this.db
+                });
+                return true;
+            } catch (error) {
+                console.error('FirestoreDbEngine: Initialization failed:', error);
+                this.initialized = false;
+                this.app = null;
+                this.db = null;
+                console.log('FirestoreDbEngine: Failed state:', {
+                    initialized: this.initialized,
+                    hasApp: !!this.app,
+                    hasDb: !!this.db
+                });
+                throw error;
+            } finally {
+                this.initializationPromise = null;
             }
-            
-            this.initialized = true;
-            console.log('FirestoreDbEngine: Connection successful, initialized =', this.initialized);
-            return true;
-        } catch (error) {
-            console.error('FirestoreDbEngine: Connection failed:', error);
-            this.initialized = false;
-            throw error;
-        }
+        })();
+
+        const result = await this.initializationPromise;
+        return result;
     }
 
     _normalizeDates(data) {
@@ -569,27 +602,29 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     async deleteCollection(collection) {
-        console.log('FirestoreDbEngine: Deleting collection:', collection);
-        console.log('FirestoreDbEngine: Current initialization state:', this.initialized);
+        console.log('FirestoreDbEngine: DeleteCollection called, state:', {
+            initialized: this.initialized,
+            hasApp: !!this.app,
+            hasDb: !!this.db
+        });
         
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            console.error('FirestoreDbEngine: Cannot delete collection - not initialized');
             throw new Error('Firestore not initialized');
         }
 
         try {
             const collectionName = this._getCollectionName(collection);
-            const collectionRef = firestoreCollection(this.db, collectionName);
+            console.log(`FirestoreDbEngine: Attempting to delete collection: ${collectionName}`);
             
-            // Get all documents in the collection
+            const collectionRef = firestoreCollection(this.db, collectionName);
             const snapshot = await getDocs(collectionRef);
             
             if (snapshot.empty) {
-                console.log(`Collection ${collectionName} is already empty`);
+                console.log(`FirestoreDbEngine: Collection ${collectionName} is already empty`);
                 return true;
             }
 
-            // Delete documents in batches (Firestore limit is 500 operations per batch)
             const batchSize = 500;
             const docs = snapshot.docs;
             let count = 0;
@@ -604,25 +639,57 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 });
 
                 await batch.commit();
-                console.log(`Deleted batch of ${chunk.length} documents from ${collectionName}`);
+                console.log(`FirestoreDbEngine: Deleted batch of ${chunk.length} documents from ${collectionName}`);
             }
 
-            console.log(`Deleted collection: ${collectionName} (${count} documents)`);
+            console.log(`FirestoreDbEngine: Successfully deleted collection ${collectionName} (${count} documents)`);
             return true;
         } catch (error) {
-            console.error(`Error deleting collection ${collection}:`, error);
+            console.error(`FirestoreDbEngine: Error deleting collection ${collection}:`, error);
             throw error;
         }
     }
 
     async disconnect() {
-        console.log('FirestoreDbEngine: Disconnecting...');
-        if (this.db) {
-            // Firebase doesn't have a direct disconnect method, but we can clean up our state
+        console.log('FirestoreDbEngine: Disconnect called, current state:', {
+            initialized: this.initialized,
+            hasApp: !!this.app,
+            hasDb: !!this.db,
+            hasInitPromise: !!this.initializationPromise
+        });
+
+        try {
+            // Clear database reference
             this.db = null;
-            this.app = null;
+
+            // Delete Firebase app if it exists
+            if (this.app) {
+                console.log('FirestoreDbEngine: Attempting to delete Firebase app...');
+                try {
+                    // Use deleteApp from firebase/app instead of app.delete()
+                    const { deleteApp } = await import('firebase/app');
+                    await deleteApp(this.app);
+                    console.log('FirestoreDbEngine: Firebase app deleted successfully');
+                } catch (error) {
+                    console.log('FirestoreDbEngine: Error deleting Firebase app:', error.message);
+                    // Continue cleanup even if app deletion fails
+                }
+                this.app = null;
+            }
+
+            // Reset initialization state
             this.initialized = false;
-            console.log('FirestoreDbEngine: Disconnected and cleaned up');
+            this.initializationPromise = null;
+
+            console.log('FirestoreDbEngine: Cleanup complete, final state:', {
+                initialized: this.initialized,
+                hasApp: !!this.app,
+                hasDb: !!this.db,
+                hasInitPromise: !!this.initializationPromise
+            });
+        } catch (error) {
+            console.error('FirestoreDbEngine: Error during disconnect:', error);
+            throw error;
         }
     }
 }

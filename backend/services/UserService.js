@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
-import { ValidationError, AuthenticationError, NotFoundError } from '../utils/errors.js';
-import { User } from '../models/User.js';
-import { config } from '../config/config.js';
+import { ValidationError, AuthError, NotFoundError } from '../utils/errors.js';
+import { UserDB } from '../models/User.js';
 import { EmailService } from './EmailService.js';
 import SessionManager from './SessionManager.js';
 import { UuidService } from './UuidService.js';
@@ -17,7 +16,7 @@ class UserService {
         }
         
         // Check for existing user
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        const existingUser = await UserDB.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             throw new ValidationError('Username or email already exists');
         }
@@ -27,7 +26,7 @@ class UserService {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
-        const user = await User.create({
+        const user = await UserDB.create({
             uuid: UuidService.generate(),
             username,
             email,
@@ -44,18 +43,18 @@ class UserService {
     }
 
     static async login(username, password) {
-        const user = await User.findOne({ username });
+        const user = await UserDB.findOne({ username });
         if (!user) {
-            throw new AuthenticationError('Invalid credentials');
+            throw new AuthError('Invalid credentials');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            throw new AuthenticationError('Invalid credentials');
+            throw new AuthError('Invalid credentials');
         }
 
         if (user.banned) {
-            throw new AuthenticationError('Account is banned');
+            throw new AuthError('Account is banned');
         }
 
         // Create session (this will remove any existing sessions)
@@ -75,13 +74,13 @@ class UserService {
     static async validateSession(sessionToken) {
         const session = SessionManager.getSession(sessionToken);
         if (!session) {
-            throw new AuthenticationError('Invalid session');
+            throw new AuthError('Invalid session');
         }
 
-        const user = await User.findOne({ uuid: session.userUuid });
+        const user = await UserDB.findOne({ uuid: session.userUuid });
         if (!user || user.banned) {
             SessionManager.removeSession(sessionToken);
-            throw new AuthenticationError('User not found or banned');
+            throw new AuthError('User not found or banned');
         }
 
         return session;
@@ -89,7 +88,7 @@ class UserService {
 
     // Profile management
     static async getProfile(userUuid) {
-        const user = await User.findOne({ uuid: userUuid });
+        const user = await UserDB.findOne({ uuid: userUuid });
         if (!user) {
             throw new NotFoundError('User not found');
         }
@@ -108,7 +107,7 @@ class UserService {
 
         updateData.updatedAt = new Date();
 
-        const user = await User.findOneAndUpdate(
+        const user = await UserDB.findOneAndUpdate(
             { uuid: userUuid },
             { $set: updateData },
             { new: true }
@@ -123,7 +122,7 @@ class UserService {
 
     // Security features
     static async changePassword(userUuid, oldPassword, newPassword) {
-        const user = await User.findOne({ uuid: userUuid });
+        const user = await UserDB.findOne({ uuid: userUuid });
         if (!user) {
             throw new NotFoundError('User not found');
         }
@@ -136,7 +135,7 @@ class UserService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { 
                 $set: { 
@@ -151,7 +150,7 @@ class UserService {
     }
 
     static async requestPasswordReset(email) {
-        const user = await User.findOne({ email });
+        const user = await UserDB.findOne({ email });
         if (!user) {
             return; // Silent return to prevent email enumeration
         }
@@ -160,7 +159,7 @@ class UserService {
         const resetToken = UuidService.generate();
         
         // Store the reset token with an expiry
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: user.uuid },
             { 
                 $set: { 
@@ -175,7 +174,7 @@ class UserService {
     }
 
     static async resetPassword(token, newPassword) {
-        const user = await User.findOne({
+        const user = await UserDB.findOne({
             resetToken: token,
             resetTokenExpiry: { $gt: new Date() }
         });
@@ -187,7 +186,7 @@ class UserService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: user.uuid },
             { 
                 $set: { 
@@ -205,40 +204,40 @@ class UserService {
 
     // Social features
     static async muteUser(userUuid, targetUserUuid) {
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { $addToSet: { mutedUsers: targetUserUuid } }
         );
     }
 
     static async unmuteUser(userUuid, targetUserUuid) {
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { $pull: { mutedUsers: targetUserUuid } }
         );
     }
 
     static async blockUser(userUuid, targetUserUuid) {
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { $addToSet: { blockedUsers: targetUserUuid } }
         );
     }
 
     static async unblockUser(userUuid, targetUserUuid) {
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { $pull: { blockedUsers: targetUserUuid } }
         );
     }
 
     static async getMutedUsers(userUuid) {
-        const user = await User.findOne({ uuid: userUuid });
+        const user = await UserDB.findOne({ uuid: userUuid });
         return user ? user.mutedUsers : [];
     }
 
     static async getBlockedUsers(userUuid) {
-        const user = await User.findOne({ uuid: userUuid });
+        const user = await UserDB.findOne({ uuid: userUuid });
         return user ? user.blockedUsers : [];
     }
 
@@ -254,7 +253,7 @@ class UserService {
         const query = { ...filter };
         const skip = (page - 1) * limit;
 
-        const users = await User.find(query)
+        const users = await UserDB.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -265,7 +264,7 @@ class UserService {
     static async banUser(userUuid, reason, duration) {
         const banExpiry = duration ? new Date(Date.now() + duration) : null;
         
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { 
                 $set: { 
@@ -282,7 +281,7 @@ class UserService {
     }
 
     static async unbanUser(userUuid) {
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: userUuid },
             { 
                 $set: { 
@@ -309,7 +308,7 @@ class UserService {
         const verificationToken = UuidService.generate();
         
         // Store the verification token
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: user.uuid },
             { 
                 $set: { 
@@ -324,7 +323,7 @@ class UserService {
     }
 
     static async verifyEmail(token) {
-        const user = await User.findOne({
+        const user = await UserDB.findOne({
             verificationToken: token,
             verificationTokenExpiry: { $gt: new Date() }
         });
@@ -333,7 +332,7 @@ class UserService {
             throw new ValidationError('Invalid or expired verification token');
         }
 
-        await User.updateOne(
+        await UserDB.updateOne(
             { uuid: user.uuid },
             { 
                 $set: { 
