@@ -9,7 +9,19 @@ const router = express.Router();
 // Authentication routes
 router.post('/user/register', createRateLimit('register'), async (req, res) => {
     try {
-        const user = await userService.register(req.body);
+        // TEMPORARY MODIFICATION - START
+        // Email verification disabled for initial development
+        // This is a temporary change to simplify the registration flow
+        // Will be re-enabled once email infrastructure is in place
+        // DO NOT REMOVE the email validation below
+        const { username, password } = req.body;
+        // const { username, email, password } = req.body;
+
+        const user = await userService.register({ 
+            username, 
+            // email,  // Temporarily disabled
+            password 
+        });
         res.json({ success: true, user });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
@@ -86,6 +98,12 @@ router.post('/user/password/change', authenticateUser, async (req, res) => {
 });
 
 // Email verification
+// TEMPORARY MODIFICATION - START
+// Email verification endpoints temporarily disabled
+// This is a temporary change to simplify the registration flow
+// Will be re-enabled once email infrastructure is in place
+// DO NOT REMOVE the routes below
+/*
 router.post('/user/verify-email', async (req, res) => {
     try {
         await userService.verifyEmail(req.body.token);
@@ -103,6 +121,8 @@ router.post('/user/verify-email/resend', authenticateUser, async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+*/
+// TEMPORARY MODIFICATION - END
 
 // Social features
 router.post('/user/mute', authenticateUser, async (req, res) => {

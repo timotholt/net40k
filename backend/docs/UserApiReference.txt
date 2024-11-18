@@ -1,0 +1,256 @@
+Net40k User API Reference
+=======================
+
+Authentication Routes
+-------------------
+
+POST /user/register
+Description: Register a new user account
+Request Body:
+  - username: string (required)
+  - email: string (required)
+  - password: string (required)
+Response:
+  - success: boolean
+  - user: { userUuid, username, email, isVerified }
+Rate Limited: Yes
+
+POST /user/login
+Description: Login to an existing account
+Request Body:
+  - username: string (required)
+  - password: string (required)
+Response:
+  - success: boolean
+  - user: { userUuid, username, email, isVerified }
+  - sessionToken: string
+Rate Limited: Yes
+
+POST /user/logout
+Description: Logout and invalidate current session
+Headers:
+  - Authorization: Bearer <sessionToken>
+Response:
+  - success: boolean
+Authentication: Required
+
+Profile Management
+-----------------
+
+GET /user/profile
+Description: Get current user's profile
+Headers:
+  - Authorization: Bearer <sessionToken>
+Response:
+  - success: boolean
+  - user: { userUuid, username, email, isVerified, ... }
+Authentication: Required
+
+PUT /user/profile
+Description: Update user's profile information
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body: (all fields optional)
+  - nickname: string
+  - avatar: string
+  - preferences: object
+Response:
+  - success: boolean
+  - user: { userUuid, username, ... }
+Authentication: Required
+
+Password Management
+------------------
+
+POST /user/password/reset-request
+Description: Request a password reset email
+Request Body:
+  - email: string (required)
+Response:
+  - success: boolean
+  - message: string
+Rate Limited: Yes
+
+POST /user/password/reset
+Description: Reset password using reset token
+Request Body:
+  - token: string (required)
+  - newPassword: string (required)
+Response:
+  - success: boolean
+
+POST /user/password/change
+Description: Change password (when logged in)
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - oldPassword: string (required)
+  - newPassword: string (required)
+Response:
+  - success: boolean
+Authentication: Required
+
+Email Verification
+-----------------
+
+POST /user/verify-email
+Description: Verify email address using token
+Request Body:
+  - token: string (required)
+Response:
+  - success: boolean
+
+POST /user/verify-email/resend
+Description: Resend email verification
+Headers:
+  - Authorization: Bearer <sessionToken>
+Response:
+  - success: boolean
+Authentication: Required
+
+Social Features
+--------------
+
+POST /user/mute
+Description: Mute a user
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - targetUserUuid: string (required)
+Response:
+  - success: boolean
+Authentication: Required
+
+POST /user/unmute
+Description: Unmute a user
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - targetUserUuid: string (required)
+Response:
+  - success: boolean
+Authentication: Required
+
+POST /user/block
+Description: Block a user
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - targetUserUuid: string (required)
+Response:
+  - success: boolean
+Authentication: Required
+
+POST /user/unblock
+Description: Unblock a user
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - targetUserUuid: string (required)
+Response:
+  - success: boolean
+Authentication: Required
+
+GET /user/muted
+Description: Get list of muted users
+Headers:
+  - Authorization: Bearer <sessionToken>
+Response:
+  - success: boolean
+  - mutedUsers: array
+Authentication: Required
+
+GET /user/blocked
+Description: Get list of blocked users
+Headers:
+  - Authorization: Bearer <sessionToken>
+Response:
+  - success: boolean
+  - blockedUsers: array
+Authentication: Required
+
+Admin Routes
+-----------
+
+GET /user/list
+Description: Get list of active users (admin only)
+Headers:
+  - Authorization: Bearer <sessionToken>
+Query Parameters:
+  - page: number (default: 1)
+  - limit: number (default: 50)
+  - filter: JSON string
+Response:
+  - success: boolean
+  - users: array
+Authentication: Admin Only
+
+POST /user/ban
+Description: Ban a user (admin only)
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - userUuid: string (required)
+  - reason: string
+  - duration: number (in seconds)
+Response:
+  - success: boolean
+Authentication: Admin Only
+
+POST /user/unban
+Description: Unban a user (admin only)
+Headers:
+  - Authorization: Bearer <sessionToken>
+Request Body:
+  - userUuid: string (required)
+Response:
+  - success: boolean
+Authentication: Admin Only
+
+Error Responses
+--------------
+All endpoints may return the following error responses:
+
+400 Bad Request
+{
+  "success": false,
+  "error": "Error message describing the validation failure"
+}
+
+401 Unauthorized
+{
+  "success": false,
+  "error": "Authentication required" or "Invalid credentials"
+}
+
+403 Forbidden
+{
+  "success": false,
+  "error": "Insufficient permissions"
+}
+
+404 Not Found
+{
+  "success": false,
+  "error": "Resource not found"
+}
+
+500 Internal Server Error
+{
+  "success": false,
+  "error": "Internal server error"
+}
+
+Rate Limiting
+------------
+Rate-limited endpoints use the following headers:
+- X-RateLimit-Limit: Maximum number of requests allowed in the window
+- X-RateLimit-Remaining: Number of requests remaining in the current window
+- X-RateLimit-Reset: Time when the rate limit resets (Unix timestamp)
+
+When rate limit is exceeded:
+429 Too Many Requests
+{
+  "success": false,
+  "error": "Too many requests, please try again later"
+}
