@@ -101,8 +101,8 @@ async function startServer() {
 
     // Start HTTP server
     const server = app.listen(port, () => {
-        console.log(`🚀 Server is running on port ${port}`);
         console.log('Build Info:', buildInfo);
+        console.log(`🚀 Server is running on port ${port}`);
     });
 
     // Setup WebSocket server
@@ -113,11 +113,11 @@ async function startServer() {
 
 async function main() {
     try {
-        // Comment out this if-else block to disable test functionality
-        if (command === 's' || command === 'start') {
+        // Run tests first
+        const shouldStartServer = await handleTestCommand();
+        // If tests pass or user chose to start server, start it
+        if (shouldStartServer) {
             await startServer();
-        } else {
-            await handleTestCommand(command);
         }
     } catch (error) {
         console.error('Error in main:', error);
