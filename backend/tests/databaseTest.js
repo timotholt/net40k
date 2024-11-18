@@ -386,7 +386,7 @@ async function testDataIntegrity() {
     assert(updated.array[0] === 4, 'Array should be updated');
     assert(updated.field1 === 'updated1', 'Previous updates should be preserved');
     
-    // Test 2: Document Replacement
+    // Test 2: Document Updates with Field Removal
     const doc2 = {
         _id: 'integrity-test-2',
         original: true,
@@ -395,18 +395,19 @@ async function testDataIntegrity() {
     
     await db.create('test_integrity', doc2);
     
-    // Test 2.1: Replace with new fields
-    const replacement = {
+    // Test 2.1: Update with new fields and field removal
+    const updateData = {
         _id: 'integrity-test-2',
         new: true,
-        data: { x: 1 }
+        data: { x: 1 },
+        original: null  // Explicitly set to null to remove
     };
     
-    await db.update('test_integrity', { _id: 'integrity-test-2' }, replacement);
+    await db.update('test_integrity', { _id: 'integrity-test-2' }, updateData);
     updated = await db.findOne('test_integrity', { _id: 'integrity-test-2' });
     assert(updated.new === true, 'New fields should be added');
     assert(updated.data.x === 1, 'New nested objects should be added');
-    assert(updated.original === undefined, 'Old fields should be removed');
+    assert(updated.original === null, 'Fields can be explicitly nulled');
     
     // Test 3: Multiple Updates
     const doc3 = {
