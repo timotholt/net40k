@@ -3,7 +3,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { WebSocketServer } from 'ws';
 import session from 'express-session';
-import { router as userRoutes } from './routes/users.js';
+import { router as userRoutes } from './routes/Users.js';
 import { router as lobbyRoutes } from './routes/lobby.js';
 import { router as adminRoutes } from './routes/admin.js';
 import { router as chatRoutes } from './routes/chat.js';
@@ -37,42 +37,47 @@ const command = process.argv[2];
 async function startServer() {
     console.log('Initializing services...');
     
+    // Initialize database first
+    console.log('Initializing database...');
+    await db.init(); // Database type is controlled by DB_TYPE env var
+    console.log('✓ Database initialized');
+    
     // Initialize SessionManager (it will start automatically due to static initialization)
     console.log('✓ SessionManager initialized');
     
     // Initialize session store and middleware
-    const sessionStore = new DatabaseSessionStore({
-        ttl: 24 * 60 * 60 // 24 hours
-    });
-    console.log('✓ SessionStore initialized');
+    // const sessionStore = new DatabaseSessionStore({
+    //     ttl: 24 * 60 * 60 // 24 hours
+    // });
+    // console.log('✓ SessionStore initialized');
 
     // Session middleware
-    app.use(session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: sessionStore,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 1000 * 60 * 60 * 24 // 24 hours
-        }
-    }));
+    // app.use(session({
+    //     secret: process.env.SESSION_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     store: sessionStore,
+    //     cookie: {
+    //         secure: process.env.NODE_ENV === 'production',
+    //         maxAge: 1000 * 60 * 60 * 24 // 24 hours
+    //     }
+    // }));
 
     // Initialize UserService
     await userService.initialize();
     console.log('✓ UserService initialized');
     
     // Initialize ChatCommandService
-    await chatCommandService.initialize();
-    console.log('✓ ChatCommandService initialized');
+    // await chatCommandService.initialize();
+    // console.log('✓ ChatCommandService initialized');
 
     // Configure trust proxy more securely
     // Only trust reverse proxies on your infrastructure
-    app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 0);
+    // app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 0);
 
     // View engine setup
-    app.set('views', path.join(__dirname, 'views'));
-    app.set('view engine', 'ejs');
+    // app.set('views', path.join(__dirname, 'views'));
+    // app.set('view engine', 'ejs');
 
     // Request processing middleware
     app.use(express.json({ limit: '10kb' }));
@@ -92,23 +97,32 @@ async function startServer() {
     });
 
     // Rate limiting
-    const userLimiter = rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
-        message: 'Too many requests from this IP, please try again after 15 minutes',
-        standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-        legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-        trustProxy: false // Explicitly disable trust proxy for rate limiting
-    });
+    // const userLimiter = rateLimit({
+    //     windowMs: 15 * 60 * 1000, // 15 minutes
+    //     max: 100, // limit each IP to 100 requests per windowMs
+    //     message: 'Too many requests from this IP, please try again after 15 minutes',
+    //     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    //     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    //     trustProxy: false // Explicitly disable trust proxy for rate limiting
+    // });
 
     // Custom middleware
     app.use(requestLogger);
 
-    // Static files
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
+    // Debug middleware
+    app.use((req, res, next) => {
+        console.log('Debug - Incoming request:', {
+            method: req.method,
+            path: req.path,
+            baseUrl: req.baseUrl,
+            originalUrl: req.originalUrl
+        });
+        next();
+    });
 
-    // Routes with rate limiting
-    app.use('/user', userLimiter, userRoutes);
+    // API Routes with rate limiting
+    console.log('Mounting user routes at /user');
+    app.use('/user', userRoutes); // Removed rate limiter
     //app.use('/lobby', lobbyRoutes);
     //app.use('/admin', adminRoutes);
     //app.use('/chat', chatRoutes);
@@ -118,6 +132,9 @@ async function startServer() {
     app.get('/about', (req, res) => {
         res.json({ message: 'Hello World!' });
     });
+
+    // Static files - after API routes
+    app.use(express.static(path.join(__dirname, '../frontend/build')));
 
     // Catch-all route to serve React's index.html for client-side routing
     app.get('*', (req, res) => {

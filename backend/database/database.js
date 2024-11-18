@@ -3,6 +3,7 @@ import { getDbEngine } from './selectDbEngine.js';
 class Database {
     #dbEngine;
     #initialized;
+    static instance = null;
 
     constructor() {
         if (Database.instance) {
@@ -14,201 +15,155 @@ class Database {
     }
 
     isConnected() {
-        return (this.#dbEngine != null && this.#initialized);
+        return this.#initialized && this.#dbEngine?.initialized;
     }
 
     async init() {
-        console.log('Database: Init called, current state:', {
-            initialized: this.#initialized,
-            hasEngine: !!this.#dbEngine
-        });
-        
-        if (this.#initialized && this.#dbEngine && this.#dbEngine.initialized) {
-            console.log('Database: Already initialized, reusing existing engine');
-            return this.#dbEngine;
+        if (this.isConnected()) {
+            console.log('Database: Already initialized and connected');
+            return this;
         }
 
         try {
             const dbType = process.env.DB_TYPE || 'memory';
-            console.log(`Database: Using database type: ${dbType}`);
+            console.log(`Database: Initializing ${dbType} database`);
             
+            // Create new engine instance if none exists
             if (!this.#dbEngine) {
-                console.log('Database: Creating new database engine instance');
                 this.#dbEngine = getDbEngine(dbType);
-            } else {
-                console.log('Database: Reusing existing database engine instance');
+                if (!this.#dbEngine) {
+                    throw new Error(`Failed to create database engine for type: ${dbType}`);
+                }
             }
             
-            console.log('Database: Connecting to engine...');
+            // Connect to the database
             const connected = await this.#dbEngine.connect();
-            
-            if (!connected || !this.#dbEngine.initialized) {
-                throw new Error('Database engine failed to initialize');
+            if (!connected) {
+                throw new Error('Database engine failed to connect');
             }
-            
-            // Sync initialization state with engine
-            this.#initialized = this.#dbEngine.initialized;
-            console.log('Database: Connection complete, state:', {
-                initialized: this.#initialized,
-                hasEngine: !!this.#dbEngine,
-                engineInitialized: this.#dbEngine.initialized
-            });
-            
-            return this.#dbEngine;
+
+            this.#initialized = true;
+            console.log('Database: Successfully initialized and connected');
+            return this;
         } catch (error) {
             console.error('Database: Initialization failed:', error);
             this.#initialized = false;
-            console.log('Database: Failed state:', {
-                initialized: this.#initialized,
-                hasEngine: !!this.#dbEngine,
-                engineInitialized: this.#dbEngine?.initialized
-            });
+            this.#dbEngine = null;
             throw error;
         }
     }
 
-    async find(collection, query, options = {}) {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized');
+    async ensureConnection() {
+        if (!this.isConnected()) {
+            await this.init();
         }
-        console.log('Database: Finding documents in collection:', collection);
-        console.log('Database: Query:', query);
-        let result = await this.#dbEngine.find(collection, query);
+    }
+
+    async find(collection, query, options = {}) {
+        await this.ensureConnection();
         
-        // Handle the chainable methods from MongoDB engine
-        if (options.sort && result && typeof result.sort === 'function') {
-            // Convert MongoDB-style sort object to comparison function
-            if (typeof options.sort === 'object') {
+        try {
+            console.log(`Database: Finding in ${collection}:`, { query, options });
+            let result = await this.#dbEngine.find(collection, query);
+            
+            // Handle sorting
+            if (options.sort && Array.isArray(result)) {
                 const [field, order] = Object.entries(options.sort)[0];
                 result = result.sort((a, b) => {
-                    if (order === -1) {
-                        return b[field] - a[field];
-                    }
-                    return a[field] - b[field];
+                    return order === -1 ? b[field] - a[field] : a[field] - b[field];
                 });
-            } else {
-                // If it's already a function, use it directly
-                result = result.sort(options.sort);
             }
             
-            // Apply limit if needed
-            if (options.limit && result && typeof result.limit === 'function') {
-                result = result.limit(options.limit);
+            // Handle limit
+            if (options.limit && Array.isArray(result)) {
+                result = result.slice(0, options.limit);
             }
             
-            // Resolve the final result if it's a promise
-            if (result && typeof result.then === 'function') {
-                result = await result;
-            }
-        } else if (options.limit && result && typeof result.limit === 'function') {
-            result = result.limit(options.limit);
-            
-            // Resolve the final result if it's a promise
-            if (result && typeof result.then === 'function') {
-                result = await result;
-            }
-        } else if (result && typeof result.then === 'function') {
-            result = await result;
+            return result;
+        } catch (error) {
+            console.error(`Database: Find operation failed in ${collection}:`, error);
+            throw error;
         }
-        
-        console.log('Database: Find result:', result);
-        return result;
     }
 
     async findOne(collection, query) {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized');
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Finding one in ${collection}:`, query);
+            return await this.#dbEngine.findOne(collection, query);
+        } catch (error) {
+            console.error(`Database: FindOne operation failed in ${collection}:`, error);
+            throw error;
         }
-        console.log('Database: Finding one document in collection:', collection);
-        console.log('Database: Query:', query);
-        const result = await this.#dbEngine.findOne(collection, query);
-        console.log('Database: Find one result:', result);
-        return result;
     }
 
     async create(collection, data) {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized');
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Creating in ${collection}:`, data);
+            return await this.#dbEngine.create(collection, data);
+        } catch (error) {
+            console.error(`Database: Create operation failed in ${collection}:`, error);
+            throw error;
         }
-        console.log('Database: Creating document in collection:', collection);
-        console.log('Database: Data:', data);
-        const result = await this.#dbEngine.create(collection, data);
-        console.log('Database: Create result:', result);
-        return result;
     }
 
     async update(collection, query, data) {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized');
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Updating in ${collection}:`, { query, data });
+            return await this.#dbEngine.update(collection, query, data);
+        } catch (error) {
+            console.error(`Database: Update operation failed in ${collection}:`, error);
+            throw error;
         }
-        console.log('Database: Updating documents in collection:', collection);
-        console.log('Database: Query:', query);
-        console.log('Database: Data:', data);
-        const result = await this.#dbEngine.update(collection, query, data);
-        console.log('Database: Update result:', result);
-        return result;
     }
 
     async delete(collection, query) {
-        if (!this.#initialized) {
-            throw new Error('Database not initialized');
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Deleting in ${collection}:`, query);
+            return await this.#dbEngine.delete(collection, query);
+        } catch (error) {
+            console.error(`Database: Delete operation failed in ${collection}:`, error);
+            throw error;
         }
-        console.log('Database: Deleting documents in collection:', collection);
-        console.log('Database: Query:', query);
-        const result = await this.#dbEngine.delete(collection, query);
-        console.log('Database: Delete result:', result);
-        return result;
     }
 
     async deleteCollection(collection) {
-        console.log('Database: DeleteCollection called, current state:', {
-            initialized: this.#initialized,
-            hasEngine: !!this.#dbEngine
-        });
+        await this.ensureConnection();
         
-        if (!this.#initialized || !this.#dbEngine) {
-            console.error('Database: Cannot delete collection - not initialized');
-            throw new Error('Database not initialized');
+        try {
+            console.log(`Database: Deleting collection: ${collection}`);
+            return await this.#dbEngine.deleteCollection(collection);
+        } catch (error) {
+            console.error(`Database: DeleteCollection operation failed:`, error);
+            throw error;
         }
-        
-        console.log(`Database: Deleting collection: ${collection}`);
-        return await this.#dbEngine.deleteCollection(collection);
     }
 
     async disconnect() {
-        console.log('Database: Disconnect called, current state:', {
-            initialized: this.#initialized,
-            hasEngine: !!this.#dbEngine
-        });
-        
-        if (!this.#initialized) {
+        if (!this.isConnected()) {
             console.log('Database: Already disconnected');
             return;
         }
         
-        if (!this.#dbEngine) {
-            console.log('Database: No engine instance to disconnect');
-            this.#initialized = false;
-            return;
-        }
-        
         try {
-            console.log('Database: Disconnecting engine...');
-            await this.#dbEngine.disconnect();
-            
-            // Sync initialization state with engine
-            this.#initialized = this.#dbEngine.initialized;
-            console.log('Database: Disconnection complete, state:', {
-                initialized: this.#initialized,
-                hasEngine: !!this.#dbEngine,
-                engineInitialized: this.#dbEngine.initialized
-            });
+            console.log('Database: Disconnecting...');
+            await this.#dbEngine?.disconnect();
+            this.#initialized = false;
+            this.#dbEngine = null;
+            console.log('Database: Successfully disconnected');
         } catch (error) {
-            console.error('Database: Disconnection failed:', error);
+            console.error('Database: Disconnect failed:', error);
             throw error;
         }
     }
 }
 
-// Export only the singleton instance
+// Export singleton instance
 export const db = new Database();

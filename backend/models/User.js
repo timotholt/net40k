@@ -134,7 +134,7 @@ export const UserDB = {
             user.verificationToken = crypto.randomBytes(32).toString('hex');
             user.verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
 
-            const result = await db.getEngine().create(this.collection, user.toJSON());
+            const result = await db.create(this.collection, user.toJSON());
             logger.info(`User created successfully: ${user.email}`);
             return result;
         } catch (error) {
@@ -147,8 +147,7 @@ export const UserDB = {
 
     async findAll() {
         try {
-            logger.debug('Fetching all users');
-            return await db.getEngine().find(this.collection, { isDeleted: false });
+            return await db.find(this.collection, { isDeleted: false });
         } catch (error) {
             logger.error(`Failed to fetch users: ${error.message}`);
             throw new DatabaseError('Failed to fetch users');
@@ -158,7 +157,7 @@ export const UserDB = {
     async findOne(query) {
         try {
             logger.debug(`Finding user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().findOne(this.collection, query);
+            return await db.findOne(this.collection, query);
         } catch (error) {
             logger.error(`Failed to find user: ${error.message}`);
             throw new DatabaseError('Failed to find user');
@@ -168,32 +167,30 @@ export const UserDB = {
     async findById(userUuid) {
         try {
             logger.debug(`Finding user by UUID: ${userUuid}`);
-            return await db.getEngine().findOne(this.collection, { userUuid, isDeleted: false });
+            return await db.findOne(this.collection, { userUuid, isDeleted: false });
         } catch (error) {
-            logger.error(`Failed to find user by ID: ${error.message}`);
+            logger.error(`Failed to find user by UUID: ${error.message}`);
             throw new DatabaseError('Failed to find user');
         }
     },
 
     async findActive() {
         try {
-            logger.debug('Finding active users');
-            return await db.getEngine().find(this.collection, {
+            const activeUsers = await db.find(this.collection, { 
                 isActive: true,
                 isDeleted: false,
-                isBanned: false,
-                isVerified: true
+                isBanned: false
             });
+            return activeUsers;
         } catch (error) {
-            logger.error(`Failed to find active users: ${error.message}`);
-            throw new DatabaseError('Failed to find active users');
+            logger.error(`Failed to fetch active users: ${error.message}`);
+            throw new DatabaseError('Failed to fetch active users');
         }
     },
 
     async delete(query) {
         try {
-            logger.info(`Deleting user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().update(this.collection, query, { isDeleted: true });
+            return await db.update(this.collection, query, { isDeleted: true });
         } catch (error) {
             logger.error(`Failed to delete user: ${error.message}`);
             throw new DatabaseError('Failed to delete user');
@@ -202,8 +199,7 @@ export const UserDB = {
 
     async permanentDelete(query) {
         try {
-            logger.info(`Permanently deleting user with query: ${JSON.stringify(query)}`);
-            return await db.getEngine().delete(this.collection, query);
+            return await db.delete(this.collection, query);
         } catch (error) {
             logger.error(`Failed to permanently delete user: ${error.message}`);
             throw new DatabaseError('Failed to permanently delete user');
@@ -211,96 +207,83 @@ export const UserDB = {
     },
 
     async update(query, updateData) {
-        const lockId = `user-update-${query.userUuid || query._id}`;
         try {
-            await Lock.acquire(lockId);
-            logger.info(`Updating user: ${JSON.stringify(query)}`);
-            
-            // Sanitize update data
-            const sanitizedData = Object.entries(updateData).reduce((acc, [key, value]) => {
-                acc[key] = typeof value === 'string' ? sanitizeInput(value) : value;
-                return acc;
-            }, {});
-
-            // Add last modified timestamp
-            sanitizedData.lastModified = DateService.now();
-
-            // Hash password if it's being updated
-            if (sanitizedData.password) {
-                sanitizedData.password = await bcrypt.hash(sanitizedData.password, PASSWORD_SALT_ROUNDS);
+            // Validate update data
+            if (updateData.password) {
+                updateData.password = await bcrypt.hash(
+                    updateData.password,
+                    PASSWORD_SALT_ROUNDS
+                );
             }
 
-            const result = await db.getEngine().update(this.collection, query, sanitizedData);
-            logger.info(`User updated successfully`);
+            // Add last modified timestamp
+            updateData.lastModified = DateService.now();
+
+            const result = await db.update(this.collection, query, updateData);
             return result;
         } catch (error) {
             logger.error(`Failed to update user: ${error.message}`);
             throw new DatabaseError('Failed to update user');
-        } finally {
-            await Lock.release(lockId);
         }
     },
 
     async findByCredentials(username, password) {
         try {
-            logger.debug(`Attempting login for user: ${username}`);
-            const user = await this.findOne({ 
-                username, 
-                isDeleted: false,
-                isActive: true,
-                isBanned: false
-            });
-
+            const user = await this.findOne({ username, isDeleted: false });
             if (!user) {
                 throw new AuthError('Invalid credentials');
             }
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
-                logger.warn(`Failed login attempt for user: ${username}`);
                 throw new AuthError('Invalid credentials');
+            }
+
+            if (user.isBanned) {
+                if (user.banExpiresAt && user.banExpiresAt < new Date()) {
+                    await this.unban(user.userUuid);
+                } else {
+                    throw new AuthError('Account is banned' + (user.banReason ? `: ${user.banReason}` : ''));
+                }
             }
 
             return user;
         } catch (error) {
-            logger.error(`Login failed: ${error.message}`);
-            throw error instanceof AuthError ? error : new DatabaseError('Authentication failed');
+            logger.error(`Login failed for user ${username}: ${error.message}`);
+            throw error;
         }
     },
 
     async updateLastLogin(userUuid) {
         try {
-            logger.info(`Updating last login for user: ${userUuid}`);
             return await this.update(
                 { userUuid },
                 { lastLoginAt: DateService.now() }
             );
         } catch (error) {
             logger.error(`Failed to update last login: ${error.message}`);
-            throw new DatabaseError('Failed to update last login');
+            throw new DatabaseError('Failed to update last login time');
         }
     },
 
     async updatePreferences(userUuid, preferences) {
         try {
-            logger.info(`Updating preferences for user: ${userUuid}`);
             return await this.update(
                 { userUuid },
                 { preferences }
             );
         } catch (error) {
             logger.error(`Failed to update preferences: ${error.message}`);
-            throw new DatabaseError('Failed to update preferences');
+            throw new DatabaseError('Failed to update user preferences');
         }
     },
 
     async ban(userUuid, reason, duration = null) {
         try {
-            logger.info(`Banning user: ${userUuid}`);
             const banData = {
                 isBanned: true,
                 banReason: reason,
-                banExpiresAt: duration ? DateService.addDuration(DateService.now(), duration) : null
+                banExpiresAt: duration ? new Date(Date.now() + duration) : null
             };
             return await this.update({ userUuid }, banData);
         } catch (error) {
@@ -311,15 +294,12 @@ export const UserDB = {
 
     async unban(userUuid) {
         try {
-            logger.info(`Unbanning user: ${userUuid}`);
-            return await this.update(
-                { userUuid },
-                {
-                    isBanned: false,
-                    banReason: null,
-                    banExpiresAt: null
-                }
-            );
+            const unbanData = {
+                isBanned: false,
+                banReason: null,
+                banExpiresAt: null
+            };
+            return await this.update({ userUuid }, unbanData);
         } catch (error) {
             logger.error(`Failed to unban user: ${error.message}`);
             throw new DatabaseError('Failed to unban user');
@@ -328,18 +308,16 @@ export const UserDB = {
 
     async verify(token) {
         try {
-            logger.info(`Verifying user with token: ${token}`);
-            const user = await db.getEngine().findOne(this.collection, {
+            const user = await this.findOne({
                 verificationToken: token,
-                verificationExpires: { $gt: DateService.now() }
+                verificationExpires: { $gt: new Date() }
             });
 
             if (!user) {
-                throw new AuthError('Invalid verification token');
+                throw new ValidationError('Invalid or expired verification token');
             }
 
-            await db.getEngine().update(
-                this.collection,
+            await this.update(
                 { userUuid: user.userUuid },
                 {
                     isVerified: true,
@@ -350,35 +328,34 @@ export const UserDB = {
 
             return user;
         } catch (error) {
-            logger.error(`Verification failed: ${error.message}`);
-            throw error instanceof AuthError ? error : new DatabaseError('Verification failed');
+            logger.error(`Failed to verify user: ${error.message}`);
+            throw error instanceof ValidationError ? error : new DatabaseError('Failed to verify user');
         }
     },
 
     async resendVerification(userUuid) {
         try {
-            logger.info(`Resending verification for user: ${userUuid}`);
-            const user = await db.getEngine().findOne(this.collection, { userUuid });
-            if (!user || user.isVerified) {
-                throw new AuthError('User is already verified');
+            const user = await this.findById(userUuid);
+            if (!user) {
+                throw new ValidationError('User not found');
+            }
+
+            if (user.isVerified) {
+                throw new ValidationError('User is already verified');
             }
 
             const verificationToken = crypto.randomBytes(32).toString('hex');
-            const verificationExpires = DateService.addDuration(DateService.now(), { hours: 24 });
+            const verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
 
-            await db.getEngine().update(
-                this.collection,
+            await this.update(
                 { userUuid },
-                {
-                    verificationToken,
-                    verificationExpires
-                }
+                { verificationToken, verificationExpires }
             );
 
             return { verificationToken };
         } catch (error) {
             logger.error(`Failed to resend verification: ${error.message}`);
-            throw error instanceof AuthError ? error : new DatabaseError('Failed to resend verification');
+            throw error instanceof ValidationError ? error : new DatabaseError('Failed to resend verification');
         }
     }
 };

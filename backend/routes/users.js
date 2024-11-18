@@ -6,8 +6,19 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
+// Debug middleware for user routes
+router.use((req, res, next) => {
+    console.log('User Routes - Incoming request:', {
+        method: req.method,
+        path: req.path,
+        baseUrl: req.baseUrl,
+        originalUrl: req.originalUrl
+    });
+    next();
+});
+
 // Authentication routes
-router.post('/user/register', createRateLimit('register'), async (req, res) => {
+router.post('/register', createRateLimit('register'), async (req, res) => {
     try {
         // TEMPORARY MODIFICATION - START
         // Email verification disabled for initial development
@@ -28,7 +39,7 @@ router.post('/user/register', createRateLimit('register'), async (req, res) => {
     }
 });
 
-router.post('/user/login', createRateLimit('login'), async (req, res) => {
+router.post('/login', createRateLimit('login'), async (req, res) => {
     try {
         const { username, password } = req.body;
         const result = await userService.login(username, password);
@@ -38,7 +49,7 @@ router.post('/user/login', createRateLimit('login'), async (req, res) => {
     }
 });
 
-router.post('/user/logout', authenticateUser, async (req, res) => {
+router.post('/logout', authenticateUser, async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
         await userService.logout(token);
@@ -49,7 +60,7 @@ router.post('/user/logout', authenticateUser, async (req, res) => {
 });
 
 // Profile routes
-router.get('/user/profile', authenticateUser, async (req, res) => {
+router.get('/profile', authenticateUser, async (req, res) => {
     try {
         const user = await userService.getProfile(req.user.userUuid);
         res.json({ success: true, user });
@@ -58,7 +69,7 @@ router.get('/user/profile', authenticateUser, async (req, res) => {
     }
 });
 
-router.put('/user/profile', authenticateUser, async (req, res) => {
+router.put('/profile', authenticateUser, async (req, res) => {
     try {
         const user = await userService.updateProfile(req.user.userUuid, req.body);
         res.json({ success: true, user });
@@ -68,7 +79,7 @@ router.put('/user/profile', authenticateUser, async (req, res) => {
 });
 
 // Password management
-router.post('/user/password/reset-request', createRateLimit('passwordReset'), async (req, res) => {
+router.post('/password/reset-request', createRateLimit('passwordReset'), async (req, res) => {
     try {
         await userService.requestPasswordReset(req.body.email);
         res.json({ success: true, message: 'If an account exists, a reset email has been sent' });
@@ -77,7 +88,7 @@ router.post('/user/password/reset-request', createRateLimit('passwordReset'), as
     }
 });
 
-router.post('/user/password/reset', async (req, res) => {
+router.post('/password/reset', async (req, res) => {
     try {
         const { token, newPassword } = req.body;
         await userService.resetPassword(token, newPassword);
@@ -87,7 +98,7 @@ router.post('/user/password/reset', async (req, res) => {
     }
 });
 
-router.post('/user/password/change', authenticateUser, async (req, res) => {
+router.post('/password/change', authenticateUser, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
         await userService.changePassword(req.user.userUuid, oldPassword, newPassword);
@@ -104,7 +115,7 @@ router.post('/user/password/change', authenticateUser, async (req, res) => {
 // Will be re-enabled once email infrastructure is in place
 // DO NOT REMOVE the routes below
 /*
-router.post('/user/verify-email', async (req, res) => {
+router.post('/verify-email', async (req, res) => {
     try {
         await userService.verifyEmail(req.body.token);
         res.json({ success: true });
@@ -113,7 +124,7 @@ router.post('/user/verify-email', async (req, res) => {
     }
 });
 
-router.post('/user/verify-email/resend', authenticateUser, async (req, res) => {
+router.post('/verify-email/resend', authenticateUser, async (req, res) => {
     try {
         await userService.sendVerificationEmail(req.user);
         res.json({ success: true });
@@ -125,7 +136,7 @@ router.post('/user/verify-email/resend', authenticateUser, async (req, res) => {
 // TEMPORARY MODIFICATION - END
 
 // Social features
-router.post('/user/mute', authenticateUser, async (req, res) => {
+router.post('/mute', authenticateUser, async (req, res) => {
     try {
         await userService.muteUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
@@ -134,7 +145,7 @@ router.post('/user/mute', authenticateUser, async (req, res) => {
     }
 });
 
-router.post('/user/unmute', authenticateUser, async (req, res) => {
+router.post('/unmute', authenticateUser, async (req, res) => {
     try {
         await userService.unmuteUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
@@ -143,7 +154,7 @@ router.post('/user/unmute', authenticateUser, async (req, res) => {
     }
 });
 
-router.post('/user/block', authenticateUser, async (req, res) => {
+router.post('/block', authenticateUser, async (req, res) => {
     try {
         await userService.blockUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
@@ -152,7 +163,7 @@ router.post('/user/block', authenticateUser, async (req, res) => {
     }
 });
 
-router.post('/user/unblock', authenticateUser, async (req, res) => {
+router.post('/unblock', authenticateUser, async (req, res) => {
     try {
         await userService.unblockUser(req.user.userUuid, req.body.targetUserUuid);
         res.json({ success: true });
@@ -161,7 +172,7 @@ router.post('/user/unblock', authenticateUser, async (req, res) => {
     }
 });
 
-router.get('/user/muted', authenticateUser, async (req, res) => {
+router.get('/muted', authenticateUser, async (req, res) => {
     try {
         const mutedUsers = await userService.getMutedUsers(req.user.userUuid);
         res.json({ success: true, mutedUsers });
@@ -170,7 +181,7 @@ router.get('/user/muted', authenticateUser, async (req, res) => {
     }
 });
 
-router.get('/user/blocked', authenticateUser, async (req, res) => {
+router.get('/blocked', authenticateUser, async (req, res) => {
     try {
         const blockedUsers = await userService.getBlockedUsers(req.user.userUuid);
         res.json({ success: true, blockedUsers });
@@ -180,7 +191,7 @@ router.get('/user/blocked', authenticateUser, async (req, res) => {
 });
 
 // Admin routes
-router.get('/user/list', authenticateAdmin, async (req, res) => {
+router.get('/list', authenticateAdmin, async (req, res) => {
     try {
         const { page, limit, filter } = req.query;
         const users = await userService.getActiveUsers({
@@ -194,7 +205,7 @@ router.get('/user/list', authenticateAdmin, async (req, res) => {
     }
 });
 
-router.post('/user/ban', authenticateAdmin, async (req, res) => {
+router.post('/ban', authenticateAdmin, async (req, res) => {
     try {
         const { userUuid, reason, duration } = req.body;
         await userService.banUser(userUuid, reason, duration);
@@ -204,7 +215,7 @@ router.post('/user/ban', authenticateAdmin, async (req, res) => {
     }
 });
 
-router.post('/user/unban', authenticateAdmin, async (req, res) => {
+router.post('/unban', authenticateAdmin, async (req, res) => {
     try {
         await userService.unbanUser(req.body.userUuid);
         res.json({ success: true });

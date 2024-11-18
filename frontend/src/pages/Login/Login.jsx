@@ -67,7 +67,13 @@ export default function Login() {
     setIsLoading(true);
     try {
       console.log('Attempting login...');
-      await dispatch(loginUser(formData.username, formData.password));
+      const result = await dispatch(loginUser({ username: formData.username, password: formData.password }));
+      
+      // Check if the login was successful
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
       console.log('Login successful');
       navigate('/lobby');
     } catch (error) {
