@@ -1,6 +1,20 @@
 // DO NOT CHANGE THIS FILE  JUST DO NOT
 // Tim -- 11/17/2024
 
+/*
+ * TODO: Field Deletion Support
+ * -----------------------------
+ * Currently, the engine only supports setting fields to null but not truly deleting them.
+ * Firestore natively supports field deletion via FieldValue.delete(), which removes fields
+ * entirely from documents. While our service layer doesn't currently transform documents
+ * by deleting fields, we may want to add this capability in the future for more granular
+ * document management. This would require:
+ * 1. Importing FieldValue from firebase/firestore
+ * 2. Adding field deletion detection in update operations
+ * 3. Converting null fields to FieldValue.delete() when appropriate
+ * 4. Updating tests to verify field deletion behavior
+ */
+
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { initializeApp } from 'firebase/app';
 import { 
