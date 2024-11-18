@@ -14,6 +14,9 @@ import { notFoundHandler, errorHandler } from './middleware/errorHandling.js';
 import { SystemMessages } from './models/SystemMessages.js';
 import UserWebSocketHandler from './services/UserWebSocketHandler.js';
 import { DatabaseSessionStore } from './services/SessionStore.js';
+import { userService } from './services/UserService.js';
+import { chatCommandService } from './services/ChatCommandService.js';
+import SessionManager from './services/SessionManager.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,6 +35,37 @@ const port = process.env.PORT || 3000;
 const command = process.argv[2];
 
 async function startServer() {
+    console.log('Initializing services...');
+    
+    // Initialize SessionManager (it will start automatically due to static initialization)
+    console.log('✓ SessionManager initialized');
+    
+    // Initialize session store and middleware
+    const sessionStore = new DatabaseSessionStore({
+        ttl: 24 * 60 * 60 // 24 hours
+    });
+    console.log('✓ SessionStore initialized');
+
+    // Session middleware
+    app.use(session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: sessionStore,
+        cookie: {
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 1000 * 60 * 60 * 24 // 24 hours
+        }
+    }));
+
+    // Initialize UserService
+    await userService.initialize();
+    console.log('✓ UserService initialized');
+    
+    // Initialize ChatCommandService
+    await chatCommandService.initialize();
+    console.log('✓ ChatCommandService initialized');
+
     // Add this near the top of server.js, after creating the app
     app.set('trust proxy', true);
 
@@ -50,20 +84,6 @@ async function startServer() {
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
         next();
     });
-
-    // Session middleware
-    app.use(session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: new DatabaseSessionStore({
-            ttl: 24 * 60 * 60 // 24 hours
-        }),
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 1000 * 60 * 60 * 24 // 24 hours
-        }
-    }));
 
     // Rate limiting
     const userLimiter = rateLimit({

@@ -6,6 +6,9 @@ class SessionManager {
     static sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
 
     static {
+        // Display startup message
+        console.log(`SessionManager.js initialized with cleanup interval of ${this.cleanupInterval} ms and session timeout of ${this.sessionTimeout} ms`);
+
         // Start cleanup interval when module is loaded
         setInterval(() => this.cleanup(), this.cleanupInterval);
     }

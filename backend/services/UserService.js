@@ -6,8 +6,14 @@ import SessionManager from './SessionManager.js';
 import { UuidService } from './UuidService.js';
 
 class UserService {
+    async initialize() {
+        console.log('Initializing UserService...');
+        // Add any initialization logic here
+        return this;
+    }
+
     // Authentication methods
-    static async register(userData) {
+    async register(userData) {
         const { username, email, password } = userData;
         
         // Validate input
@@ -26,23 +32,20 @@ class UserService {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
+        const userUuid = UuidService.generate();
         const user = await UserDB.create({
-            uuid: UuidService.generate(),
+            userUuid,
             username,
             email,
             password: hashedPassword,
-            verified: false,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            isVerified: false,
+            verificationToken: UuidService.generate()
         });
-
-        // Send verification email
-        await this.sendVerificationEmail(user);
 
         return this.sanitizeUser(user);
     }
 
-    static async login(username, password) {
+    async login(username, password) {
         const user = await UserDB.findOne({ username });
         if (!user) {
             throw new AuthError('Invalid credentials');
@@ -58,7 +61,7 @@ class UserService {
         }
 
         // Create session (this will remove any existing sessions)
-        const sessionToken = SessionManager.createSession(user.uuid);
+        const sessionToken = SessionManager.createSession(user.userUuid);
 
         return {
             user: this.sanitizeUser(user),
@@ -66,18 +69,18 @@ class UserService {
         };
     }
 
-    static async logout(sessionToken) {
+    async logout(sessionToken) {
         SessionManager.removeSession(sessionToken);
     }
 
     // Session management
-    static async validateSession(sessionToken) {
+    async validateSession(sessionToken) {
         const session = SessionManager.getSession(sessionToken);
         if (!session) {
             throw new AuthError('Invalid session');
         }
 
-        const user = await UserDB.findOne({ uuid: session.userUuid });
+        const user = await UserDB.findOne({ userUuid: session.userUuid });
         if (!user || user.banned) {
             SessionManager.removeSession(sessionToken);
             throw new AuthError('User not found or banned');
@@ -86,16 +89,25 @@ class UserService {
         return session;
     }
 
+    validateSession(token) {
+        return SessionManager.validateSession(token);
+    }
+
+    async isAdmin(userUuid) {
+        const user = await UserDB.findOne({ userUuid });
+        return user?.isAdmin || false;
+    }
+
     // Profile management
-    static async getProfile(userUuid) {
-        const user = await UserDB.findOne({ uuid: userUuid });
+    async getProfile(userUuid) {
+        const user = await UserDB.findOne({ userUuid });
         if (!user) {
             throw new NotFoundError('User not found');
         }
         return this.sanitizeUser(user);
     }
 
-    static async updateProfile(userUuid, updates) {
+    async updateProfile(userUuid, updates) {
         const allowedUpdates = ['displayName', 'avatar', 'bio'];
         const updateData = {};
         
@@ -108,7 +120,7 @@ class UserService {
         updateData.updatedAt = new Date();
 
         const user = await UserDB.findOneAndUpdate(
-            { uuid: userUuid },
+            { userUuid },
             { $set: updateData },
             { new: true }
         );
@@ -121,8 +133,8 @@ class UserService {
     }
 
     // Security features
-    static async changePassword(userUuid, oldPassword, newPassword) {
-        const user = await UserDB.findOne({ uuid: userUuid });
+    async changePassword(userUuid, oldPassword, newPassword) {
+        const user = await UserDB.findOne({ userUuid });
         if (!user) {
             throw new NotFoundError('User not found');
         }
@@ -136,7 +148,7 @@ class UserService {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { 
                 $set: { 
                     password: hashedPassword,
@@ -149,7 +161,7 @@ class UserService {
         SessionManager.removeUserSessions(userUuid);
     }
 
-    static async requestPasswordReset(email) {
+    async requestPasswordReset(email) {
         const user = await UserDB.findOne({ email });
         if (!user) {
             return; // Silent return to prevent email enumeration
@@ -160,7 +172,7 @@ class UserService {
         
         // Store the reset token with an expiry
         await UserDB.updateOne(
-            { uuid: user.uuid },
+            { userUuid: user.userUuid },
             { 
                 $set: { 
                     resetToken,
@@ -173,7 +185,7 @@ class UserService {
         await EmailService.sendPasswordResetEmail(user.email, resetToken);
     }
 
-    static async resetPassword(token, newPassword) {
+    async resetPassword(token, newPassword) {
         const user = await UserDB.findOne({
             resetToken: token,
             resetTokenExpiry: { $gt: new Date() }
@@ -187,7 +199,7 @@ class UserService {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         await UserDB.updateOne(
-            { uuid: user.uuid },
+            { userUuid: user.userUuid },
             { 
                 $set: { 
                     password: hashedPassword,
@@ -199,45 +211,45 @@ class UserService {
         );
 
         // Terminate any existing sessions
-        SessionManager.removeUserSessions(user.uuid);
+        SessionManager.removeUserSessions(user.userUuid);
     }
 
     // Social features
-    static async muteUser(userUuid, targetUserUuid) {
+    async muteUser(userUuid, targetUserUuid) {
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { $addToSet: { mutedUsers: targetUserUuid } }
         );
     }
 
-    static async unmuteUser(userUuid, targetUserUuid) {
+    async unmuteUser(userUuid, targetUserUuid) {
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { $pull: { mutedUsers: targetUserUuid } }
         );
     }
 
-    static async blockUser(userUuid, targetUserUuid) {
+    async blockUser(userUuid, targetUserUuid) {
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { $addToSet: { blockedUsers: targetUserUuid } }
         );
     }
 
-    static async unblockUser(userUuid, targetUserUuid) {
+    async unblockUser(userUuid, targetUserUuid) {
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { $pull: { blockedUsers: targetUserUuid } }
         );
     }
 
-    static async getMutedUsers(userUuid) {
-        const user = await UserDB.findOne({ uuid: userUuid });
+    async getMutedUsers(userUuid) {
+        const user = await UserDB.findOne({ userUuid });
         return user ? user.mutedUsers : [];
     }
 
-    static async getBlockedUsers(userUuid) {
-        const user = await UserDB.findOne({ uuid: userUuid });
+    async getBlockedUsers(userUuid) {
+        const user = await UserDB.findOne({ userUuid });
         return user ? user.blockedUsers : [];
     }
 
@@ -249,7 +261,7 @@ class UserService {
     // - Consider game state persistence for reconnects
 
     // Admin methods
-    static async getActiveUsers({ page = 1, limit = 50, filter = {} }) {
+    async getActiveUsers({ page = 1, limit = 50, filter = {} }) {
         const query = { ...filter };
         const skip = (page - 1) * limit;
 
@@ -261,11 +273,11 @@ class UserService {
         return users.map(user => this.sanitizeUser(user));
     }
 
-    static async banUser(userUuid, reason, duration) {
+    async banUser(userUuid, reason, duration) {
         const banExpiry = duration ? new Date(Date.now() + duration) : null;
         
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { 
                 $set: { 
                     banned: true,
@@ -280,9 +292,9 @@ class UserService {
         SessionManager.removeUserSessions(userUuid);
     }
 
-    static async unbanUser(userUuid) {
+    async unbanUser(userUuid) {
         await UserDB.updateOne(
-            { uuid: userUuid },
+            { userUuid },
             { 
                 $set: { 
                     banned: false,
@@ -295,7 +307,7 @@ class UserService {
     }
 
     // Utility methods
-    static sanitizeUser(user) {
+    sanitizeUser(user) {
         const sanitized = { ...user.toObject() };
         delete sanitized.password;
         delete sanitized._id;
@@ -303,13 +315,13 @@ class UserService {
         return sanitized;
     }
 
-    static async sendVerificationEmail(user) {
+    async sendVerificationEmail(user) {
         // Generate verification token
         const verificationToken = UuidService.generate();
         
         // Store the verification token
         await UserDB.updateOne(
-            { uuid: user.uuid },
+            { userUuid: user.userUuid },
             { 
                 $set: { 
                     verificationToken,
@@ -322,7 +334,7 @@ class UserService {
         await EmailService.sendVerificationEmail(user.email, verificationToken);
     }
 
-    static async verifyEmail(token) {
+    async verifyEmail(token) {
         const user = await UserDB.findOne({
             verificationToken: token,
             verificationTokenExpiry: { $gt: new Date() }
@@ -333,10 +345,10 @@ class UserService {
         }
 
         await UserDB.updateOne(
-            { uuid: user.uuid },
+            { userUuid: user.userUuid },
             { 
                 $set: { 
-                    verified: true,
+                    isVerified: true,
                     verificationToken: null,
                     verificationTokenExpiry: null,
                     updatedAt: new Date()
@@ -348,4 +360,6 @@ class UserService {
     }
 }
 
-export default UserService;
+// Create and export a singleton instance
+const userService = new UserService();
+export { userService };

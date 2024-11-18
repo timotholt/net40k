@@ -21,19 +21,30 @@ class ChatCommandService {
                 permission: 'all',
                 help: 'Change nickname: /nick <new_nickname>'
             }],
-            ['msg', {
-                execute: this.msgCommand.bind(this),
+            ['w', {
+                execute: this.whisperCommand.bind(this),
                 permission: 'all',
-                help: 'Send private message: /msg <user> <message>'
+                help: 'Send private message: /w <userUuid> <message>'
+            }],
+            ['whisper', {
+                execute: this.whisperCommand.bind(this),
+                permission: 'all',
+                help: 'Send private message: /whisper <userUuid> <message>'
             }],
             ['kick', {
                 execute: this.kickCommand.bind(this),
                 permission: 'creator',
-                help: 'Kick user from game: /kick <user>'
+                help: 'Kick user from game: /kick <userUuid>'
             }]
         ]);
 
         ChatCommandService.instance = this;
+    }
+
+    async initialize() {
+        console.log('Initializing ChatCommandService...');
+        // Add any initialization logic here
+        return this;
     }
 
     static getInstance() {
@@ -43,7 +54,7 @@ class ChatCommandService {
         return ChatCommandService.instance;
     }
 
-    async processCommand(type, userId, message, gameId = null) {
+    async processCommand(type, userUuid, message, gameId = null) {
         if (!message.startsWith('/')) {
             return false;
         }
@@ -55,40 +66,84 @@ class ChatCommandService {
             throw new APIError('Unknown command', 400);
         }
 
-        await cmd.execute(type, userId, args, gameId);
+        await cmd.execute(type, userUuid, args, gameId);
         return true;
     }
 
     // Command implementations
-    async helpCommand(type, userId, args, gameId) {
+    async helpCommand(type, userUuid, args, gameId) {
         const helpText = Array.from(this.commands.entries())
             .map(([name, cmd]) => `/${name} - ${cmd.help}`)
             .join('\n');
         
         await chatService.createMessage(
             type,
-            userId,
+            userUuid,
             `Available commands:\n${helpText}`,
             gameId
         );
     }
 
-    async nickCommand(type, userId, args, gameId) {
+    async nickCommand(type, userUuid, args, gameId) {
         const newNick = args[0];
         if (!newNick) {
             throw new APIError('New nickname required', 400);
         }
 
-        const user = await UserDB.findById(userId);
+        const user = await UserDB.findOne({ userUuid });
         if (!user) {
             throw new APIError('User not found', 404);
         }
 
-        await UserDB.update({ userId }, { nickname: newNick });
-        await chatService.updateUserNickname(userId, newNick);
+        await UserDB.update({ userUuid }, { nickname: newNick });
+        await chatService.updateUserNickname(userUuid, newNick);
     }
 
-    // Add other command implementations...
+    async whisperCommand(type, userUuid, args, gameId) {
+        if (args.length < 2) {
+            throw new APIError('Usage: /w <userUuid> <message>', 400);
+        }
+
+        const targetUserUuid = args[0];
+        const message = args.slice(1).join(' ');
+
+        const user = await UserDB.findOne({ userUuid: targetUserUuid });
+        if (!user) {
+            throw new APIError('User not found', 404);
+        }
+
+        await chatService.createPrivateMessage(userUuid, targetUserUuid, message);
+    }
+
+    async kickCommand(type, userUuid, args, gameId) {
+        if (!gameId) {
+            throw new APIError('This command can only be used in a game', 400);
+        }
+
+        if (args.length < 1) {
+            throw new APIError('Usage: /kick <userUuid>', 400);
+        }
+
+        const targetUserUuid = args[0];
+        const user = await UserDB.findOne({ userUuid: targetUserUuid });
+        if (!user) {
+            throw new APIError('User not found', 404);
+        }
+
+        // Verify user has permission to kick
+        const game = await chatService.getGame(gameId);
+        if (game.creatorUuid !== userUuid) {
+            throw new APIError('Only the game creator can kick users', 403);
+        }
+
+        await chatService.removeUserFromGame(targetUserUuid, gameId);
+        await chatService.createMessage(
+            'system',
+            userUuid,
+            `${user.nickname} has been kicked from the game`,
+            gameId
+        );
+    }
 }
 
 export const chatCommandService = ChatCommandService.getInstance();
