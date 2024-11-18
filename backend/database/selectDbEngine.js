@@ -8,6 +8,7 @@ let baseEngine = null;
 export function getDbEngine(type) {
     console.log('SelectDbEngine: Getting database engine for type:', type);
     
+    // Reuse existing engine instance
     if (baseEngine !== null) {
         console.log('SelectDbEngine: Returning existing engine instance');
         return baseEngine;
