@@ -28,7 +28,7 @@ export class Lock {
     }
   }
 
-  static async acquire(resourceId, timeoutMs = 5000) {
+  static async acquire(resourceId, timeoutMs = 1000) {
     // Auto-initialize with default cleanup if not already done
     if (!this.cleanupInterval) {
       this.initialize();
@@ -49,10 +49,9 @@ export class Lock {
         reject(new Error(`Lock timeout for resource ${resourceId}`));
       }, timeoutMs);
 
-      resolve(() => {
-        clearTimeout(timeout);
-        this.release(resourceId);
-      });
+      // Clear timeout and resolve immediately
+      clearTimeout(timeout);
+      resolve();
     });
   }
 

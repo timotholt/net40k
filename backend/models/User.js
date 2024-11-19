@@ -140,9 +140,14 @@ export const UserDB = {
     },
 
     async create(userData) {
-        const lockId = `user-create-${userData.username}`;
+        // Create composite lock ID for both username and email
+        const lockId = userData.email 
+            ? `user-create-${userData.username}-${userData.email}`
+            : `user-create-${userData.username}`;
+            
         try {
-            await Lock.acquire(lockId);
+            // Acquire lock with shorter timeout since registration should be quick
+            await Lock.acquire(lockId, 1000);
             logger.info(`Creating new user: ${userData.username}`);
             
             const user = new User(userData);
@@ -150,10 +155,14 @@ export const UserDB = {
 
             // Check for existing user
             const existingUser = await this.findOne({ 
-                $or: [{ email: user.email }, { username: user.username }] 
+                $or: [
+                    { username: user.username },
+                    ...(user.email ? [{ email: user.email }] : [])
+                ] 
             });
             if (existingUser) {
-                throw new ValidationError('User with this email or username already exists');
+                const field = existingUser.username === user.username ? 'username' : 'email';
+                throw new ValidationError(`User with this ${field} already exists`);
             }
 
             // Hash password with proper salt rounds
