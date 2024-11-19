@@ -3,12 +3,13 @@ import { userService } from '../services/UserService.js';
 import { authenticateUser, authenticateAdmin } from '../middleware/auth.js';
 import { ValidationError } from '../utils/errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 
 // Debug middleware for user routes
 router.use((req, res, next) => {
-    console.log('User Routes - Incoming request:', {
+    logger.debug('User Routes - Incoming request:', {
         method: req.method,
         path: req.path,
         baseUrl: req.baseUrl,
@@ -36,7 +37,7 @@ router.post('/register', createRateLimit('register'), async (req, res) => {
         });
         res.status(201).json({ success: true, user });
     } catch (error) {
-        console.error('Registration error:', error.message);
+        logger.error('Registration error:', error.message);
         const statusCode = error.name === 'ValidationError' ? 400 : 500;
         res.status(statusCode).json({ success: false, message: error.message });
     }
@@ -200,7 +201,7 @@ router.delete('/delete/:username', async (req, res) => {
         await userService.deleteUser(username);
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
-        console.error('Delete failed:', error.message);
+        logger.error('Delete failed:', error.message);
         res.status(400).json({ error: error.message });
     }
 });

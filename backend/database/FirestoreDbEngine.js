@@ -37,6 +37,7 @@ import {
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
 import { UuidService } from '../services/UuidService.js';
+import logger from '../utils/logger.js';
 
 dotenv.config();
 
@@ -49,7 +50,7 @@ const withRetry = async (operation, maxAttempts = 3) => {
         } catch (error) {
             if (!transientErrors.includes(error.code) || attempt === maxAttempts) throw error;
             const delay = Math.min(100 * Math.pow(2, attempt), 1000);
-            console.log(`Retrying operation after transient error: ${error.code}. Attempt ${attempt} of ${maxAttempts}. Waiting ${delay}ms`);
+            logger.warn(`Retrying operation after transient error: ${error.code}. Attempt ${attempt} of ${maxAttempts}. Waiting ${delay}ms`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -68,24 +69,15 @@ const validateDotEnv = () => {
     const missingFields = [];
     for (const field of requiredFields) {
         if (!process.env[field] || process.env[field].trim() === '') {
-        console.error(`Missing or empty Firebase config: ${field}`);
-        missingFields.push(field);
+            logger.error(`Missing or empty Firebase config: ${field}`);
+            missingFields.push(field);
         }
     }
 
     if (missingFields.length > 0) {
-        console.error('Missing Firebase configuration fields:', missingFields);
+        logger.error('Missing Firebase configuration fields:', missingFields);
         throw new Error(`Missing required Firebase configuration fields: ${missingFields.join(', ')}`);
     }
-};
-
-const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.FIREBASE_APP_ID
 };
 
 export class FirestoreDbEngine extends BaseDbEngine {
@@ -96,13 +88,10 @@ export class FirestoreDbEngine extends BaseDbEngine {
         this.initialized = false;
         this.initializationPromise = null;
 
-        // console.log('FirestoreDbEngine: Constructor called, initialized =', this.initialized);
-
         try {
             validateDotEnv();
-//            console.log('FirestoreDbEngine: Environment validation successful');
         } catch (error) {
-            console.error('Firebase env validation error:', error);
+            logger.error('Firebase env validation error:', error);
             throw error;
         }
     }
@@ -115,15 +104,11 @@ export class FirestoreDbEngine extends BaseDbEngine {
             hasInitPromise: !!this.initializationPromise
         };
 
-//        console.log('FirestoreDbEngine: Connect called, current state:', state);
-
         if (this.initialized && this.app && this.db) {
-//            console.log('FirestoreDbEngine: Already initialized, reusing existing connection');
             return true;
         }
 
         if (this.initializationPromise) {
-//            console.log('FirestoreDbEngine: Initialization in progress, waiting...');
             await this.initializationPromise;
             return true;
         }
@@ -132,15 +117,9 @@ export class FirestoreDbEngine extends BaseDbEngine {
             this.initializationPromise = this._initialize();
             await this.initializationPromise;
 
-            const finalState = {
-                initialized: this.initialized,
-                hasApp: !!this.app,
-                hasDb: !!this.db
-            };
-//            console.log('FirestoreDbEngine: Initialization complete, final state:', finalState);
             return true;
         } catch (error) {
-            console.error('FirestoreDbEngine: Initialization failed:', error);
+            logger.error('FirestoreDbEngine: Initialization failed:', error);
             this.initialized = false;
             this.initializationPromise = null;
             throw error;
@@ -150,21 +129,28 @@ export class FirestoreDbEngine extends BaseDbEngine {
     async _initialize() {
         try {
             if (!this.app) {
-//                console.log('FirestoreDbEngine: Creating new Firebase app instance...');
-                this.app = initializeApp(firebaseConfig);
-//                console.log('FirestoreDbEngine: Firebase app created successfully');
+                logger.info('Creating new Firebase app instance...');
+                this.app = initializeApp({
+                    apiKey: process.env.FIREBASE_API_KEY,
+                    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+                    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+                    appId: process.env.FIREBASE_APP_ID
+                });
+                logger.info('Firebase app created successfully');
             }
 
             if (!this.db) {
-//                console.log('FirestoreDbEngine: Creating new Firestore instance...');
+                logger.info('Creating new Firestore instance...');
                 this.db = getFirestore(this.app);
-//                console.log('FirestoreDbEngine: Firestore instance created successfully');
+                logger.info('Firestore instance created successfully');
             }
 
             this.initialized = true;
             return true;
         } catch (error) {
-            console.error('FirestoreDbEngine: Error during initialization:', error);
+            logger.error('FirestoreDbEngine: Error during initialization:', error);
             this.initialized = false;
             throw error;
         }
@@ -203,7 +189,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
         for (const [key, value] of Object.entries(converted)) {
             if (value instanceof Date) {
                 converted[key] = Timestamp.fromDate(value);
-                console.log('Converting Date to Timestamp:', key, value);
+                logger.log('Converting Date to Timestamp:', key, value);
             } else if (Array.isArray(value)) {
                 // Handle nested arrays by flattening them with a special format
                 converted[key] = this._convertArrayToFirestore(value);
@@ -241,7 +227,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 if (value.toDate && typeof value.toDate === 'function' && value.seconds !== undefined && value.nanoseconds !== undefined) {
                     // Use Firestore's toDate() to ensure consistent conversion
                     converted[key] = value.toDate();
-                    console.log('Converted Timestamp:', {
+                    logger.log('Converted Timestamp:', {
                         key,
                         original: value,
                         result: converted[key],
@@ -280,9 +266,9 @@ export class FirestoreDbEngine extends BaseDbEngine {
         
         // Handle arrays (including nested)
         if (Array.isArray(obj)) {
-//            console.log('Flattening array:', JSON.stringify(obj));
+            logger.log('Flattening array:', JSON.stringify(obj));
             const result = obj.map(item => this._flattenObject(item));
-//            console.log('Flattened array result:', JSON.stringify(result));
+            logger.log('Flattened array result:', JSON.stringify(result));
             return result;
         }
 
@@ -295,10 +281,10 @@ export class FirestoreDbEngine extends BaseDbEngine {
         const processed = {};
         for (const [key, value] of Object.entries(obj)) {
             if (Array.isArray(value)) {
-//                console.log(`Processing array at key ${key}:`, JSON.stringify(value));
+                logger.log(`Processing array at key ${key}:`, JSON.stringify(value));
                 // Preserve arrays as is, just process their contents
                 processed[key] = value.map(item => this._flattenObject(item));
-//                console.log(`Processed array at key ${key}:`, JSON.stringify(processed[key]));
+                logger.log(`Processed array at key ${key}:`, JSON.stringify(processed[key]));
             } else if (typeof value === 'object' && value !== null && !(value instanceof Date) && !(value instanceof Timestamp)) {
                 // Only flatten non-array objects
                 const flattened = flatten(value, {
@@ -418,7 +404,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
 
     async find(collection, queryObj, options = {}) {
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            logger.error('FirestoreDbEngine: Not initialized');
             throw new Error('Firestore not initialized');
         }
 
@@ -438,7 +424,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
                     return await getDocs(q);
                 } catch (error) {
                     if (error.message?.includes('BloomFilter')) {
-                        console.log(`Retrying after BloomFilter error for collection ${collectionName}`);
+                        logger.log(`Retrying after BloomFilter error for collection ${collectionName}`);
                         // Force a small delay before retry
                         await new Promise(resolve => setTimeout(resolve, 100));
                         return await getDocs(q);
@@ -450,8 +436,8 @@ export class FirestoreDbEngine extends BaseDbEngine {
             // Process results
             const results = snapshot.docs.map(doc => {
                 const data = doc.data();
-                console.log('\nDocument Processing Steps:');
-                console.log('1. Raw doc data:', {
+                logger.log('\nDocument Processing Steps:');
+                logger.log('1. Raw doc data:', {
                     data,
                     id: doc.id,
                     created: data.created,
@@ -459,14 +445,14 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 });
 
                 const unflattened = this._unflattenObject(data);
-                console.log('2. Unflattened data:', {
+                logger.log('2. Unflattened data:', {
                     unflattened,
                     created: unflattened.created,
                     createdType: unflattened.created?.constructor?.name
                 });
 
                 const withDates = this._convertFromFirestoreData(unflattened);
-                console.log('3. Data with dates:', {
+                logger.log('3. Data with dates:', {
                     withDates,
                     created: withDates.created,
                     createdType: withDates.created?.constructor?.name,
@@ -495,38 +481,38 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 then: (resolve) => resolve(results)
             };
         } catch (error) {
-            console.error('Error in find:', error);
+            logger.error('Error in find:', error);
             throw error;
         }
     }
 
     async findOne(collection, queryObj) {
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            logger.error('FirestoreDbEngine: Not initialized');
             throw new Error('Firestore not initialized');
         }
 
         try {
             // Use query to find first matching document
             const results = await this.find(collection, queryObj, 1);
-            console.log('FindOne results:', results);
+            logger.log('FindOne results:', results);
             return results.length > 0 ? results[0] : null;
         } catch (error) {
-            console.error('Error in findOne:', error);
+            logger.error('Error in findOne:', error);
             throw error;
         }
     }
 
     async update(collection, queryObj, data) {
-        // console.log('FirestoreDbEngine: Updating document in collection:', collection);
-        // console.log('');
-        // console.log('FirestoreDbEngine: Query:', queryObj);
-        // console.log('');
-        // console.log('FirestoreDbEngine: Data:', data);
-        // console.log('');
+        logger.log('FirestoreDbEngine: Updating document in collection:', collection);
+        logger.log('');
+        logger.log('FirestoreDbEngine: Query:', queryObj);
+        logger.log('');
+        logger.log('FirestoreDbEngine: Data:', data);
+        logger.log('');
         
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            logger.error('FirestoreDbEngine: Not initialized');
             throw new Error('Firestore not initialized');
         }
 
@@ -552,19 +538,19 @@ export class FirestoreDbEngine extends BaseDbEngine {
 
             return { modifiedCount };
         } catch (error) {
-            console.error('Error in update:', error);
+            logger.error('Error in update:', error);
             throw error;
         }
     }
 
     async create(collection, data) {
-        // console.log('FirestoreDbEngine: Creating document in collection:', collection);
-        // console.log('');
-        // console.log('FirestoreDbEngine: Current initialization state:', this.initialized);
-        // console.log('');
+        logger.log('FirestoreDbEngine: Creating document in collection:', collection);
+        logger.log('');
+        logger.log('FirestoreDbEngine: Current initialization state:', this.initialized);
+        logger.log('');
         
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            logger.error('FirestoreDbEngine: Not initialized');
             throw new Error('Firestore not initialized');
         }
 
@@ -595,22 +581,22 @@ export class FirestoreDbEngine extends BaseDbEngine {
             
             // Return the created document data with dates converted back
             const result = this._convertFromFirestoreData(docSnap.data());
-            console.log('Final data from create:', result);
+            logger.log('Final data from create:', result);
             return result;
         } catch (error) {
-            console.error('Error creating document:', error);
+            logger.error('Error creating document:', error);
             throw error;
         }
     }
 
     async delete(collection, queryObj) {
-        // console.log('FirestoreDbEngine: Deleting documents in collection:', collection);
-        // console.log('');
-        // console.log('FirestoreDbEngine: Query:', queryObj);
-        // console.log('');
+        logger.log('FirestoreDbEngine: Deleting documents in collection:', collection);
+        logger.log('');
+        logger.log('FirestoreDbEngine: Query:', queryObj);
+        logger.log('');
         
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Not initialized');
+            logger.error('FirestoreDbEngine: Not initialized');
             throw new Error('Firestore not initialized');
         }
 
@@ -632,38 +618,38 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 deletedCount++;
             }
 
-//            console.log(`Deleted ${deletedCount} documents`);
+            logger.log(`Deleted ${deletedCount} documents`);
             return { deletedCount };
         } catch (error) {
-            console.error('Error in delete:', error);
+            logger.error('Error in delete:', error);
             throw error;
         }
     }
 
     async deleteCollection(collection) {
-        // console.log('FirestoreDbEngine: DeleteCollection called, state:', {
-        //     initialized: this.initialized,
-        //     hasApp: !!this.app,
-        //     hasDb: !!this.db
-        // });
-        // console.log('');
+        logger.log('FirestoreDbEngine: DeleteCollection called, state:', {
+            initialized: this.initialized,
+            hasApp: !!this.app,
+            hasDb: !!this.db
+        });
+        logger.log('');
         
         if (!this.initialized || !this.db) {
-            console.error('FirestoreDbEngine: Cannot delete collection - not initialized');
+            logger.error('FirestoreDbEngine: Cannot delete collection - not initialized');
             throw new Error('Firestore not initialized');
         }
 
         try {
             const collectionName = this._getCollectionName(collection);
-            console.log(`FirestoreDbEngine: Attempting to delete collection: ${collectionName}`);
-            console.log('');
+            logger.log(`FirestoreDbEngine: Attempting to delete collection: ${collectionName}`);
+            logger.log('');
             
             const collectionRef = firestoreCollection(this.db, collectionName);
             const snapshot = await getDocs(collectionRef);
             
             if (snapshot.empty) {
-                // console.log(`FirestoreDbEngine: Collection ${collectionName} is already empty`);
-                // console.log('');
+                logger.log(`FirestoreDbEngine: Collection ${collectionName} is already empty`);
+                logger.log('');
                 return true;
             }
 
@@ -681,44 +667,44 @@ export class FirestoreDbEngine extends BaseDbEngine {
                 });
 
                 await withRetry(() => batch.commit());
-                // console.log(`FirestoreDbEngine: Deleted batch of ${chunk.length} documents from ${collectionName}`);
-                // console.log('');
+                logger.log(`FirestoreDbEngine: Deleted batch of ${chunk.length} documents from ${collectionName}`);
+                logger.log('');
             }
 
-            // console.log(`FirestoreDbEngine: Successfully deleted collection ${collectionName} (${count} documents)`);
-            // console.log('');
+            logger.log(`FirestoreDbEngine: Successfully deleted collection ${collectionName} (${count} documents)`);
+            logger.log('');
             return true;
         } catch (error) {
-            console.error(`FirestoreDbEngine: Error deleting collection ${collection}:`, error);
+            logger.error(`FirestoreDbEngine: Error deleting collection ${collection}:`, error);
             throw error;
         }
     }
 
     async disconnect() {
-        // console.log('FirestoreDbEngine: Disconnect called, current state:', {
-        //     initialized: this.initialized,
-        //     hasApp: !!this.app,
-        //     hasDb: !!this.db,
-        //     hasInitPromise: !!this.initializationPromise
-        // });
-        // console.log('');
+        logger.log('FirestoreDbEngine: Disconnect called, current state:', {
+            initialized: this.initialized,
+            hasApp: !!this.app,
+            hasDb: !!this.db,
+            hasInitPromise: !!this.initializationPromise
+        });
+        logger.log('');
         
         try {
             // Clear database reference
             this.db = null;
 
             if (this.app) {
-                // console.log('FirestoreDbEngine: Attempting to delete Firebase app...');
-                // console.log('');
+                logger.log('FirestoreDbEngine: Attempting to delete Firebase app...');
+                logger.log('');
                 try {
                     // Use deleteApp from firebase/app instead of app.delete()
                     const { deleteApp } = await import('firebase/app');
                     await deleteApp(this.app);
-                    // console.log('FirestoreDbEngine: Firebase app deleted successfully');
-                    // console.log('');
+                    logger.log('FirestoreDbEngine: Firebase app deleted successfully');
+                    logger.log('');
                 } catch (error) {
-                    console.log('FirestoreDbEngine: Error deleting Firebase app:', error.message);
-                    console.log('');
+                    logger.log('FirestoreDbEngine: Error deleting Firebase app:', error.message);
+                    logger.log('');
                     // Continue cleanup even if app deletion fails
                 }
                 this.app = null;
@@ -728,15 +714,15 @@ export class FirestoreDbEngine extends BaseDbEngine {
             this.initialized = false;
             this.initializationPromise = null;
 
-            // console.log('FirestoreDbEngine: Cleanup complete, final state:', {
-            //     initialized: this.initialized,
-            //     hasApp: !!this.app,
-            //     hasDb: !!this.db,
-            //     hasInitPromise: !!this.initializationPromise
-            // });
-            // console.log('');
+            logger.log('FirestoreDbEngine: Cleanup complete, final state:', {
+                initialized: this.initialized,
+                hasApp: !!this.app,
+                hasDb: !!this.db,
+                hasInitPromise: !!this.initializationPromise
+            });
+            logger.log('');
         } catch (error) {
-            console.error('FirestoreDbEngine: Error during disconnect:', error);
+            logger.error('FirestoreDbEngine: Error during disconnect:', error);
             throw error;
         }
     }

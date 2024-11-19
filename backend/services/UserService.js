@@ -4,10 +4,11 @@ import { UserDB } from '../models/User.js';
 import { EmailService } from './EmailService.js';
 import SessionManager from './SessionManager.js';
 import { UuidService } from './UuidService.js';
+import logger from '../utils/logger.js';
 
 class UserService {
     async initialize() {
-        console.log('Initializing UserService...');
+        logger.info('Initializing UserService...');
         // Add any initialization logic here
         return this;
     }
@@ -16,28 +17,29 @@ class UserService {
     async register(userData) {
         const { username, nickname, password } = userData;
 
-        console.log('🚀 UserService: Starting registration process...');
-        console.log('📝 Registration details:');
-        console.log('   - Username:', username);
-        console.log('   - Nickname:', nickname || username);
-        console.log('   - Password length:', password?.length || 'missing');
+        logger.info('🚀 UserService: Starting registration process...');
+        logger.debug('📝 Registration details:', {
+            username,
+            nickname: nickname || username,
+            passwordLength: password?.length || 'missing'
+        });
 
         // Validate input
         if (!username || !password) {
-            console.log('❌ Registration failed: Missing required fields');
+            logger.error('❌ Registration failed: Missing required fields');
             throw new ValidationError('Missing required fields');
         }
         
         // Check for existing user
-        console.log('🔍 Checking for existing user...');
+        logger.debug('🔍 Checking for existing user...');
         const existingUser = await UserDB.findOne({ username });
         if (existingUser) {
-            console.log('❌ Registration failed: Username already exists');
+            logger.error('❌ Registration failed: Username already exists');
             throw new ValidationError('Username already exists');
         }
 
         // Create user
-        console.log('👤 Creating new user...');
+        logger.debug('👤 Creating new user...');
         const userUuid = UuidService.generate();
         const user = await UserDB.create({
             userUuid,
@@ -47,13 +49,15 @@ class UserService {
             createdAt: new Date()
         });
 
-        console.log('✅ User created successfully:', user?.userUuid);
+        logger.info('✅ User created successfully:', user?.userUuid);
         const sanitizedUser = this.sanitizeUser(user);
         return sanitizedUser;
     }
 
     async login(username, password) {
         try {
+            logger.debug('Starting login process for user:', username);
+            
             // Use findByCredentials which properly handles password comparison
             const user = await UserDB.findByCredentials(username, password);
 
@@ -63,13 +67,14 @@ class UserService {
             // Update last login time
             await UserDB.updateLastLogin(user.userUuid);
 
+            logger.info('Login successful for user:', username);
             return {
                 user: this.sanitizeUser(user),
                 sessionToken
             };
         } catch (error) {
             // Log the error but don't expose internal details
-            console.error('Login failed:', error.message);
+            logger.error('Login failed:', error.message);
             throw new AuthError('Invalid credentials');
         }
     }
@@ -320,7 +325,7 @@ class UserService {
             await UserDB.delete({ username });
             return { success: true };
         } catch (error) {
-            console.error(`Failed to delete user ${username}:`, error.message);
+            logger.error(`Failed to delete user ${username}:`, error.message);
             throw error;
         }
     }

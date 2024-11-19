@@ -13,6 +13,8 @@ export function notFoundHandler(req, res, next) {
   next(error);
 }
 
+import logger from '../utils/logger.js';
+
 // Global error handler
 export function errorHandler(err, req, res, next) {
   const timestamp = new Date().toISOString();
@@ -28,7 +30,7 @@ export function errorHandler(err, req, res, next) {
   };
   
   // Log error details
-  console.error(`[${timestamp}] Error:`, logData);
+  logger.error(`[${timestamp}] Error:`, logData);
 
   // Set defaults
   err.statusCode = err.statusCode || 500;
@@ -80,4 +82,3 @@ function sanitizeErrorMessage(message) {
   // Remove any actual UUIDs from error messages
   return message.replace(/[0-9a-f-]{36}/gi, '[REDACTED]');
 }
-

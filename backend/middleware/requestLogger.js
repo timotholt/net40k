@@ -1,3 +1,5 @@
+import logger from '../utils/logger.js';
+
 // Request logger middleware
 export function requestLogger(req, res, next) {
     const timestamp = new Date().toISOString();
@@ -27,20 +29,12 @@ export function requestLogger(req, res, next) {
     // if (sanitizedBody.newPassword) sanitizedBody.newPassword = '[REDACTED]';
     
     // Log the request
-    // console.log(`[${timestamp}] ${method} ${originalUrl}
-    // IP: ${ip}
-    // Query params: ${queryParams}
-    // Body: ${JSON.stringify(sanitizedBody)}
-    // User-Agent: ${headers['user-agent'] || 'none'}
-    // `);
-
-    // Log the request
-    console.log(`[${timestamp}] ${method} ${originalUrl}
+    logger.info(`[${timestamp}] ${method} ${originalUrl}
+    IP: ${ip}
     Query params: ${queryParams}
     Body: ${JSON.stringify(sanitizedBody)}
     User-Agent: ${headers['user-agent'] || 'none'}
     `);
-
 
     // Track response time
     const startTime = process.hrtime();
@@ -52,12 +46,10 @@ export function requestLogger(req, res, next) {
         const diff = process.hrtime(startTime);
         const responseTime = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
 
-        console.log(`[${timestamp}] Response sent: Status ${res.statusCode}, Time: ${responseTime}ms`);
+        logger.info(`[${timestamp}] Response sent: Status ${res.statusCode}, Time: ${responseTime}ms`);
 
         originalEnd.call(this, chunk, encoding);
     };
 
     next();
 }
-
-

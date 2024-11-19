@@ -1,4 +1,5 @@
 import { getDbEngine } from './selectDbEngine.js';
+import logger from '../utils/logger.js';
 
 class Database {
     #dbEngine;
@@ -20,13 +21,13 @@ class Database {
 
     async init() {
         if (this.isConnected()) {
-            console.log('Database: Already initialized and connected');
+            logger.info('Database: Already initialized and connected');
             return this;
         }
 
         try {
             const dbType = process.env.DB_TYPE || 'memory';
-            console.log(`Database: Initializing ${dbType} database`);
+            logger.info(`Database: Initializing ${dbType} database`);
             
             // Create new engine instance if none exists
             if (!this.#dbEngine) {
@@ -43,10 +44,10 @@ class Database {
             }
 
             this.#initialized = true;
-            console.log('Database: Successfully initialized and connected');
+            logger.info('Database: Successfully initialized and connected');
             return this;
         } catch (error) {
-            console.error('Database: Initialization failed:', error);
+            logger.error('Database: Initialization failed:', error);
             this.#initialized = false;
             this.#dbEngine = null;
             throw error;
@@ -63,7 +64,7 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Finding in ${collection}:`, { query, options });
+            logger.debug(`Database: Finding in ${collection}:`, { query, options });
             let result = await this.#dbEngine.find(collection, query);
             
             // Handle sorting
@@ -81,7 +82,7 @@ class Database {
             
             return result;
         } catch (error) {
-            console.error(`Database: Find operation failed in ${collection}:`, error);
+            logger.error(`Database: Find operation failed in ${collection}:`, error);
             throw error;
         }
     }
@@ -90,10 +91,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Finding one in ${collection}:`, query);
+            logger.debug(`Database: Finding one in ${collection}:`, query);
             return await this.#dbEngine.findOne(collection, query);
         } catch (error) {
-            console.error(`Database: FindOne operation failed in ${collection}:`, error);
+            logger.error(`Database: FindOne operation failed in ${collection}:`, error);
             throw error;
         }
     }
@@ -102,10 +103,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Creating in ${collection}:`, data);
+            logger.debug(`Database: Creating in ${collection}:`, data);
             return await this.#dbEngine.create(collection, data);
         } catch (error) {
-            console.error(`Database: Create operation failed in ${collection}:`, error);
+            logger.error(`Database: Create operation failed in ${collection}:`, error);
             throw error;
         }
     }
@@ -114,10 +115,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Updating in ${collection}:`, { query, data });
+            logger.debug(`Database: Updating in ${collection}:`, { query, data });
             return await this.#dbEngine.update(collection, query, data);
         } catch (error) {
-            console.error(`Database: Update operation failed in ${collection}:`, error);
+            logger.error(`Database: Update operation failed in ${collection}:`, error);
             throw error;
         }
     }
@@ -126,10 +127,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Deleting in ${collection}:`, query);
+            logger.debug(`Database: Deleting in ${collection}:`, query);
             return await this.#dbEngine.delete(collection, query);
         } catch (error) {
-            console.error(`Database: Delete operation failed in ${collection}:`, error);
+            logger.error(`Database: Delete operation failed in ${collection}:`, error);
             throw error;
         }
     }
@@ -138,10 +139,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Deleting collection: ${collection}`);
+            logger.debug(`Database: Deleting collection: ${collection}`);
             return await this.#dbEngine.deleteCollection(collection);
         } catch (error) {
-            console.error(`Database: DeleteCollection operation failed:`, error);
+            logger.error(`Database: DeleteCollection operation failed:`, error);
             throw error;
         }
     }
@@ -150,10 +151,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Creating collection: ${collection}`);
+            logger.debug(`Database: Creating collection: ${collection}`);
             return await this.#dbEngine.createCollection(collection);
         } catch (error) {
-            console.error(`Database: CreateCollection operation failed:`, error);
+            logger.error(`Database: CreateCollection operation failed:`, error);
             throw error;
         }
     }
@@ -162,10 +163,10 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Creating index on ${collection}:`, { fields, options });
+            logger.debug(`Database: Creating index on ${collection}:`, { fields, options });
             return await this.#dbEngine.createIndex(collection, fields, options);
         } catch (error) {
-            console.error(`Database: CreateIndex operation failed:`, error);
+            logger.error(`Database: CreateIndex operation failed:`, error);
             throw error;
         }
     }
@@ -174,30 +175,30 @@ class Database {
         await this.ensureConnection();
         
         try {
-            console.log(`Database: Listing indexes for ${collection}`);
+            logger.debug(`Database: Listing indexes for ${collection}`);
             const indexes = await this.#dbEngine.listIndexes(collection);
-            console.log(`Database: Found indexes:`, indexes);
+            logger.debug(`Database: Found indexes:`, indexes);
             return indexes;
         } catch (error) {
-            console.error(`Database: ListIndexes operation failed:`, error);
+            logger.error(`Database: ListIndexes operation failed:`, error);
             throw error;
         }
     }
 
     async disconnect() {
         if (!this.isConnected()) {
-            console.log('Database: Already disconnected');
+            logger.info('Database: Already disconnected');
             return;
         }
         
         try {
-            console.log('Database: Disconnecting...');
+            logger.info('Database: Disconnecting...');
             await this.#dbEngine?.disconnect();
             this.#initialized = false;
             this.#dbEngine = null;
-            console.log('Database: Successfully disconnected');
+            logger.info('Database: Successfully disconnected');
         } catch (error) {
-            console.error('Database: Disconnect failed:', error);
+            logger.error('Database: Disconnect failed:', error);
             throw error;
         }
     }

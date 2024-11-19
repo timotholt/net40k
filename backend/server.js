@@ -1,3 +1,5 @@
+import logger from './utils/logger.js';
+
 // Main entry point with top-level await
 async function main() {
     try {
@@ -39,22 +41,22 @@ async function main() {
         const app = express();
         const port = process.env.PORT || 3000;
 
-        console.log('Initializing services...');
+        logger.info('Initializing services...');
         
         // Initialize database first
-        console.log('Initializing database...');
+        logger.info('Initializing database...');
         await db.init();
-        console.log('✓ Database initialized');
+        logger.info('✓ Database initialized');
         
         // Initialize models
-        console.log('Initializing models...');
+        logger.info('Initializing models...');
         const { UserDB } = await import('./models/User.js');
         await UserDB.init();
-        console.log('✓ Models initialized');
+        logger.info('✓ Models initialized');
         
         // Initialize UserService
         await userService.initialize();
-        console.log('✓ UserService initialized');
+        logger.info('✓ UserService initialized');
 
         // Request processing middleware
         app.use(express.json({ limit: '10kb' }));
@@ -77,7 +79,7 @@ async function main() {
 
         // Debug middleware
         app.use((req, res, next) => {
-            console.log('Debug - Incoming request:', {
+            logger.debug('Debug - Incoming request:', {
                 method: req.method,
                 path: req.path,
                 baseUrl: req.baseUrl,
@@ -87,7 +89,7 @@ async function main() {
         });
 
         // API Routes
-        console.log('Mounting user routes at /user');
+        logger.info('Mounting user routes at /user');
         app.use('/user', userRoutes);
         //app.use('/lobby', lobbyRoutes);
         //app.use('/admin', adminRoutes);
@@ -113,8 +115,8 @@ async function main() {
 
         // Start HTTP server
         const server = app.listen(port, () => {
-            console.log('Build Info:', buildInfo);
-            console.log(`🚀 Server is running on port ${port}`);
+            logger.info('Build Info:', buildInfo);
+            logger.info(`🚀 Server is running on port ${port}`);
         });
 
         // Setup WebSocket server
@@ -123,7 +125,7 @@ async function main() {
         UserWebSocketHandler.startHeartbeat(wss);
 
     } catch (error) {
-        console.error('Error in main:', error);
+        logger.error('Failed to start server:', error);
         process.exit(1);
     }
 }

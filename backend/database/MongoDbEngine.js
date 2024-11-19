@@ -1,5 +1,6 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { MongoClient } from 'mongodb';
+import logger from '../utils/logger.js';
 import { UuidService } from '../services/UuidService.js';
 import DateService from '../services/DateService.js';
 
@@ -26,9 +27,10 @@ export class MongoDbEngine extends BaseDbEngine {
             await this.connectionPromise;
             this.db = this.client.db(process.env.MONGODB_DATABASE);
             this.initialized = true;
+            logger.info('Successfully connected to MongoDB');
             return true;
         } catch (error) {
-            console.error('MongoDbEngine: Connection failed:', error);
+            logger.error('MongoDbEngine: Connection failed:', error);
             this.initialized = false;
             throw error;
         }
@@ -43,13 +45,13 @@ export class MongoDbEngine extends BaseDbEngine {
 
     async disconnect() {
         if (this.client) {
-            console.log('Disconnecting from MongoDB...');
+            logger.info('Disconnecting from MongoDB...');
             await this.client.close();
             this.client = null;
             this.db = null;
             this.connectionPromise = null;
             this.initialized = false;
-            console.log('Disconnected from MongoDB');
+            logger.info('Disconnected from MongoDB');
         }
     }
 
@@ -59,6 +61,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Find:', { collection, query });
         const result = await db.collection(collection.toLowerCase()).find(query).toArray();
         
         // Remove _id from results and normalize dates
@@ -94,6 +97,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB FindOne:', { collection, query });
         const doc = await db.collection(collection.toLowerCase()).findOne(query);
         if (!doc) return null;
         
@@ -121,6 +125,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Insert:', { collection, data });
         const normalizedData = this._normalizeDates(docToInsert);
         await db.collection(collection.toLowerCase()).insertOne(normalizedData);
         const { _id, ...cleanData } = normalizedData;
@@ -133,7 +138,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
-        console.log('MongoDB Update - Before:', { collection, query, data });
+        logger.debug('MongoDB Update - Before:', { collection, query, data });
         
         // If data has _id, it's a document replacement
         if (data._id) {
@@ -143,7 +148,7 @@ export class MongoDbEngine extends BaseDbEngine {
                 query,
                 { _id, ...updateData }
             );
-            console.log('MongoDB Full Replace Result:', result);
+            logger.debug('MongoDB Full Replace Result:', result);
             return { modifiedCount: result.modifiedCount };
         }
         
@@ -155,7 +160,7 @@ export class MongoDbEngine extends BaseDbEngine {
         
         // Verify the update
         const updated = await db.collection(collection.toLowerCase()).findOne(query);
-        console.log('MongoDB Update Result:', { result, updated });
+        logger.debug('MongoDB Update Result:', { result, updated });
         
         return { modifiedCount: result.modifiedCount };
     }
@@ -166,6 +171,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Delete:', { collection, query });
         const result = await db.collection(collection.toLowerCase()).deleteMany(query);
         return { deletedCount: result.deletedCount };
     }
@@ -176,6 +182,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.warn('MongoDB Delete Collection:', collection);
         const result = await db.collection(collection.toLowerCase()).drop().catch(err => {
             if (err.code === 26) { // Collection doesn't exist
                 return true;
@@ -191,6 +198,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.warn('MongoDB Clear Collection:', collection);
         return await db.collection(collection.toLowerCase()).deleteMany({});
     }
 
@@ -200,6 +208,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Count:', { collection, query });
         return await db.collection(collection.toLowerCase()).countDocuments(query);
     }
 
@@ -209,6 +218,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Aggregate:', { collection, pipeline });
         return await db.collection(collection.toLowerCase()).aggregate(pipeline).toArray();
     }
 
@@ -218,6 +228,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB FindByUuid:', { collection, uuid });
         return await db.collection(collection.toLowerCase()).findOne({ uuid });
     }
 
@@ -237,6 +248,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Create Collection:', collection);
         await db.createCollection(collection.toLowerCase());
     }
 
@@ -246,6 +258,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB Create Index:', { collection, fields, options });
         await db.collection(collection.toLowerCase()).createIndex(fields, options);
     }
 
@@ -255,6 +268,7 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
+        logger.debug('MongoDB List Indexes:', collection);
         const indexes = await db.collection(collection.toLowerCase()).indexes();
         return indexes.map(index => ({
             name: index.name,

@@ -1,5 +1,6 @@
 import { BaseDbEngine } from './BaseDbEngine.js';
 import sizeof from 'object-sizeof';
+import logger from '../utils/logger.js';
 
 class TimeStats {
   constructor(intervalMinutes = 60) {
@@ -177,7 +178,7 @@ export class CacheDbEngine extends BaseDbEngine {
     this.cache = new Map();
     this.collectionStats = new Map();
     this.supportsExplicitIndexes = baseEngine.supportsExplicitIndexes;
-    console.log('CacheDbEngine: Initialized with base engine:', {
+    logger.info('CacheDbEngine: Initialized with base engine:', {
       type: baseEngine.constructor.name,
       maxSizeMb,
       supportsExplicitIndexes: this.supportsExplicitIndexes
@@ -189,14 +190,14 @@ export class CacheDbEngine extends BaseDbEngine {
   }
 
   async connect() {
-    console.log('CacheDbEngine: Connecting to base engine...');
+    logger.info('CacheDbEngine: Connecting to base engine...');
     const result = await this.baseEngine.connect();
-    console.log('CacheDbEngine: Base engine connection result:', result);
+    logger.info('CacheDbEngine: Base engine connection result:', result);
     return result;
   }
 
   async disconnect() {
-    console.log('CacheDbEngine: Disconnecting...');
+    logger.info('CacheDbEngine: Disconnecting...');
     // Clear cache
     this.cache.clear();
     this.collectionStats.clear();
@@ -206,7 +207,7 @@ export class CacheDbEngine extends BaseDbEngine {
     if (this.baseEngine && typeof this.baseEngine.disconnect === 'function') {
       await this.baseEngine.disconnect();
     }
-    console.log('CacheDbEngine: Disconnected');
+    logger.info('CacheDbEngine: Disconnected');
   }
 
   _getCollectionStats(collection) {

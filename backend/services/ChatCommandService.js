@@ -2,6 +2,7 @@
 import { chatService } from './ChatService.js';
 import { UserDB } from '../models/User.js';
 import { APIError } from '../middleware/errorHandling.js';
+import logger from '../utils/logger.js';
 
 class ChatCommandService {
     constructor() {
@@ -42,7 +43,7 @@ class ChatCommandService {
     }
 
     async initialize() {
-        console.log('Initializing ChatCommandService...');
+        logger.info('Initializing ChatCommandService...');
         // Add any initialization logic here
         return this;
     }
