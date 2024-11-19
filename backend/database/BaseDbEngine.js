@@ -76,6 +76,21 @@ export class BaseDbEngine {
 
     // Delete all documents in a collection
     async deleteCollection(collection) {
-        throw new Error('deleteCollection() must be implemented by subclass');
+        throw new Error('Method not implemented');
+    }
+
+    // Create a new collection
+    async createCollection(collection) {
+        throw new Error('Method not implemented');
+    }
+
+    // Create an index on a collection
+    async createIndex(collection, fields, options = {}) {
+        throw new Error('Method not implemented');
+    }
+
+    // List all indexes on a collection
+    async listIndexes(collection) {
+        throw new Error('Method not implemented');
     }
 }

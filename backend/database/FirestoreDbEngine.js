@@ -720,4 +720,27 @@ export class FirestoreDbEngine extends BaseDbEngine {
             throw error;
         }
     }
+
+    async createCollection(collection) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+        
+        // Firestore creates collections implicitly
+        // This is just a no-op to maintain API consistency
+        return;
+    }
+
+    async createIndex(collection, fields, options = {}) {
+        // Firestore indexes are managed in the Firebase Console
+        // This is just a no-op to maintain API consistency
+        console.log(`Note: Firestore indexes should be configured in Firebase Console for collection: ${collection}`);
+        return;
+    }
+
+    async listIndexes(collection) {
+        // Firestore indexes are managed in the Firebase Console
+        console.log(`Note: Firestore indexes can be viewed in Firebase Console for collection: ${collection}`);
+        return [];
+    }
 }

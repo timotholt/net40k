@@ -159,6 +159,28 @@ export class InMemoryDbEngine extends BaseDbEngine {
         }
     }
 
+    async createCollection(collection) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+        
+        // Initialize empty collection if it doesn't exist
+        if (!this.storage.has(collection.toLowerCase())) {
+            this.storage.set(collection.toLowerCase(), []);
+        }
+    }
+
+    async createIndex(collection, fields, options = {}) {
+        // No-op for in-memory database
+        // Indexes aren't needed for in-memory operations
+        return;
+    }
+
+    async listIndexes(collection) {
+        // In-memory database doesn't use indexes
+        return [];
+    }
+
     // Helper method to clear all data (useful for testing)
     async clear() {
         this.storage.clear();

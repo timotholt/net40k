@@ -227,6 +227,39 @@ export class MongoDbEngine extends BaseDbEngine {
         }
     }
 
+    async createCollection(collection) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const db = await this._ensureConnected();
+        await db.createCollection(collection.toLowerCase());
+    }
+
+    async createIndex(collection, fields, options = {}) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const db = await this._ensureConnected();
+        await db.collection(collection.toLowerCase()).createIndex(fields, options);
+    }
+
+    async listIndexes(collection) {
+        if (typeof collection !== 'string') {
+            throw new Error('Invalid collection: must be a string');
+        }
+
+        const db = await this._ensureConnected();
+        const indexes = await db.collection(collection.toLowerCase()).indexes();
+        return indexes.map(index => ({
+            name: index.name,
+            fields: index.key,
+            unique: !!index.unique,
+            sparse: !!index.sparse
+        }));
+    }
+
     _normalizeDates(data) {
         if (!data) return data;
 

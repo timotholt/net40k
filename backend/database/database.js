@@ -146,6 +146,44 @@ class Database {
         }
     }
 
+    async createCollection(collection) {
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Creating collection: ${collection}`);
+            return await this.#dbEngine.createCollection(collection);
+        } catch (error) {
+            console.error(`Database: CreateCollection operation failed:`, error);
+            throw error;
+        }
+    }
+
+    async createIndex(collection, fields, options = {}) {
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Creating index on ${collection}:`, { fields, options });
+            return await this.#dbEngine.createIndex(collection, fields, options);
+        } catch (error) {
+            console.error(`Database: CreateIndex operation failed:`, error);
+            throw error;
+        }
+    }
+
+    async listIndexes(collection) {
+        await this.ensureConnection();
+        
+        try {
+            console.log(`Database: Listing indexes for ${collection}`);
+            const indexes = await this.#dbEngine.listIndexes(collection);
+            console.log(`Database: Found indexes:`, indexes);
+            return indexes;
+        } catch (error) {
+            console.error(`Database: ListIndexes operation failed:`, error);
+            throw error;
+        }
+    }
+
     async disconnect() {
         if (!this.isConnected()) {
             console.log('Database: Already disconnected');

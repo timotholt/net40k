@@ -43,7 +43,8 @@ async function cleanupCollections() {
         'test_errors',
         'test_parents',
         'test_children',
-        'test_integrity'
+        'test_integrity',
+        'test_indexes'
     ];
 
     try {
@@ -327,6 +328,55 @@ async function testErrorRecovery() {
     assert(checkDoc.field1 === 'new-value1', 'Document should update specified fields');
 }
 
+// Index management test
+async function testIndexManagement() {
+    const collection = 'test_indexes';
+    
+    // Create collection first
+    await db.createCollection(collection);
+    
+    // Test single index creation
+    await db.createIndex(collection, { field1: 1 }, { unique: true });
+    let indexes = await db.listIndexes(collection);
+    assert(indexes.length >= 2, 'Should have at least 2 indexes (default _id and field1)');
+    assert(indexes.some(idx => idx.fields.field1 === 1), 'Should have field1 index');
+    
+    // Test compound index creation
+    await db.createIndex(collection, { field2: -1, field3: 1 });
+    indexes = await db.listIndexes(collection);
+    assert(indexes.some(idx => idx.fields.field2 === -1 && idx.fields.field3 === 1), 
+        'Should have compound index on field2 and field3');
+    
+    // Test sparse index creation
+    await db.createIndex(collection, { field4: 1 }, { sparse: true });
+    indexes = await db.listIndexes(collection);
+    assert(indexes.some(idx => idx.fields.field4 === 1 && idx.sparse), 
+        'Should have sparse index on field4');
+    
+    // Verify all indexes
+    indexes = await db.listIndexes(collection);
+    console.log('Final indexes:', JSON.stringify(indexes, null, 2));
+    
+    // Verify we can still perform operations with indexes
+    const testDoc = {
+        field1: 'unique1',
+        field2: 100,
+        field3: 'test',
+        field4: 'sparse'
+    };
+    await db.create(collection, testDoc);
+    
+    // Test unique constraint
+    try {
+        const dupDoc = { ...testDoc };
+        await db.create(collection, dupDoc);
+        assert(false, 'Should not allow duplicate field1 value');
+    } catch (error) {
+        assert(error.message.includes('duplicate') || error.message.includes('unique'), 
+            'Should fail with uniqueness violation');
+    }
+}
+
 // Data integrity testing
 async function testDataIntegrity() {
     // Test 1: Partial Updates
@@ -432,6 +482,7 @@ export async function testDatabaseEngine() {
             ['Date Handling', testDateHandling],
             ['Array Handling', testArrayHandling],
             ['Query Operations', testQueryOperations],
+            ['Index Management', testIndexManagement],
             ['Data Integrity', testDataIntegrity],
             ['Performance', testPerformance],
             ['Error Recovery', testErrorRecovery]

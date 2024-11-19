@@ -46,6 +46,12 @@ async function main() {
         await db.init();
         console.log('✓ Database initialized');
         
+        // Initialize models
+        console.log('Initializing models...');
+        const { UserDB } = await import('./models/User.js');
+        await UserDB.init();
+        console.log('✓ Models initialized');
+        
         // Initialize UserService
         await userService.initialize();
         console.log('✓ UserService initialized');
