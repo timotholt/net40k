@@ -9,6 +9,7 @@ import { sanitizeInput } from '../utils/sanitizer.js';
 import { ValidationError, DatabaseError, AuthError } from '../utils/errors.js';
 import { Lock } from './Lock.js';
 import { PASSWORD_SALT_ROUNDS, VERIFICATION_TOKEN_EXPIRY } from '../config/constants.js';
+import { isFeatureEnabled, noOpAsync } from '../config/features.js';
 
 // Service Layer: User Representation
 class User {
@@ -43,9 +44,14 @@ class User {
         if (!this.username || typeof this.username !== 'string' || this.username.length < 3) {
             throw new ValidationError('Username must be at least 3 characters long');
         }
-        if (!this.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
-            throw new ValidationError('Invalid email format');
+        
+        // Only validate email if email verification is enabled
+        if (isFeatureEnabled('EMAIL_VERIFICATION')) {
+            if (!this.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+                throw new ValidationError('Invalid email format');
+            }
         }
+        
         if (this.password && this.password.length < 8) {
             throw new ValidationError('Password must be at least 8 characters long');
         }
@@ -247,6 +253,11 @@ export const UserDB = {
                 }
             }
 
+            // Skip verification check if feature is disabled
+            if (isFeatureEnabled('EMAIL_VERIFICATION') && !user.isVerified) {
+                throw new AuthError('Email not verified');
+            }
+
             return user;
         } catch (error) {
             logger.error(`Login failed for user ${username}: ${error.message}`);
@@ -306,58 +317,65 @@ export const UserDB = {
         }
     },
 
-    async verify(token) {
-        try {
-            const user = await this.findOne({
-                verificationToken: token,
-                verificationExpires: { $gt: new Date() }
-            });
+    // Replace email verification methods with no-op when feature is disabled
+    verify: isFeatureEnabled('EMAIL_VERIFICATION') 
+        ? async function(token) {
+            // Original verify implementation
+            try {
+                const user = await this.findOne({ 
+                    verificationToken: token,
+                    verificationExpires: { $gt: new Date() }
+                });
 
-            if (!user) {
-                throw new ValidationError('Invalid or expired verification token');
-            }
-
-            await this.update(
-                { userUuid: user.userUuid },
-                {
-                    isVerified: true,
-                    verificationToken: null,
-                    verificationExpires: null
+                if (!user) {
+                    throw new AuthError('Invalid or expired verification token');
                 }
-            );
 
-            return user;
-        } catch (error) {
-            logger.error(`Failed to verify user: ${error.message}`);
-            throw error instanceof ValidationError ? error : new DatabaseError('Failed to verify user');
-        }
-    },
+                await this.update(
+                    { userUuid: user.userUuid },
+                    { 
+                        isVerified: true,
+                        verificationToken: null,
+                        verificationExpires: null
+                    }
+                );
 
-    async resendVerification(userUuid) {
-        try {
-            const user = await this.findById(userUuid);
-            if (!user) {
-                throw new ValidationError('User not found');
+                return true;
+            } catch (error) {
+                logger.error(`Verification failed: ${error.message}`);
+                throw error;
             }
-
-            if (user.isVerified) {
-                throw new ValidationError('User is already verified');
-            }
-
-            const verificationToken = crypto.randomBytes(32).toString('hex');
-            const verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
-
-            await this.update(
-                { userUuid },
-                { verificationToken, verificationExpires }
-            );
-
-            return { verificationToken };
-        } catch (error) {
-            logger.error(`Failed to resend verification: ${error.message}`);
-            throw error instanceof ValidationError ? error : new DatabaseError('Failed to resend verification');
         }
-    }
+        : noOpAsync,
+
+    resendVerification: isFeatureEnabled('EMAIL_VERIFICATION')
+        ? async function(userUuid) {
+            // Original resendVerification implementation
+            try {
+                const user = await this.findById(userUuid);
+                if (!user) {
+                    throw new AuthError('User not found');
+                }
+
+                if (user.isVerified) {
+                    throw new AuthError('User is already verified');
+                }
+
+                const verificationToken = crypto.randomBytes(32).toString('hex');
+                const verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
+
+                await this.update(
+                    { userUuid },
+                    { verificationToken, verificationExpires }
+                );
+
+                return { verificationToken };
+            } catch (error) {
+                logger.error(`Resend verification failed: ${error.message}`);
+                throw error;
+            }
+        }
+        : noOpAsync,
 };
 
 export default User;
