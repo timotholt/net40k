@@ -10,6 +10,7 @@ export class MongoDbEngine extends BaseDbEngine {
         this.db = null;
         this.connectionPromise = null;
         this.initialized = false;
+        this.supportsExplicitIndexes = true;
     }
 
     isConnected() {
@@ -106,18 +107,21 @@ export class MongoDbEngine extends BaseDbEngine {
             throw new Error('Invalid collection: must be a string');
         }
 
-        // Use provided _id or generate one
-        if (!data._id) {
-            data._id = UuidService.generate();
+        // Make a copy of the data to avoid modifying the input
+        const docToInsert = { ...data };
+
+        // Generate _id if not provided
+        if (!docToInsert._id) {
+            docToInsert._id = UuidService.generate();
         }
 
         // Ensure UUID is generated if not provided
-        if (!data.uuid) {
-            data.uuid = UuidService.generate();
+        if (!docToInsert.uuid) {
+            docToInsert.uuid = UuidService.generate();
         }
 
         const db = await this._ensureConnected();
-        const normalizedData = this._normalizeDates(data);
+        const normalizedData = this._normalizeDates(docToInsert);
         await db.collection(collection.toLowerCase()).insertOne(normalizedData);
         const { _id, ...cleanData } = normalizedData;
         return cleanData;

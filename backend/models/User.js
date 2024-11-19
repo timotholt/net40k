@@ -116,10 +116,16 @@ export const UserDB = {
 
     async init() {
         await db.createCollection(this.collection);
-        // Create indexes for efficient lookups
-        await db.createIndex(this.collection, { username: 1 }, { unique: true });
-        await db.createIndex(this.collection, { email: 1 }, { unique: true, sparse: true });
-        await db.createIndex(this.collection, { userUuid: 1 }, { unique: true });
+        
+        // Only create indexes if the database engine supports them
+        if (db.supportsExplicitIndexes) {
+            // Create indexes for efficient lookups
+            await db.createIndex(this.collection, { username: 1 }, { unique: true });
+            await db.createIndex(this.collection, { email: 1 }, { unique: true, sparse: true });
+            await db.createIndex(this.collection, { userUuid: 1 }, { unique: true });
+        } else {
+            logger.info('Database engine does not support explicit indexes, skipping index creation');
+        }
     },
 
     async create(userData) {

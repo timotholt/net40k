@@ -201,6 +201,10 @@ class Database {
             throw error;
         }
     }
+
+    get supportsExplicitIndexes() {
+        return this.#dbEngine?.supportsExplicitIndexes || false;
+    }
 }
 
 // Export singleton instance

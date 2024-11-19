@@ -36,6 +36,7 @@ import {
 } from 'firebase/firestore';
 import dotenv from 'dotenv';
 import { flatten, unflatten } from 'flat';
+import { UuidService } from '../services/UuidService.js';
 
 dotenv.config();
 
@@ -554,18 +555,23 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
 
         try {
-//            console.log('Creating document with data:', JSON.stringify(data, null, 2));
-//            console.log('');
+            // Make a copy of the data to avoid modifying the input
+            const docToInsert = { ...data };
+
+            // Ensure UUID is generated if not provided
+            if (!docToInsert.uuid) {
+                docToInsert.uuid = UuidService.generate();
+            }
             
             // Convert data to Firestore-compatible format
-            const firestoreData = this._convertToFirestoreData(data);
+            const firestoreData = this._convertToFirestoreData(docToInsert);
             
             // Get collection reference
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
             
-            // Create a new document with auto-generated ID
-            const docRef = doc(collectionRef);
+            // Create a new document using UUID as the document ID
+            const docRef = doc(collectionRef, docToInsert.uuid);
             
             // Set the document data with retry
             await withRetry(() => setDoc(docRef, firestoreData));

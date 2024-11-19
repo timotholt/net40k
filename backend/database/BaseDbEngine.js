@@ -9,6 +9,13 @@ import DateService from '../services/DateService.js';
 //
 
 export class BaseDbEngine {
+    constructor() {
+        if (this.constructor === BaseDbEngine) {
+            throw new Error('Cannot instantiate abstract class');
+        }
+        this.supportsExplicitIndexes = false;
+    }
+
     _initializeData(collection, data) {
         // If no data, return as is
         if (!data) return data;

@@ -335,6 +335,12 @@ async function testIndexManagement() {
     // Create collection first
     await db.createCollection(collection);
     
+    // Skip index tests if database doesn't support explicit indexes
+    if (!db.engine.supportsExplicitIndexes) {
+        log('Database engine does not support explicit indexes, skipping index tests', 'info');
+        return;
+    }
+    
     // Test single index creation
     await db.createIndex(collection, { field1: 1 }, { unique: true });
     let indexes = await db.listIndexes(collection);
@@ -366,9 +372,14 @@ async function testIndexManagement() {
     };
     await db.create(collection, testDoc);
     
-    // Test unique constraint
+    // Test unique constraint on field1
     try {
-        const dupDoc = { ...testDoc };
+        const dupDoc = {
+            field1: 'unique1', // Same field1 value
+            field2: 200, // Different field2 value
+            field3: 'test2', // Different field3 value
+            field4: 'sparse2' // Different field4 value
+        };
         await db.create(collection, dupDoc);
         assert(false, 'Should not allow duplicate field1 value');
     } catch (error) {
