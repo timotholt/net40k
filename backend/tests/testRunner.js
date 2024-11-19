@@ -49,15 +49,12 @@ export async function handleTestCommand(command) {
             case 'q':
                 if (rl) rl.close();
                 process.exit(0);
-            case '':
-            case undefined:
-                return false;
             default:
                 console.log('Unknown command');
                 return false;
         }
     } catch (error) {
-        console.error('Error executing command:', error);
+        console.error('Command failed:', error);
         return false;
     }
 }

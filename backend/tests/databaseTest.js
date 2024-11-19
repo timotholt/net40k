@@ -419,6 +419,12 @@ export async function testDatabaseEngine() {
     try {
         log('Starting database tests...');
         let allTestsPassed = true;
+
+        // Ensure clean state by disconnecting first
+        if (db.isConnected()) {
+            log('Cleaning up previous connection...');
+            await db.disconnect();
+        }
         
         const tests = [
             ['Database Initialization', testDatabaseInitialization],
@@ -431,30 +437,44 @@ export async function testDatabaseEngine() {
             ['Error Recovery', testErrorRecovery]
         ];
 
-        // Run initialization test first
-        const [initName, initTest] = tests[0];
-        const initPassed = await runTest(initName, initTest);
-        if (!initPassed) allTestsPassed = false;
-
-        // Run remaining tests after database is initialized
-        await db.init();
-        for (let i = 1; i < tests.length; i++) {
+        // Run all tests in sequence, maintaining connection between CRUD tests
+        for (let i = 0; i < tests.length; i++) {
             const [name, testFn] = tests[i];
+            
+            // For non-initialization tests, ensure we're connected
+            if (i > 0 && !db.isConnected()) {
+                await db.init();
+            }
+            
             const passed = await runTest(name, testFn);
             if (!passed) allTestsPassed = false;
-            await cleanupCollections();
+            
+            // Cleanup after each test except initialization
+            if (i > 0) {
+                await cleanupCollections();
+            }
         }
-        await db.disconnect();
+
+        // Ensure we disconnect at the end
+        if (db.isConnected()) {
+            await db.disconnect();
+        }
         
         if (allTestsPassed) {
             log('All tests completed successfully! 🎉');
-            process.exit(0);
+            return true;
         } else {
-            log('Some tests failed. Check the logs above for details.');
-            process.exit(1);
+            log('Some tests failed.', 'error');
+            return false;
         }
     } catch (error) {
-        console.error('Test suite failed:', error);
-        process.exit(1);
+        log('Test execution failed: ' + error.message, 'error');
+        console.error(error);
+        return false;
+    } finally {
+        // Extra safety: ensure we're disconnected even if tests fail
+        if (db.isConnected()) {
+            await db.disconnect();
+        }
     }
 }
