@@ -31,9 +31,13 @@ class User {
         this.isActive = sanitizedData.isActive !== undefined ? sanitizedData.isActive : true;
         this.isDeleted = sanitizedData.isDeleted || false;
         this.isBanned = sanitizedData.isBanned || false;
-        this.isVerified = sanitizedData.isVerified || false;
-        this.verificationToken = sanitizedData.verificationToken || null;
-        this.verificationExpires = sanitizedData.verificationExpires || null;
+        
+        // Handle verification based on feature flag
+        const emailVerificationEnabled = isFeatureEnabled('EMAIL_VERIFICATION');
+        this.isVerified = emailVerificationEnabled ? (sanitizedData.isVerified || false) : true;
+        this.verificationToken = emailVerificationEnabled ? (sanitizedData.verificationToken || null) : null;
+        this.verificationExpires = emailVerificationEnabled ? (sanitizedData.verificationExpires || null) : null;
+        
         this.banReason = sanitizedData.banReason || null;
         this.banExpiresAt = sanitizedData.banExpiresAt || null;
         this.preferences = sanitizedData.preferences || {};

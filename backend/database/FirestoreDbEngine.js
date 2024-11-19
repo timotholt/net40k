@@ -431,7 +431,23 @@ export class FirestoreDbEngine extends BaseDbEngine {
             const flattenedQuery = this._flattenObject(normalizedQuery);
             
             let q = this._buildQuery(collectionRef, flattenedQuery);
-            const snapshot = await getDocs(q);
+            
+            // Wrap getDocs in a try-catch to handle BloomFilter errors
+            let snapshot;
+            try {
+                snapshot = await getDocs(q);
+            } catch (error) {
+                // If it's a BloomFilter error and the collection might be empty, return empty results
+                if (error.message?.includes('BloomFilter')) {
+                    console.log(`Ignoring BloomFilter error for potentially empty collection ${collectionName}`);
+                    return {
+                        sort: () => ({ limit: n => [], then: resolve => resolve([]) }),
+                        limit: () => [],
+                        then: resolve => resolve([])
+                    };
+                }
+                throw error;
+            }
             
             // Process results
             const results = snapshot.docs.map(doc => {

@@ -25,13 +25,14 @@ router.post('/register', createRateLimit('register'), async (req, res) => {
         // This is a temporary change to simplify the registration flow
         // Will be re-enabled once email infrastructure is in place
         // DO NOT REMOVE the email validation below
-        const { username, password } = req.body;
+        const { username, password, nickname } = req.body;
         // const { username, email, password } = req.body;
 
         const user = await userService.register({ 
             username, 
             // email,  // Temporarily disabled
-            password 
+            password,
+            nickname 
         });
         res.json({ success: true, user });
     } catch (error) {
