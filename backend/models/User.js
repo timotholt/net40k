@@ -4,7 +4,7 @@ import { createUserUuid } from '../constants/GameUuids.js';
 import DateService from '../services/DateService.js';
 import crypto from 'crypto';
 import { ValidationError, DatabaseError, AuthError } from '../utils/errors.js';
-import { isFeatureEnabled } from '../config/features.js';
+import { isFeatureEnabled, noOpAsync } from '../config/features.js';
 import logger from '../utils/logger.js';
 import { Lock } from './Lock.js';
 import { generateSchema } from '../utils/schemaGenerator.js';
