@@ -34,9 +34,11 @@ router.post('/register', createRateLimit('register'), async (req, res) => {
             password,
             nickname 
         });
-        res.json({ success: true, user });
+        res.status(201).json({ success: true, user });
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        console.error('Registration error:', error.message);
+        const statusCode = error.name === 'ValidationError' ? 400 : 500;
+        res.status(statusCode).json({ success: false, message: error.message });
     }
 });
 

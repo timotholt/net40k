@@ -35,8 +35,15 @@ class User {
         // Handle verification based on feature flag
         const emailVerificationEnabled = isFeatureEnabled('EMAIL_VERIFICATION');
         this.isVerified = emailVerificationEnabled ? (sanitizedData.isVerified || false) : true;
-        this.verificationToken = emailVerificationEnabled ? (sanitizedData.verificationToken || null) : null;
-        this.verificationExpires = emailVerificationEnabled ? (sanitizedData.verificationExpires || null) : null;
+        
+        // Only set verification token if email verification is enabled
+        if (emailVerificationEnabled) {
+            this.verificationToken = sanitizedData.verificationToken || crypto.randomBytes(32).toString('hex');
+            this.verificationExpires = sanitizedData.verificationExpires || new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
+        } else {
+            this.verificationToken = null;
+            this.verificationExpires = null;
+        }
         
         this.banReason = sanitizedData.banReason || null;
         this.banExpiresAt = sanitizedData.banExpiresAt || null;
@@ -133,10 +140,10 @@ export const UserDB = {
     },
 
     async create(userData) {
-        const lockId = `user-create-${userData.email}`;
+        const lockId = `user-create-${userData.username}`;
         try {
             await Lock.acquire(lockId);
-            logger.info(`Creating new user: ${userData.email}`);
+            logger.info(`Creating new user: ${userData.username}`);
             
             const user = new User(userData);
             user.validate();
@@ -159,7 +166,7 @@ export const UserDB = {
             user.verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
 
             const result = await db.create(this.collection, user.toJSON());
-            logger.info(`User created successfully: ${user.email}`);
+            logger.info(`User created successfully: ${user.username}`);
             return result;
         } catch (error) {
             logger.error(`Failed to create user: ${error.message}`);

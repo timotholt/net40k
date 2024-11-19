@@ -49,21 +49,12 @@ class UserService {
             username,
             nickname: nickname || username,
             password: hashedPassword,
-
-            // TEMPORARY MODIFICATION - START
-            // Email verification disabled for initial development
-            // This is a temporary change to simplify the registration flow
-            // Will be re-enabled once email infrastructure is in place
-            // DO NOT REMOVE the email validation below
-            emailVerified: true,  // Temporarily set to true by default
-            emailVerificationToken: null,  // Temporarily not needed
-            // TEMPORARY MODIFICATION - END
-            isVerified: true,  // Temporarily set to true by default
-            verificationToken: null,  // Temporarily not needed
             createdAt: new Date()
         });
 
-        return this.sanitizeUser(user);
+        console.log('✅ User created successfully:', user?.userUuid);
+        const sanitizedUser = this.sanitizeUser(user);
+        return sanitizedUser;
     }
 
     async login(username, password) {
@@ -329,11 +320,21 @@ class UserService {
 
     // Utility methods
     sanitizeUser(user) {
-        const sanitized = { ...user.toObject() };
-        delete sanitized.password;
-        delete sanitized._id;
-        delete sanitized.__v;
-        return sanitized;
+        if (!user) return null;
+        
+        // Create a new object with only the fields we want to expose
+        return {
+            userUuid: user.userUuid,
+            username: user.username,
+            nickname: user.nickname,
+            email: user.email,
+            createdAt: user.createdAt,
+            lastLoginAt: user.lastLoginAt,
+            isAdmin: user.isAdmin,
+            isActive: user.isActive,
+            isVerified: user.isVerified,
+            preferences: user.preferences
+        };
     }
 
     async sendVerificationEmail(user) {
