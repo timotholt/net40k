@@ -169,7 +169,7 @@ export class GameStateServer extends GameStateBase {
 
     static async findByUuid(gameUuid) {
         const db = new Database();
-        const data = await db.getEngine().findOne(GameStateServer.collection, { gameUuid });
+        const data = await db.getEngine().findOne(GameStateServer.collection, { uuid: gameUuid });
         return data ? new GameStateServer(data) : null;
     }
 

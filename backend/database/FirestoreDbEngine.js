@@ -17,8 +17,8 @@
 
 import { BaseDbEngine } from './BaseDbEngine.js';
 import { initializeApp } from 'firebase/app';
-import { 
-    getFirestore, 
+import {
+    getFirestore,
     collection as firestoreCollection,
     doc,
     getDoc,
@@ -202,6 +202,7 @@ export class FirestoreDbEngine extends BaseDbEngine {
         for (const [key, value] of Object.entries(converted)) {
             if (value instanceof Date) {
                 converted[key] = Timestamp.fromDate(value);
+                console.log('Converting Date to Timestamp:', key, value);
             } else if (Array.isArray(value)) {
                 // Handle nested arrays by flattening them with a special format
                 converted[key] = this._convertArrayToFirestore(value);
@@ -234,12 +235,23 @@ export class FirestoreDbEngine extends BaseDbEngine {
 
         const converted = { ...data };
         for (const [key, value] of Object.entries(converted)) {
-            if (value instanceof Timestamp) {
-                converted[key] = value.toDate();
-            } else if (Array.isArray(value)) {
-                converted[key] = this._convertArrayFromFirestore(value);
-            } else if (value && typeof value === 'object') {
-                converted[key] = this._convertFromFirestoreData(value);
+            if (value && typeof value === 'object') {
+                // Check for Firestore Timestamp
+                if (value.toDate && typeof value.toDate === 'function' && value.seconds !== undefined && value.nanoseconds !== undefined) {
+                    // Use Firestore's toDate() to ensure consistent conversion
+                    converted[key] = value.toDate();
+                    console.log('Converted Timestamp:', {
+                        key,
+                        original: value,
+                        result: converted[key],
+                        isDate: converted[key] instanceof Date,
+                        dateTime: converted[key].toISOString()
+                    });
+                } else if (Array.isArray(value)) {
+                    converted[key] = this._convertArrayFromFirestore(value);
+                } else {
+                    converted[key] = this._convertFromFirestoreData(value);
+                }
             }
         }
         return converted;
@@ -248,11 +260,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
     _convertArrayFromFirestore(arr) {
         return arr.map(item => {
             if (item && typeof item === 'object') {
-                if (item._type === 'array') {
-                    // Convert back from our special format to a real array
-                    return this._convertArrayFromFirestore(item.value);
-                } else if (item instanceof Timestamp) {
+                // Check for Firestore Timestamp
+                if (item.toDate && typeof item.toDate === 'function' && item.seconds !== undefined && item.nanoseconds !== undefined) {
+                    // Use Firestore's toDate() to ensure consistent conversion
                     return item.toDate();
+                } else if (item._type === 'array') {
+                    return this._convertArrayFromFirestore(item.value);
                 } else {
                     return this._convertFromFirestoreData(item);
                 }
@@ -300,41 +313,57 @@ export class FirestoreDbEngine extends BaseDbEngine {
     }
 
     _unflattenObject(obj) {
-        if (obj === undefined || obj === null) return obj;
+        if (!obj) return obj;
 
-        // Handle arrays (including nested)
-        if (Array.isArray(obj)) {
-//            console.log('Unflattening array:', JSON.stringify(obj));
-            const result = obj.map(item => this._unflattenObject(item));
-//            console.log('Unflattened array result:', JSON.stringify(result));
-            return result;
-        }
-
-        // Handle primitive values and Dates/Timestamps
-        if (typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) {
+        // If it's already a Timestamp, return it
+        if (obj instanceof Timestamp) {
             return obj;
         }
 
-        // Handle objects
-        const processed = {};
-        for (const [key, value] of Object.entries(obj)) {
-            if (Array.isArray(value)) {
-//                console.log(`Unflattening array at key ${key}:`, JSON.stringify(value));
-                // Preserve arrays as is, just process their contents
-                processed[key] = value.map(item => this._unflattenObject(item));
-//                console.log(`Unflattened array at key ${key}:`, JSON.stringify(processed[key]));
-            } else if (typeof value === 'object' && value !== null) {
-                // Only unflatten non-array objects
-                const unflattened = unflatten(value, {
-                    safe: true,
-                    delimiter: '.'
-                });
-                processed[key] = this._unflattenObject(unflattened);
-            } else {
-                processed[key] = value;
-            }
+        // Handle arrays
+        if (Array.isArray(obj)) {
+            return obj.map(item => this._unflattenObject(item));
         }
-        return processed;
+
+        // If it's not an object, return as is
+        if (typeof obj !== 'object') {
+            return obj;
+        }
+
+        const result = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (!value) {
+                result[key] = value;
+                continue;
+            }
+
+            // If it looks like a Timestamp
+            if (typeof value === 'object' && 
+                'seconds' in value && 
+                'nanoseconds' in value &&
+                typeof value.seconds === 'number' &&
+                typeof value.nanoseconds === 'number') {
+                result[key] = new Timestamp(value.seconds, value.nanoseconds);
+                continue;
+            }
+
+            // Handle arrays
+            if (Array.isArray(value)) {
+                result[key] = value.map(item => this._unflattenObject(item));
+                continue;
+            }
+
+            // Handle nested objects
+            if (typeof value === 'object') {
+                result[key] = this._unflattenObject(value);
+                continue;
+            }
+
+            // Handle primitive values
+            result[key] = value;
+        }
+
+        return result;
     }
 
     _getCollectionName(collection) {
@@ -386,7 +415,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
         return q;
     }
 
-    async find(collection, queryObj) {
+    async find(collection, queryObj, options = {}) {
+        if (!this.initialized || !this.db) {
+            console.error('FirestoreDbEngine: Not initialized');
+            throw new Error('Firestore not initialized');
+        }
+
         try {
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
@@ -401,12 +435,32 @@ export class FirestoreDbEngine extends BaseDbEngine {
             // Process results
             const results = snapshot.docs.map(doc => {
                 const data = doc.data();
+                console.log('\nDocument Processing Steps:');
+                console.log('1. Raw doc data:', {
+                    data,
+                    id: doc.id,
+                    created: data.created,
+                    createdType: data.created?.constructor?.name
+                });
+
                 const unflattened = this._unflattenObject(data);
+                console.log('2. Unflattened data:', {
+                    unflattened,
+                    created: unflattened.created,
+                    createdType: unflattened.created?.constructor?.name
+                });
+
                 const withDates = this._convertFromFirestoreData(unflattened);
-                return {
-                    ...withDates,
-                    _id: doc.id
-                };
+                console.log('3. Data with dates:', {
+                    withDates,
+                    created: withDates.created,
+                    createdType: withDates.created?.constructor?.name,
+                    isDate: withDates.created instanceof Date
+                });
+
+                // Remove _id from returned data
+                const { _id, ...cleanData } = withDates;
+                return cleanData;
             });
 
             return {
@@ -438,51 +492,12 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
 
         try {
-            // If querying by _id, use direct document reference
-            if (queryObj._id) {
-                const collectionName = this._getCollectionName(collection);
-                const docRef = doc(this.db, collectionName, queryObj._id.toString());
-                const docSnap = await getDoc(docRef);
-                
-                if (!docSnap.exists()) {
-                    return null;
-                }
-                
-                const data = docSnap.data();
-                return this._convertFromFirestoreData({
-                    ...data,
-                    _id: docSnap.id
-                });
-            }
-
-            // Otherwise, use query to find first matching document
+            // Use query to find first matching document
             const results = await this.find(collection, queryObj, 1);
+            console.log('FindOne results:', results);
             return results.length > 0 ? results[0] : null;
         } catch (error) {
             console.error('Error in findOne:', error);
-            throw error;
-        }
-    }
-
-    async findByUuid(collection, uuid) {
-        try {
-            const collectionName = this._getCollectionName(collection);
-            const collectionRef = firestoreCollection(this.db, collectionName);
-            const q = query(collectionRef, where('uuid', '==', uuid), limit(1));
-
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) return null;
-
-            const document = snapshot.docs[0];
-            const data = document.data();
-            const unflattened = this._unflattenObject(data);
-            const withDates = this._convertFromFirestoreData(unflattened);
-            return {
-                ...withDates,
-                _id: document.id
-            };
-        } catch (error) {
-            console.error('Error in findByUuid:', error);
             throw error;
         }
     }
@@ -501,40 +516,26 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
 
         try {
-            // If updating by _id, use direct document reference
-            if (queryObj._id) {
-                const collectionName = this._getCollectionName(collection);
-                const docRef = doc(this.db, collectionName, queryObj._id.toString());
-                
-                // Get current document data
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) {
-//                    console.log('Document not found for update');
-                    return { modifiedCount: 0 };
-                }
-                
-                // If data has _id, treat it as a document replacement
-                if (data._id) {
-                    const { _id, ...updateData } = data;
-                    await withRetry(() => updateDoc(docRef, this._convertToFirestoreData(updateData)));
-                } else {
-                    // Otherwise, merge the update
-                    await withRetry(() => updateDoc(docRef, this._convertToFirestoreData(data)));
-                }
-                
-//                console.log('Document updated successfully');
-                return { modifiedCount: 1 };
+            const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            const normalizedQuery = this._normalizeDates(queryObj || {});
+            const flattenedQuery = this._flattenObject(normalizedQuery);
+            const q = this._buildQuery(collectionRef, flattenedQuery);
+
+            // Get matching documents
+            const snapshot = await getDocs(q);
+            let modifiedCount = 0;
+
+            // Convert update data
+            const updateData = this._convertToFirestoreData(data);
+
+            // Update each document
+            for (const docSnap of snapshot.docs) {
+                await withRetry(() => updateDoc(docSnap.ref, updateData));
+                modifiedCount++;
             }
 
-            // For non-_id queries, find and update first matching document
-            const result = await this.findOne(collection, queryObj);
-            if (!result) {
-                console.log('No document found matching query');
-                return { modifiedCount: 0 };
-            }
-
-            // Update the found document
-            return this.update(collection, { _id: result._id }, data);
+            return { modifiedCount };
         } catch (error) {
             console.error('Error in update:', error);
             throw error;
@@ -563,20 +564,19 @@ export class FirestoreDbEngine extends BaseDbEngine {
             const collectionName = this._getCollectionName(collection);
             const collectionRef = firestoreCollection(this.db, collectionName);
             
-            // Create a new document with the specified ID
-            const docRef = doc(collectionRef, firestoreData._id.toString());
-            
-            // Remove _id from the data since it's used as the document ID
-            const { _id, ...docData } = firestoreData;
+            // Create a new document with auto-generated ID
+            const docRef = doc(collectionRef);
             
             // Set the document data with retry
-            await withRetry(() => setDoc(docRef, docData));
+            await withRetry(() => setDoc(docRef, firestoreData));
             
             // Get fresh data after creation with retry
             const docSnap = await withRetry(() => getDoc(docRef));
             
             // Return the created document data with dates converted back
-            return this._convertFromFirestoreData({ _id, ...docSnap.data() });
+            const result = this._convertFromFirestoreData(docSnap.data());
+            console.log('Final data from create:', result);
+            return result;
         } catch (error) {
             console.error('Error creating document:', error);
             throw error;
@@ -595,46 +595,21 @@ export class FirestoreDbEngine extends BaseDbEngine {
         }
 
         try {
-            // If deleting by _id, use direct document reference
-            if (queryObj._id) {
-                const collectionName = this._getCollectionName(collection);
-                const docRef = doc(this.db, collectionName, queryObj._id.toString());
-                
-                // Check if document exists before deletion
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) {
-                    console.log('Document not found for deletion');
-                    return { deletedCount: 0 };
-                }
-                
-                // Attempt to delete the document
-                await withRetry(() => deleteDoc(docRef));
-                
-                // Verify deletion by checking if document still exists
-                const verifySnap = await getDoc(docRef);
-                if (!verifySnap.exists()) {
-//                    console.log('Document deleted successfully');
-                    return { deletedCount: 1 };
-                } else {
-                    console.error('Document still exists after deletion attempt');
-                    return { deletedCount: 0 };
-                }
-            }
-
-            // For other queries, find matching documents and delete them
-            const results = await this.find(collection, queryObj);
+            // Get collection reference and build query
             const collectionName = this._getCollectionName(collection);
+            const collectionRef = firestoreCollection(this.db, collectionName);
+            const normalizedQuery = this._normalizeDates(queryObj || {});
+            const flattenedQuery = this._flattenObject(normalizedQuery);
+            const q = this._buildQuery(collectionRef, flattenedQuery);
+
+            // Get matching documents
+            const snapshot = await getDocs(q);
             let deletedCount = 0;
 
-            for (const result of results) {
-                const docRef = doc(this.db, collectionName, result._id.toString());
-                await withRetry(() => deleteDoc(docRef));
-                
-                // Verify each deletion
-                const verifySnap = await getDoc(docRef);
-                if (!verifySnap.exists()) {
-                    deletedCount++;
-                }
+            // Delete each document
+            for (const docSnap of snapshot.docs) {
+                await withRetry(() => deleteDoc(docSnap.ref));
+                deletedCount++;
             }
 
 //            console.log(`Deleted ${deletedCount} documents`);

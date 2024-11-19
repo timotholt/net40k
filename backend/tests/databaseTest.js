@@ -87,7 +87,7 @@ async function testDatabaseInitialization() {
 // Basic CRUD operations test
 async function testBasicCRUD() {
     const testData = {
-        _id: 'test-crud-1',
+        uuid: 'test-crud-1',
         name: 'Test Item',
         created: new Date(),
         tags: ['test', 'crud'],
@@ -96,10 +96,31 @@ async function testBasicCRUD() {
 
     // Create
     const created = await db.create('test_collection', testData);
-    assert(created._id === testData._id, 'Created item should have the same ID');
+    console.log('Created data:', created);
+    console.log('Created date type:', created.created instanceof Date);
+    assert(created.uuid === testData.uuid, 'Created item should have the same UUID');
 
     // Read
-    const found = await db.findOne('test_collection', { _id: testData._id });
+    const found = await db.findOne('test_collection', { uuid: testData.uuid });
+    console.log('\nDate Comparison:');
+    console.log('Original date:', {
+        value: testData.created,
+        type: testData.created.constructor.name,
+        isDate: testData.created instanceof Date,
+        timestamp: testData.created.getTime(),
+        iso: testData.created.toISOString(),
+        toString: testData.created.toString()
+    });
+    console.log('Found date:', {
+        value: found.created,
+        type: found.created.constructor.name,
+        isDate: found.created instanceof Date,
+        timestamp: found.created?.getTime?.(),
+        iso: found.created?.toISOString?.(),
+        toString: found.created?.toString?.()
+    });
+    console.log('Raw found object:', found);
+
     assert(found.name === testData.name, 'Found item should match created item');
     assert(found.created instanceof Date, 'Date should be properly deserialized');
     assert(Array.isArray(found.tags), 'Arrays should be preserved');
@@ -107,20 +128,20 @@ async function testBasicCRUD() {
 
     // Update
     const updateData = { name: 'Updated Item' };
-    await db.update('test_collection', { _id: testData._id }, updateData);
-    const updated = await db.findOne('test_collection', { _id: testData._id });
+    await db.update('test_collection', { uuid: testData.uuid }, updateData);
+    const updated = await db.findOne('test_collection', { uuid: testData.uuid });
     assert(updated.name === 'Updated Item', 'Item should be updated');
 
     // Delete
-    await db.delete('test_collection', { _id: testData._id });
-    const deleted = await db.findOne('test_collection', { _id: testData._id });
+    await db.delete('test_collection', { uuid: testData.uuid });
+    const deleted = await db.findOne('test_collection', { uuid: testData.uuid });
     assert(!deleted, 'Item should be deleted');
 }
 
 // Date handling test
 async function testDateHandling() {
     const dates = {
-        _id: 'test-dates',
+        uuid: 'test-dates',
         current: new Date(),
         past: new Date('2020-01-01'),
         future: new Date('2025-12-31'),
@@ -128,7 +149,7 @@ async function testDateHandling() {
     };
 
     await db.create('test_dates', dates);
-    const retrieved = await db.findOne('test_dates', { _id: 'test-dates' });
+    const retrieved = await db.findOne('test_dates', { uuid: 'test-dates' });
 
     assert(retrieved.current instanceof Date, 'Current date should be a Date object');
     assert(retrieved.past instanceof Date, 'Past date should be a Date object');
@@ -143,7 +164,7 @@ async function testDateHandling() {
 // Array handling test
 async function testArrayHandling() {
     const arrayData = {
-        _id: 'test-arrays',
+        uuid: 'test-arrays',
         emptyArray: [],
         numberArray: [1, 2, 3],
         objectArray: [{ id: 1 }, { id: 2 }],
@@ -152,7 +173,7 @@ async function testArrayHandling() {
 
     console.log('Original array data:', JSON.stringify(arrayData, null, 2));
     await db.create('test_arrays', arrayData);
-    const retrieved = await db.findOne('test_arrays', { _id: 'test-arrays' });
+    const retrieved = await db.findOne('test_arrays', { uuid: 'test-arrays' });
     console.log('Retrieved array data:', JSON.stringify(retrieved, null, 2));
 
     assert(Array.isArray(retrieved.emptyArray), 'Empty arrays should be preserved');
@@ -168,9 +189,9 @@ async function testArrayHandling() {
 async function testQueryOperations() {
     // Create test data
     const items = [
-        { _id: 'query-1', value: 10, category: 'A' },
-        { _id: 'query-2', value: 20, category: 'A' },
-        { _id: 'query-3', value: 30, category: 'B' }
+        { uuid: 'query-1', value: 10, category: 'A' },
+        { uuid: 'query-2', value: 20, category: 'A' },
+        { uuid: 'query-3', value: 30, category: 'B' }
     ];
 
     for (const item of items) {
@@ -225,7 +246,7 @@ async function testLoadJsonData() {
 async function testConcurrentOperations() {
     const numOperations = 50;
     const testDoc = {
-        _id: 'concurrent-test',
+        uuid: 'concurrent-test',
         counter: 0
     };
     
@@ -236,9 +257,9 @@ async function testConcurrentOperations() {
     const operations = [];
     for (let i = 0; i < numOperations; i++) {
         operations.push((async () => {
-            const doc = await db.findOne('test_concurrent', { _id: 'concurrent-test' });
+            const doc = await db.findOne('test_concurrent', { uuid: 'concurrent-test' });
             doc.counter++;
-            await db.update('test_concurrent', { _id: 'concurrent-test' }, doc);
+            await db.update('test_concurrent', { uuid: 'concurrent-test' }, doc);
         })());
     }
     
@@ -246,14 +267,14 @@ async function testConcurrentOperations() {
     await Promise.all(operations);
     
     // Verify final count
-    const finalDoc = await db.findOne('test_concurrent', { _id: 'concurrent-test' });
+    const finalDoc = await db.findOne('test_concurrent', { uuid: 'concurrent-test' });
     assert(finalDoc.counter === numOperations, `Expected counter to be ${numOperations}, got ${finalDoc.counter}`);
 }
 
 // Cache consistency test
 async function testCacheConsistency() {
     const testData = {
-        _id: 'cache-test-1',
+        uuid: 'cache-test-1',
         value: 'original'
     };
 
@@ -261,43 +282,43 @@ async function testCacheConsistency() {
     await db.create('test_cache', testData);
 
     // First read should populate cache
-    const firstRead = await db.findOne('test_cache', { _id: testData._id });
+    const firstRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
     assert(firstRead.value === 'original', 'Initial read should return original value');
 
     // Update document
-    await db.update('test_cache', { _id: testData._id }, { value: 'updated' });
+    await db.update('test_cache', { uuid: 'cache-test-1' }, { value: 'updated' });
 
     // Second read should reflect update
-    const secondRead = await db.findOne('test_cache', { _id: testData._id });
+    const secondRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
     assert(secondRead.value === 'updated', 'Cache should be invalidated after update');
 
     // Test document replacement
     const replacementData = {
-        _id: testData._id,
+        uuid: 'cache-test-1',
         value: 'replaced',
         newField: 'new'
     };
-    await db.update('test_cache', { _id: testData._id }, replacementData);
+    await db.update('test_cache', { uuid: 'cache-test-1' }, replacementData);
 
     // Third read should show complete replacement
-    const thirdRead = await db.findOne('test_cache', { _id: testData._id });
+    const thirdRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
     assert(thirdRead.value === 'replaced', 'Cache should reflect document replacement');
     assert(thirdRead.newField === 'new', 'New fields should be added');
-    assert(Object.keys(thirdRead).length === 3, 'Document should only have _id, value, and newField');
+    assert(Object.keys(thirdRead).length === 3, 'Document should only have uuid, value, and newField');
 
     // Test partial update
-    await db.update('test_cache', { _id: testData._id }, { value: 'partial' });
+    await db.update('test_cache', { uuid: 'cache-test-1' }, { value: 'partial' });
 
     // Fourth read should show partial update
-    const fourthRead = await db.findOne('test_cache', { _id: testData._id });
+    const fourthRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
     assert(fourthRead.value === 'partial', 'Cache should reflect partial update');
     assert(fourthRead.newField === 'new', 'Unmodified fields should remain');
 
     // Delete document
-    await db.delete('test_cache', { _id: testData._id });
+    await db.delete('test_cache', { uuid: 'cache-test-1' });
 
     // Fifth read should return null
-    const fifthRead = await db.findOne('test_cache', { _id: testData._id });
+    const fifthRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
     assert(!fifthRead, 'Cache should be invalidated after delete');
 }
 
@@ -305,7 +326,7 @@ async function testCacheConsistency() {
 async function testPerformance() {
     // Test with minimal documents to avoid hitting Firestore quotas
     const testDoc = {
-        _id: 'perf-test-1',
+        uuid: 'perf-test-1',
         value: 'test-1',
         number: 1,
         nested: {
@@ -316,20 +337,20 @@ async function testPerformance() {
     
     // Test single write and read
     await db.create('test_performance', testDoc);
-    const savedDoc = await db.findOne('test_performance', { _id: 'perf-test-1' });
+    const savedDoc = await db.findOne('test_performance', { uuid: 'perf-test-1' });
     assert(savedDoc.nested.field2 === 2, 'Should correctly store and retrieve nested data');
 
     // Test simple query with sort
     const sortedDoc = await db.find('test_performance', {}, { sort: { number: -1 }, limit: 1 });
     assert(sortedDoc.length === 1, 'Should return single document');
-    assert(sortedDoc[0]._id === 'perf-test-1', 'Should return correct document');
+    assert(sortedDoc[0].uuid === 'perf-test-1', 'Should return correct document');
 }
 
 // Error recovery testing
 async function testErrorRecovery() {
     // Test partial updates
     const doc = {
-        _id: 'error-test',
+        uuid: 'error-test',
         field1: 'value1',
         field2: 'value2'
     };
@@ -341,10 +362,10 @@ async function testErrorRecovery() {
         field1: 'new-value1'
         // field2 is intentionally omitted to test partial update
     };
-    await db.update('test_errors', { _id: 'error-test' }, updateDoc);
+    await db.update('test_errors', { uuid: 'error-test' }, updateDoc);
     
     // Verify document maintains untouched fields
-    const checkDoc = await db.findOne('test_errors', { _id: 'error-test' });
+    const checkDoc = await db.findOne('test_errors', { uuid: 'error-test' });
     assert(checkDoc.field2 === 'value2', 'Document should maintain untouched fields');
     assert(checkDoc.field1 === 'new-value1', 'Document should update specified fields');
 }
@@ -353,7 +374,7 @@ async function testErrorRecovery() {
 async function testDataIntegrity() {
     // Test 1: Partial Updates
     const doc1 = {
-        _id: 'integrity-test-1',
+        uuid: 'integrity-test-1',
         field1: 'value1',
         field2: 'value2',
         nested: {
@@ -365,30 +386,35 @@ async function testDataIntegrity() {
     
     await db.create('test_integrity', doc1);
     
+    // Test 1.0: Verify no _id in returned document
+    let created = await db.findOne('test_integrity', { uuid: 'integrity-test-1' });
+    assert(!('_id' in created), 'Document should not contain _id field');
+    assert.deepStrictEqual(Object.keys(created).sort(), ['array', 'field1', 'field2', 'nested', 'uuid'].sort(), 'Document should only contain expected fields');
+    
     // Test 1.1: Update single field
-    await db.update('test_integrity', { _id: 'integrity-test-1' }, { field1: 'updated1' });
-    let updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    await db.update('test_integrity', { uuid: 'integrity-test-1' }, { field1: 'updated1' });
+    let updated = await db.findOne('test_integrity', { uuid: 'integrity-test-1' });
     assert(updated.field1 === 'updated1', 'Single field should be updated');
     assert(updated.field2 === 'value2', 'Untouched field should remain unchanged');
     assert(updated.nested.a === 1, 'Nested objects should be preserved');
     assert(updated.array.length === 3, 'Arrays should be preserved');
     
     // Test 1.2: Update nested field
-    await db.update('test_integrity', { _id: 'integrity-test-1' }, { 'nested.a': 10 });
-    updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    await db.update('test_integrity', { uuid: 'integrity-test-1' }, { 'nested.a': 10 });
+    updated = await db.findOne('test_integrity', { uuid: 'integrity-test-1' });
     assert(updated.nested.a === 10, 'Nested field should be updated');
     assert(updated.nested.b === 2, 'Other nested fields should be preserved');
     
     // Test 1.3: Update array
-    await db.update('test_integrity', { _id: 'integrity-test-1' }, { array: [4, 5, 6] });
-    updated = await db.findOne('test_integrity', { _id: 'integrity-test-1' });
+    await db.update('test_integrity', { uuid: 'integrity-test-1' }, { array: [4, 5, 6] });
+    updated = await db.findOne('test_integrity', { uuid: 'integrity-test-1' });
     assert(updated.array.length === 3, 'Array length should match');
     assert(updated.array[0] === 4, 'Array should be updated');
     assert(updated.field1 === 'updated1', 'Previous updates should be preserved');
     
     // Test 2: Document Updates with Field Removal
     const doc2 = {
-        _id: 'integrity-test-2',
+        uuid: 'integrity-test-2',
         original: true,
         count: 1
     };
@@ -397,21 +423,21 @@ async function testDataIntegrity() {
     
     // Test 2.1: Update with new fields and field removal
     const updateData = {
-        _id: 'integrity-test-2',
+        uuid: 'integrity-test-2',
         new: true,
         data: { x: 1 },
         original: null  // Explicitly set to null to remove
     };
     
-    await db.update('test_integrity', { _id: 'integrity-test-2' }, updateData);
-    updated = await db.findOne('test_integrity', { _id: 'integrity-test-2' });
+    await db.update('test_integrity', { uuid: 'integrity-test-2' }, updateData);
+    updated = await db.findOne('test_integrity', { uuid: 'integrity-test-2' });
     assert(updated.new === true, 'New fields should be added');
     assert(updated.data.x === 1, 'New nested objects should be added');
     assert(updated.original === null, 'Fields can be explicitly nulled');
     
     // Test 3: Multiple Updates
     const doc3 = {
-        _id: 'integrity-test-3',
+        uuid: 'integrity-test-3',
         counter: 0,
         history: []
     };
@@ -420,12 +446,12 @@ async function testDataIntegrity() {
     
     // Test 3.1: Sequential updates
     for (let i = 1; i <= 5; i++) {
-        await db.update('test_integrity', { _id: 'integrity-test-3' }, {
+        await db.update('test_integrity', { uuid: 'integrity-test-3' }, {
             counter: i,
             history: Array(i).fill(true)
         });
         
-        updated = await db.findOne('test_integrity', { _id: 'integrity-test-3' });
+        updated = await db.findOne('test_integrity', { uuid: 'integrity-test-3' });
         assert(updated.counter === i, `Counter should be ${i}`);
         assert(updated.history.length === i, `History length should be ${i}`);
     }

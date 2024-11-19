@@ -51,15 +51,22 @@ export class MongoDbEngine extends BaseDbEngine {
 
         const db = await this._ensureConnected();
         const result = await db.collection(collection.toLowerCase()).find(query).toArray();
+        
+        // Remove _id from results
+        const cleanResults = result.map(doc => {
+            const { _id, ...cleanDoc } = doc;
+            return cleanDoc;
+        });
+        
         return {
             sort: (sortCriteria) => {
                 if (typeof sortCriteria === 'function') {
-                    result.sort(sortCriteria);
+                    cleanResults.sort(sortCriteria);
                     return {
-                        limit: (n) => result.slice(0, n)
+                        limit: (n) => cleanResults.slice(0, n)
                     };
                 }
-                return result.sort((a, b) => {
+                return cleanResults.sort((a, b) => {
                     const [field, order] = Object.entries(sortCriteria)[0];
                     if (order === -1) {
                         return b[field] - a[field];
@@ -67,8 +74,8 @@ export class MongoDbEngine extends BaseDbEngine {
                     return a[field] - b[field];
                 });
             },
-            limit: (n) => result.slice(0, n),
-            then: (resolve) => resolve(result)
+            limit: (n) => cleanResults.slice(0, n),
+            then: (resolve) => resolve(cleanResults)
         };
     }
 
@@ -78,7 +85,12 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
-        return await db.collection(collection.toLowerCase()).findOne(query);
+        const doc = await db.collection(collection.toLowerCase()).findOne(query);
+        if (!doc) return null;
+        
+        // Remove _id from result
+        const { _id, ...cleanDoc } = doc;
+        return cleanDoc;
     }
 
     async create(collection, data) {
@@ -206,7 +218,45 @@ export class MongoDbEngine extends BaseDbEngine {
     }
 
     _normalizeDates(data) {
-        // TO DO: implement date normalization logic
-        return data;
+        if (!data) return data;
+
+        // Handle arrays
+        if (Array.isArray(data)) {
+            return data.map(item => this._normalizeDates(item));
+        }
+
+        // Handle Date objects
+        if (data instanceof Date) {
+            return data;
+        }
+
+        // If not an object, return as is
+        if (typeof data !== 'object') {
+            return data;
+        }
+
+        const result = {};
+        for (const [key, value] of Object.entries(data)) {
+            if (!value) {
+                result[key] = value;
+                continue;
+            }
+
+            // Convert any date-like objects to proper Date instances
+            if (value instanceof Date) {
+                result[key] = value;
+            } else if (typeof value === 'object' && value.$date) {
+                // Handle MongoDB extended JSON format
+                result[key] = new Date(value.$date);
+            } else if (Array.isArray(value)) {
+                result[key] = value.map(item => this._normalizeDates(item));
+            } else if (typeof value === 'object') {
+                result[key] = this._normalizeDates(value);
+            } else {
+                result[key] = value;
+            }
+        }
+
+        return result;
     }
 }
