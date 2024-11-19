@@ -143,6 +143,8 @@ export class FirestoreDbEngine extends BaseDbEngine {
 
             if (!this.db) {
                 logger.info('Creating new Firestore instance...');
+                // Set log level to error to suppress warnings
+                setLogLevel('error');
                 this.db = getFirestore(this.app);
                 logger.info('Firestore instance created successfully');
             }
