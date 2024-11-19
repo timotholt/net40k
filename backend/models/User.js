@@ -26,7 +26,7 @@ class User {
         this.nickname = sanitizedData.nickname || sanitizedData.username;
         this.email = sanitizedData.email;
         this.password = sanitizedData.password;
-        this.createdAt = sanitizedData.createdAt || DateService.now();
+        this.createdAt = sanitizedData.createdAt || DateService.now().date;
         this.lastLoginAt = sanitizedData.lastLoginAt || null;
         this.isAdmin = sanitizedData.isAdmin || false;
         this.isActive = sanitizedData.isActive !== undefined ? sanitizedData.isActive : true;
@@ -49,7 +49,7 @@ class User {
         this.banReason = sanitizedData.banReason || null;
         this.banExpiresAt = sanitizedData.banExpiresAt || null;
         this.preferences = sanitizedData.preferences || {};
-        this.lastModified = DateService.now();
+        this.lastModified = DateService.now().date;
     }
 
     validate() {
@@ -257,8 +257,8 @@ export const UserDB = {
                 );
             }
 
-            // Add last modified timestamp
-            updateData.lastModified = DateService.now();
+            // Add last modified timestamp - use just the date component for consistency
+            updateData.lastModified = DateService.now().date;
 
             const result = await db.update(this.collection, query, updateData);
             return result;
@@ -308,9 +308,10 @@ export const UserDB = {
 
     async updateLastLogin(userUuid) {
         try {
+            const now = DateService.now();
             return await this.update(
                 { userUuid },
-                { lastLoginAt: DateService.now() }
+                { lastLoginAt: now.date }
             );
         } catch (error) {
             logger.error(`Failed to update last login: ${error.message}`);
