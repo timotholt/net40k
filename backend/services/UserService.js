@@ -36,11 +36,6 @@ class UserService {
             throw new ValidationError('Username already exists');
         }
 
-        // Hash password
-        console.log('🔒 Hashing password...');
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         // Create user
         console.log('👤 Creating new user...');
         const userUuid = UuidService.generate();
@@ -48,7 +43,7 @@ class UserService {
             userUuid,
             username,
             nickname: nickname || username,
-            password: hashedPassword,
+            password, // Pass raw password, let User model handle hashing
             createdAt: new Date()
         });
 
@@ -58,27 +53,25 @@ class UserService {
     }
 
     async login(username, password) {
-        const user = await UserDB.findOne({ username });
-        if (!user) {
+        try {
+            // Use findByCredentials which properly handles password comparison
+            const user = await UserDB.findByCredentials(username, password);
+
+            // Create session (this will remove any existing sessions)
+            const sessionToken = SessionManager.createSession(user.userUuid);
+
+            // Update last login time
+            await UserDB.updateLastLogin(user.userUuid);
+
+            return {
+                user: this.sanitizeUser(user),
+                sessionToken
+            };
+        } catch (error) {
+            // Log the error but don't expose internal details
+            console.error('Login failed:', error.message);
             throw new AuthError('Invalid credentials');
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            throw new AuthError('Invalid credentials');
-        }
-
-        if (user.banned) {
-            throw new AuthError('Account is banned');
-        }
-
-        // Create session (this will remove any existing sessions)
-        const sessionToken = SessionManager.createSession(user.userUuid);
-
-        return {
-            user: this.sanitizeUser(user),
-            sessionToken
-        };
     }
 
     async logout(sessionToken) {
@@ -316,6 +309,20 @@ class UserService {
                 }
             }
         );
+    }
+
+    async deleteUser(username) {
+        try {
+            const user = await UserDB.findOne({ username });
+            if (!user) {
+                throw new ValidationError('User not found');
+            }
+            await UserDB.delete({ username });
+            return { success: true };
+        } catch (error) {
+            console.error(`Failed to delete user ${username}:`, error.message);
+            throw error;
+        }
     }
 
     // Utility methods

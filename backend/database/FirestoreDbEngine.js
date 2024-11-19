@@ -432,22 +432,20 @@ export class FirestoreDbEngine extends BaseDbEngine {
             
             let q = this._buildQuery(collectionRef, flattenedQuery);
             
-            // Wrap getDocs in a try-catch to handle BloomFilter errors
-            let snapshot;
-            try {
-                snapshot = await getDocs(q);
-            } catch (error) {
-                // If it's a BloomFilter error and the collection might be empty, return empty results
-                if (error.message?.includes('BloomFilter')) {
-                    console.log(`Ignoring BloomFilter error for potentially empty collection ${collectionName}`);
-                    return {
-                        sort: () => ({ limit: n => [], then: resolve => resolve([]) }),
-                        limit: () => [],
-                        then: resolve => resolve([])
-                    };
+            // Use withRetry to handle transient errors including BloomFilter
+            const snapshot = await withRetry(async () => {
+                try {
+                    return await getDocs(q);
+                } catch (error) {
+                    if (error.message?.includes('BloomFilter')) {
+                        console.log(`Retrying after BloomFilter error for collection ${collectionName}`);
+                        // Force a small delay before retry
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        return await getDocs(q);
+                    }
+                    throw error;
                 }
-                throw error;
-            }
+            });
             
             // Process results
             const results = snapshot.docs.map(doc => {

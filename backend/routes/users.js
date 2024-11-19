@@ -193,6 +193,18 @@ router.get('/blocked', authenticateUser, async (req, res) => {
     }
 });
 
+// Delete user (for testing)
+router.delete('/delete/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        await userService.deleteUser(username);
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Delete failed:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
 // Admin routes
 router.get('/list', authenticateAdmin, async (req, res) => {
     try {

@@ -3,20 +3,21 @@ import { db } from '../database/database.js';
 import { createUserUuid } from '../constants/GameUuids.js';
 import DateService from '../services/DateService.js';
 import crypto from 'crypto';
-import { generateSchema } from '../utils/schemaGenerator.js';
-import logger from '../utils/logger.js';
-import { sanitizeInput } from '../utils/sanitizer.js';
 import { ValidationError, DatabaseError, AuthError } from '../utils/errors.js';
+import { isFeatureEnabled } from '../utils/featureFlags.js';
+import { logger } from '../utils/logger.js';
 import { Lock } from './Lock.js';
+import { generateSchema } from '../utils/schemaGenerator.js';
+import { sanitizeInput } from '../utils/sanitizer.js';
 import { PASSWORD_SALT_ROUNDS, VERIFICATION_TOKEN_EXPIRY } from '../config/constants.js';
-import { isFeatureEnabled, noOpAsync } from '../config/features.js';
 
 // Service Layer: User Representation
 class User {
     constructor(data = {}) {
-        // Sanitize input data
+        // Sanitize input data (except password)
         const sanitizedData = Object.entries(data).reduce((acc, [key, value]) => {
-            acc[key] = typeof value === 'string' ? sanitizeInput(value) : value;
+            // Don't sanitize password to preserve special characters
+            acc[key] = typeof value === 'string' && key !== 'password' ? sanitizeInput(value) : value;
             return acc;
         }, {});
 
@@ -274,7 +275,13 @@ export const UserDB = {
                 throw new AuthError('Invalid credentials');
             }
 
+            // Add debug logging
+            logger.debug(`Found user: ${user.username}`);
+            logger.debug(`Comparing passwords...`);
+
             const isMatch = await bcrypt.compare(password, user.password);
+            logger.debug(`Password match result: ${isMatch}`);
+
             if (!isMatch) {
                 throw new AuthError('Invalid credentials');
             }
