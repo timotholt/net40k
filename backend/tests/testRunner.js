@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { testDatabaseEngine, clearDatabase, testRaceConditions } from './databaseTest.js';
+import { testDatabaseEngine, clearDatabase } from './databaseTest.js';
 
 // Create readline interface
 const rl = readline.createInterface({
@@ -12,60 +12,23 @@ async function startInteractiveTestMode() {
         console.log('\n🧪 Net40k Test Runner');
         console.log('Commands:');
         console.log('  t - Run tests');
-        console.log('  r - Run race condition tests');
         console.log('  s - Start server');
         console.log('  c - Clear database');
         console.log('  q - Quit');
         console.log('\nEnter command:');
 
         rl.on('line', async (answer) => {
-            try {
-                switch(answer.toLowerCase()) {
-                    case 't':
-                        console.log('\nRunning tests...');
-                        try {
-                            await testDatabaseEngine();
-                            console.log('✅ All tests passed!');
-                        } catch (error) {
-                            console.error('❌ Test failed:', error);
-                        }
-                        break;
-                    case 'r':
-                        console.log('\nRunning race condition tests...');
-                        try {
-                            await testRaceConditions();
-                            console.log('✅ Race condition tests passed!');
-                        } catch (error) {
-                            console.error('❌ Race condition test failed:', error);
-                        }
-                        break;
-                    case 'c':
-                        console.log('\nClearing database...');
-                        try {
-                            await clearDatabase();
-                            console.log('✅ Database cleared successfully');
-                        } catch (error) {
-                            console.error('❌ Failed to clear database:', error);
-                        }
-                        break;
-                    case 's':
-                        console.log('\nStarting server...');
-                        rl.close();
-                        resolve(true);  // Signal to start the server
-                        return;
-                    case 'q':
-                        console.log('👋 Goodbye!');
-                        rl.close();
-                        resolve(false);
-                        process.exit(0);
-                    default:
-                        console.log('❌ Unknown command');
-                }
-                console.log('\nEnter command:');
-            } catch (error) {
-                console.error('Error processing command:', error);
+            const restart = await handleTestCommand(answer.trim().toLowerCase());
+            if (restart) {
+                process.exit(0); // Exit to let nodemon restart
+            }
+            if (answer.toLowerCase() !== 'q') {
                 console.log('\nEnter command:');
             }
+        });
+
+        rl.on('close', () => {
+            resolve();
         });
     });
 }
@@ -74,29 +37,30 @@ export async function handleTestCommand(command) {
     try {
         switch (command) {
             case 't':
-            case 'test':
                 await testDatabaseEngine();
                 return false;
-            case 'r':
-            case 'race':
-                console.log('Running race condition tests...');
-                await testRaceConditions();
-                return false;
             case 'c':
-            case 'clear':
-                console.log('Clearing database...');
                 await clearDatabase();
-                console.log('Database cleared successfully');
+                console.log('✅ Database cleared successfully');
                 return false;
+            case 's':
+                console.log('Starting server...');
+                return true;
+            case 'q':
+                if (rl) rl.close();
+                process.exit(0);
+            case '':
             case undefined:
-            case 'i':
-            case 'interactive':
-                return await startInteractiveTestMode();
+                return false;
             default:
-                throw new Error(`Unknown test command: ${command}`);
+                console.log('Unknown command');
+                return false;
         }
     } catch (error) {
-        console.error('Error in test command:', error);
-        throw error;
+        console.error('Error executing command:', error);
+        return false;
     }
 }
+
+// Start the test runner
+startInteractiveTestMode().catch(console.error);

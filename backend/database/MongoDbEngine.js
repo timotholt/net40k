@@ -9,6 +9,11 @@ export class MongoDbEngine extends BaseDbEngine {
         this.client = null;
         this.db = null;
         this.connectionPromise = null;
+        this.initialized = false;
+    }
+
+    isConnected() {
+        return !!(this.client && this.db && this.client.topology && this.client.topology.isConnected());
     }
 
     async connect() {
@@ -19,9 +24,11 @@ export class MongoDbEngine extends BaseDbEngine {
             }
             await this.connectionPromise;
             this.db = this.client.db(process.env.MONGODB_DATABASE);
+            this.initialized = true;
             return true;
         } catch (error) {
             console.error('MongoDbEngine: Connection failed:', error);
+            this.initialized = false;
             throw error;
         }
     }
@@ -40,6 +47,7 @@ export class MongoDbEngine extends BaseDbEngine {
             this.client = null;
             this.db = null;
             this.connectionPromise = null;
+            this.initialized = false;
             console.log('Disconnected from MongoDB');
         }
     }

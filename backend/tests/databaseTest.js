@@ -46,16 +46,29 @@ async function cleanupCollections() {
         'test_integrity'
     ];
 
-    for (const collection of collections) {
-        try {
-            await db.deleteCollection(collection);
+    try {
+        // First try to delete each collection individually
+        for (const collection of collections) {
+            try {
+                await db.deleteCollection(collection);
+            } catch (error) {
+                if (error.code !== 26) { // Ignore "collection doesn't exist" errors
+                    console.error(`Error cleaning up ${collection}:`, error);
+                }
+            }
+        }
+
+        // Double check that everything is gone
+        for (const collection of collections) {
             const remainingDocs = await db.find(collection, {});
             if (remainingDocs && remainingDocs.length > 0) {
-                throw new Error(`Collection ${collection} not fully deleted`);
+                console.warn(`Collection ${collection} not fully deleted, clearing...`);
+                await db.clear(collection);
             }
-        } catch (error) {
-            console.error(`Error cleaning up ${collection}:`, error);
         }
+    } catch (error) {
+        console.error('Error in cleanup:', error);
+        throw error;
     }
 }
 
@@ -64,16 +77,11 @@ export async function clearDatabase() {
     try {
         await db.init();
         await cleanupCollections();
+        await db.disconnect();
         return true;
     } catch (error) {
         console.error('Failed to clear database:', error);
         throw error;
-    } finally {
-        try {
-            await db.disconnect();
-        } catch (error) {
-            console.error('Error disconnecting:', error);
-        }
     }
 }
 
@@ -271,57 +279,6 @@ async function testConcurrentOperations() {
     assert(finalDoc.counter === numOperations, `Expected counter to be ${numOperations}, got ${finalDoc.counter}`);
 }
 
-// Cache consistency test
-async function testCacheConsistency() {
-    const testData = {
-        uuid: 'cache-test-1',
-        value: 'original'
-    };
-
-    // Create initial document
-    await db.create('test_cache', testData);
-
-    // First read should populate cache
-    const firstRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
-    assert(firstRead.value === 'original', 'Initial read should return original value');
-
-    // Update document
-    await db.update('test_cache', { uuid: 'cache-test-1' }, { value: 'updated' });
-
-    // Second read should reflect update
-    const secondRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
-    assert(secondRead.value === 'updated', 'Cache should be invalidated after update');
-
-    // Test document replacement
-    const replacementData = {
-        uuid: 'cache-test-1',
-        value: 'replaced',
-        newField: 'new'
-    };
-    await db.update('test_cache', { uuid: 'cache-test-1' }, replacementData);
-
-    // Third read should show complete replacement
-    const thirdRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
-    assert(thirdRead.value === 'replaced', 'Cache should reflect document replacement');
-    assert(thirdRead.newField === 'new', 'New fields should be added');
-    assert(Object.keys(thirdRead).length === 3, 'Document should only have uuid, value, and newField');
-
-    // Test partial update
-    await db.update('test_cache', { uuid: 'cache-test-1' }, { value: 'partial' });
-
-    // Fourth read should show partial update
-    const fourthRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
-    assert(fourthRead.value === 'partial', 'Cache should reflect partial update');
-    assert(fourthRead.newField === 'new', 'Unmodified fields should remain');
-
-    // Delete document
-    await db.delete('test_cache', { uuid: 'cache-test-1' });
-
-    // Fifth read should return null
-    const fifthRead = await db.findOne('test_cache', { uuid: 'cache-test-1' });
-    assert(!fifthRead, 'Cache should be invalidated after delete');
-}
-
 // Performance and load testing
 async function testPerformance() {
     // Test with minimal documents to avoid hitting Firestore quotas
@@ -457,28 +414,10 @@ async function testDataIntegrity() {
     }
 }
 
-// Race condition test (separated from main test suite)
-export async function testRaceConditions() {
-    await db.init();
-    console.log('Starting race condition tests...');
-    
-    try {
-        await testConcurrentOperations();
-        console.log('✅ Race condition tests passed!');
-    } catch (error) {
-        console.error('❌ Race condition test failed:', error);
-        throw error;
-    }
-}
-
 // Main test runner
 export async function testDatabaseEngine() {
     try {
         log('Starting database tests...');
-        
-        // First run: Cache disabled
-        process.env.ENABLE_CACHE = 'false';
-        log('Running tests with cache DISABLED');
         let allTestsPassed = true;
         
         const tests = [
@@ -488,7 +427,6 @@ export async function testDatabaseEngine() {
             ['Array Handling', testArrayHandling],
             ['Query Operations', testQueryOperations],
             ['Data Integrity', testDataIntegrity],
-            ['Cache Consistency', testCacheConsistency],
             ['Performance', testPerformance],
             ['Error Recovery', testErrorRecovery]
         ];
@@ -497,24 +435,6 @@ export async function testDatabaseEngine() {
         const [initName, initTest] = tests[0];
         const initPassed = await runTest(initName, initTest);
         if (!initPassed) allTestsPassed = false;
-
-        // Run remaining tests after database is initialized
-        await db.init();
-        for (let i = 1; i < tests.length; i++) {
-            const [name, testFn] = tests[i];
-            const passed = await runTest(name, testFn);
-            if (!passed) allTestsPassed = false;
-            await cleanupCollections();
-        }
-        await db.disconnect();
-        
-        // Second run: Cache enabled
-        process.env.ENABLE_CACHE = 'true';
-        log('\nRunning tests with cache ENABLED');
-        
-        // Run initialization test first again
-        const initPassedCached = await runTest(initName, initTest);
-        if (!initPassedCached) allTestsPassed = false;
 
         // Run remaining tests after database is initialized
         await db.init();

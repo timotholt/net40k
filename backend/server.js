@@ -31,9 +31,6 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Get command line argument
-const command = process.argv[2];
-
 async function startServer() {
     console.log('Initializing services...');
     
@@ -159,10 +156,12 @@ async function startServer() {
 
 async function main() {
     try {
-        // Run tests first
-        const shouldStartServer = await handleTestCommand();
-        // If tests pass or user chose to start server, start it
-        if (shouldStartServer) {
+        // Get command line argument
+        const command = process.argv[2];
+
+        if (command === 'test') {
+            await handleTestCommand();
+        } else {
             await startServer();
         }
     } catch (error) {
