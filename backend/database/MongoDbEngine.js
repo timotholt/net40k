@@ -52,10 +52,10 @@ export class MongoDbEngine extends BaseDbEngine {
         const db = await this._ensureConnected();
         const result = await db.collection(collection.toLowerCase()).find(query).toArray();
         
-        // Remove _id from results
+        // Remove _id from results and normalize dates
         const cleanResults = result.map(doc => {
             const { _id, ...cleanDoc } = doc;
-            return cleanDoc;
+            return this._normalizeDates(cleanDoc);
         });
         
         return {
@@ -88,9 +88,9 @@ export class MongoDbEngine extends BaseDbEngine {
         const doc = await db.collection(collection.toLowerCase()).findOne(query);
         if (!doc) return null;
         
-        // Remove _id from result
+        // Remove _id from result and normalize dates
         const { _id, ...cleanDoc } = doc;
-        return cleanDoc;
+        return this._normalizeDates(cleanDoc);
     }
 
     async create(collection, data) {
@@ -109,8 +109,10 @@ export class MongoDbEngine extends BaseDbEngine {
         }
 
         const db = await this._ensureConnected();
-        const result = await db.collection(collection.toLowerCase()).insertOne(data);
-        return data;
+        const normalizedData = this._normalizeDates(data);
+        await db.collection(collection.toLowerCase()).insertOne(normalizedData);
+        const { _id, ...cleanData } = normalizedData;
+        return cleanData;
     }
 
     async update(collection, query, data) {
