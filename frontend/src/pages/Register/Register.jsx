@@ -72,7 +72,7 @@ export default function Register() {
 
     try {
       await dispatch(registerUser(formData)).unwrap();
-      navigate('/lobby');
+      navigate('/login', { state: { message: 'Registration successful! Please log in with your new account.' } });
     } catch (err) {
       console.error('Registration failed:', err);
       setError(err);

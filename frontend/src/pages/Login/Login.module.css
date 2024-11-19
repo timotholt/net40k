@@ -66,6 +66,15 @@
   width: 100%;
 }
 
+.successMessage {
+  background-color: #4caf50;
+  color: white;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
 .loginButton {
   width: 100%;
   background: rgba(0, 165, 0, 0.15);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../../store/authSlice';
 import { InputField, PasswordField } from '../../components/FormFields';
@@ -8,6 +8,7 @@ import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     username: '',
@@ -15,6 +16,7 @@ export default function Login() {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,6 +94,11 @@ export default function Login() {
 
   return (
     <div className={styles.loginContainer}>
+      {successMessage && (
+        <div className={styles.successMessage}>
+          {successMessage}
+        </div>
+      )}
       <form 
         onSubmit={handleSubmit} 
         className={styles.loginForm}
