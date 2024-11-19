@@ -176,9 +176,11 @@ export class CacheDbEngine extends BaseDbEngine {
     this.currentSize = 0;
     this.cache = new Map();
     this.collectionStats = new Map();
+    this.supportsExplicitIndexes = baseEngine.supportsExplicitIndexes;
     console.log('CacheDbEngine: Initialized with base engine:', {
       type: baseEngine.constructor.name,
-      maxSizeMb
+      maxSizeMb,
+      supportsExplicitIndexes: this.supportsExplicitIndexes
     });
   }
 
@@ -383,6 +385,18 @@ export class CacheDbEngine extends BaseDbEngine {
     // Update stats
     stats.bytesInvalidated += totalInvalidatedSize;
     this.currentSize -= totalInvalidatedSize;
+  }
+
+  async createIndex(collection, fields, options = {}) {
+    return this.baseEngine.createIndex(collection, fields, options);
+  }
+
+  async listIndexes(collection) {
+    return this.baseEngine.listIndexes(collection);
+  }
+
+  async createCollection(collection) {
+    return this.baseEngine.createCollection(collection);
   }
 
   getCacheStats() {

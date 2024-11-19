@@ -202,8 +202,12 @@ class Database {
         }
     }
 
+    get engine() {
+        return this.#dbEngine;
+    }
+
     get supportsExplicitIndexes() {
-        return this.#dbEngine?.supportsExplicitIndexes || false;
+        return this.engine?.supportsExplicitIndexes || false;
     }
 }
 

@@ -336,7 +336,7 @@ async function testIndexManagement() {
     await db.createCollection(collection);
     
     // Skip index tests if database doesn't support explicit indexes
-    if (!db.engine.supportsExplicitIndexes) {
+    if (!db.supportsExplicitIndexes) {
         log('Database engine does not support explicit indexes, skipping index tests', 'info');
         return;
     }
