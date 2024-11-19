@@ -7,57 +7,52 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-async function startInteractiveTestMode() {
-    return new Promise((resolve) => {
-        console.log('\n🧪 Net40k Test Runner');
-        console.log('Commands:');
-        console.log('  t - Run tests');
-        console.log('  s - Start server');
-        console.log('  c - Clear database');
-        console.log('  q - Quit');
-        console.log('\nEnter command:');
+function displayMenu() {
+    console.log('\n🧪 Net40k Test Runner');
+    console.log('Commands:');
+    console.log('  t - Run tests');
+    console.log('  s - Start server');
+    console.log('  c - Clear database');
+    console.log('  q - Quit');
+    console.log('\nEnter command:');
+}
 
+export async function startInteractiveTestMode() {
+    displayMenu();
+
+    // Return a Promise that never resolves, keeping the process alive
+    return new Promise((resolve) => {
         rl.on('line', async (answer) => {
-            const restart = await handleTestCommand(answer.trim().toLowerCase());
-            if (restart) {
-                process.exit(0); // Exit to let nodemon restart
-            }
-            if (answer.toLowerCase() !== 'q') {
-                console.log('\nEnter command:');
+            const command = answer.trim().toLowerCase();
+            try {
+                switch (command) {
+                    case 't':
+                        await testDatabaseEngine();
+                        displayMenu(); // Show menu after test completes
+                        break;
+                    case 'c':
+                        await clearDatabase();
+                        console.log('✅ Database cleared successfully');
+                        displayMenu(); // Show menu after clear completes
+                        break;
+                    case 's':
+                        console.log('Starting server...');
+                        process.exit(0); // Exit to let nodemon restart without test mode
+                    case 'q':
+                        rl.close();
+                        process.exit(0);
+                    default:
+                        console.log('Unknown command');
+                        displayMenu(); // Show menu after invalid command
+                }
+            } catch (error) {
+                console.error('Command failed:', error);
+                displayMenu(); // Show menu after error
             }
         });
 
         rl.on('close', () => {
-            resolve();
+            process.exit(0);
         });
     });
 }
-
-export async function handleTestCommand(command) {
-    try {
-        switch (command) {
-            case 't':
-                await testDatabaseEngine();
-                return false;
-            case 'c':
-                await clearDatabase();
-                console.log('✅ Database cleared successfully');
-                return false;
-            case 's':
-                console.log('Starting server...');
-                return true;
-            case 'q':
-                if (rl) rl.close();
-                process.exit(0);
-            default:
-                console.log('Unknown command');
-                return false;
-        }
-    } catch (error) {
-        console.error('Command failed:', error);
-        return false;
-    }
-}
-
-// Start the test runner
-startInteractiveTestMode().catch(console.error);
