@@ -4,8 +4,8 @@ async function main() {
         // Import and run test mode if needed
         if (process.argv[2] === 'test') {
             const { startInteractiveTestMode } = await import('./tests/testRunner.js');
+            // Test runner handles its own exit
             await startInteractiveTestMode();
-            return; // Test runner handles its own exit
         }
 
         // Only import server dependencies if not in test mode

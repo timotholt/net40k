@@ -20,8 +20,10 @@ function displayMenu() {
 export async function startInteractiveTestMode() {
     displayMenu();
 
-    // Return a Promise that never resolves, keeping the process alive
+    // Return a Promise that resolves when we want to start the server
     return new Promise((resolve) => {
+        let startingServer = false;
+
         rl.on('line', async (answer) => {
             const command = answer.trim().toLowerCase();
             try {
@@ -37,7 +39,10 @@ export async function startInteractiveTestMode() {
                         break;
                     case 's':
                         console.log('Starting server...');
-                        process.exit(0); // Exit to let nodemon restart without test mode
+                        startingServer = true;
+                        rl.close();
+                        resolve(); // Resolve the promise to continue with server startup
+                        break;
                     case 'q':
                         rl.close();
                         process.exit(0);
@@ -52,7 +57,9 @@ export async function startInteractiveTestMode() {
         });
 
         rl.on('close', () => {
-            process.exit(0);
+            if (!startingServer) {
+                process.exit(0);
+            }
         });
     });
 }
