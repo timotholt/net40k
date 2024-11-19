@@ -1,76 +1,30 @@
 import { API_CONFIG, buildApiUrl } from '../config/api';
+import axios from 'axios';
+
+// Utility function for making API requests with error handling
+async function makeApiRequest(method, url, data, errorMessage) {
+  try {
+    const response = await axios({ method, url, data });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || errorMessage);
+  }
+}
 
 export const authService = {
   async login(username, password) {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.LOGIN), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw new Error(error.message || 'Login failed');
-    }
+    return makeApiRequest('post', buildApiUrl(API_CONFIG.ENDPOINTS.LOGIN), { username, password }, 'Login failed');
   },
 
   async register(username, password, nickname) {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.REGISTER), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password, nickname })
-      });
-
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw new Error(error.message || 'Registration failed');
-    }
+    return makeApiRequest('post', buildApiUrl(API_CONFIG.ENDPOINTS.REGISTER), { username, password, nickname }, 'Registration failed');
   },
 
   async logout() {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.LOGOUT), {
-        method: 'POST'
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-
-      return true;
-    } catch (error) {
-      throw new Error(error.message || 'Logout failed');
-    }
+    return makeApiRequest('post', buildApiUrl(API_CONFIG.ENDPOINTS.LOGOUT), null, 'Logout failed');
   },
 
   async validateSession() {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.VALIDATE));
-
-      if (!response.ok) {
-        throw new Error('Session validation failed');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw new Error(error.message || 'Session validation failed');
-    }
+    return makeApiRequest('get', buildApiUrl(API_CONFIG.ENDPOINTS.VALIDATE), null, 'Session validation failed');
   }
 };
