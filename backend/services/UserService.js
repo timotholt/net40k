@@ -400,7 +400,7 @@ class UserService {
         
         const [users, total] = await Promise.all([
             UserDB.find(query)
-                .select('userUuid nickname isOnline lastActive')
+                .select('userUuid username nickname isOnline lastActive isAdmin isActive isVerified preferences createdAt lastLoginAt profilePicture bio')
                 .sort({ isOnline: -1, lastActive: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -408,12 +408,7 @@ class UserService {
         ]);
 
         return {
-            users: users.map(user => ({
-                userUuid: user.userUuid,
-                nickname: user.nickname,
-                isOnline: user.isOnline,
-                lastActive: user.lastActive
-            })),
+            users: users.map(user => user.toPublicUser()),
             pagination: {
                 page,
                 limit,

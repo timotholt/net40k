@@ -63,6 +63,38 @@ router.post('/logout', authenticateUser, async (req, res) => {
     }
 });
 
+/**
+ * List Users Endpoint
+ * 
+ * @description
+ * Retrieves a paginated list of users.
+ * 
+ * Security Considerations:
+ * - Requires user authentication
+ * - Returns only public user information
+ * 
+ * Query Parameters:
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Number of users per page (default: 50)
+ * 
+ * Response:
+ * - 200 OK: Returns list of users
+ * - 500 Internal Server Error: Server error
+ */
+router.get('/list', authenticateUser, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+
+        const users = await userService.getUsers({}, { skip, limit });
+        res.json({ success: true, users });
+    } catch (error) {
+        logger.error('Error fetching users list:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Profile routes
 /**
  * Get Profile Endpoint
@@ -585,12 +617,16 @@ router.get('/blocked', authenticateUser, async (req, res) => {
 router.get('/list', authenticateUser, async (req, res) => {
     try {
         const { page, limit, filter } = req.query;
-        const users = await userService.getActiveUsers({
+        const result = await userService.getActiveUsers({
             page: parseInt(page) || 1,
             limit: parseInt(limit) || 50,
             filter
         });
-        res.json({ success: true, users });
+        res.json({ 
+            success: true, 
+            users: result.users,
+            pagination: result.pagination
+        });
     } catch (error) {
         logger.error('Error getting user list:', error);
         res.status(500).json({ success: false, message: error.message });

@@ -24,9 +24,9 @@ export const registerUser = createAsyncThunk(
 
       console.log('Auth: Registration successful, received data:', data);
 
-      // Store token if provided
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      // Store sessionToken
+      if (data.sessionToken) {
+        localStorage.setItem('sessionToken', data.sessionToken);
       }
 
       return transformUserForRedux(data.user);
@@ -59,9 +59,9 @@ export const loginUser = createAsyncThunk(
 
       console.log('Auth: Login successful, received data:', data);
 
-      // Store token if provided
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      // Store sessionToken
+      if (data.sessionToken) {
+        localStorage.setItem('sessionToken', data.sessionToken);
       }
 
       return transformUserForRedux(data.user);
@@ -107,7 +107,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      localStorage.removeItem('sessionToken');
     },
     clearError: (state) => {
       state.error = null;

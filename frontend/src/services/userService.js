@@ -13,7 +13,14 @@ export const userService = {
         }
       });
 
-      return response.data.users.map(user => transformUserData(user));
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch users');
+      }
+
+      return {
+        users: response.data.users.map(user => transformUserData(user)),
+        pagination: response.data.pagination
+      };
     } catch (error) {
       console.error('Failed to fetch users:', error);
       throw error;

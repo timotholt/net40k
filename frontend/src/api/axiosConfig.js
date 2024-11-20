@@ -18,10 +18,10 @@ axiosInstance.interceptors.request.use(
     // Log the full request URL
     console.log('Making request to:', config.baseURL + config.url);
     
-    // Get token from localStorage if it exists
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Get sessionToken from localStorage if it exists
+    const sessionToken = localStorage.getItem('sessionToken');
+    if (sessionToken) {
+      config.headers.Authorization = `Bearer ${sessionToken}`;
     }
     return config;
   },

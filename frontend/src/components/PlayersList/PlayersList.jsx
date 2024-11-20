@@ -8,6 +8,12 @@ import styles from './PlayersList.module.css';
 
 export default function PlayersList() {
   const [players, setPlayers] = useState([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    pages: 0
+  });
   const [activeTab, setActiveTab] = useState('all');
   const [filter, setFilter] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -19,25 +25,26 @@ export default function PlayersList() {
     setLoading(true);
     setError(null);
     try {
-      const fetchedUsers = await userService.getUsers({}, { 
-        page: 1, 
-        limit: 50 
+      const result = await userService.getUsers({}, { 
+        page: pagination.page, 
+        limit: pagination.limit 
       });
-      setPlayers(fetchedUsers);
+      setPlayers(result.users);
+      setPagination(result.pagination);
     } catch (err) {
       setError(err.message || 'Failed to fetch users');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination.page, pagination.limit]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   const tabs = [
-    { id: 'all', label: `All (${players.length})` },
+    { id: 'all', label: `All (${pagination.total})` },
     { id: 'friends', label: `Friends (${players.filter(p => p.isFriend).length})` }
   ];
 
