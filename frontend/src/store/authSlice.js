@@ -36,27 +36,22 @@ export const registerUser = createAsyncThunk(
       };
     } catch (error) {
       console.error('Auth: Registration error:', error);
-      console.log('Redux Thunk Catch Block Error:', {
-        type: typeof error,
-        keys: Object.keys(error),
-        message: error.message,
+      
+      // Log full error details
+      console.log('Full Error Details:', {
+        error: error,
         name: error.name,
-        stack: error.stack,
-        toString: error.toString()
+        message: error.message,
+        response: error.response
       });
 
-      // Attempt to extract error details
-      if (error.response) {
-        console.log('Error Response Details:', {
-          data: error.response.data,
-          status: error.response.status
-        });
-      }
-
-      return rejectWithValue(
+      // More robust error handling
+      const errorMessage = 
+        error.response?.data?.message || 
         error.message || 
-        'Registration failed'
-      );
+        'Registration failed';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -85,28 +80,22 @@ export const loginUser = createAsyncThunk(
       };
     } catch (error) {
       console.error('Auth: Login error:', error);
-      console.log('Redux Thunk Catch Block Error:', {
-        type: typeof error,
-        keys: Object.keys(error),
-        message: error.message,
+      
+      // Log full error details
+      console.log('Full Error Details:', {
+        error: error,
         name: error.name,
-        stack: error.stack,
-        toString: error.toString()
+        message: error.message,
+        response: error.response
       });
 
-      // Attempt to extract error details
-      if (error.response) {
-        console.log('Error Response Details:', {
-          data: error.response.data,
-          status: error.response.status
-        });
-      }
-
-      return rejectWithValue(
+      // More robust error handling
+      const errorMessage = 
+        error.response?.data?.message || 
         error.message || 
-        String(error) ||
-        'Login failed'
-      );
+        'Login failed';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );

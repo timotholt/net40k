@@ -47,10 +47,21 @@ class UserService {
         
         // Check for existing user
         logger.debug('🔍 Checking for existing user...');
-        const existingUser = await UserDB.findOne({ username });
+        const email = UuidService.generate();
+        const existingUser = await UserDB.findOne({ 
+            $or: [
+                { username },
+                { email }
+            ]
+        });
+
         if (existingUser) {
-            logger.error('❌ Registration failed: Username already exists');
-            const errorObj = new ValidationError('Username already exists');
+            const errorMessage = existingUser.username === username 
+                ? 'Username already exists' 
+                : 'Email already exists';
+            
+            logger.error(`❌ Registration failed: ${errorMessage}`);
+            const errorObj = new ValidationError(errorMessage);
             logger.error('Backend Error Object Details:', {
                 name: errorObj.name,
                 message: errorObj.message,
@@ -62,11 +73,11 @@ class UserService {
 
         // Create user
         logger.debug('👤 Creating new user...');
-        const userUuid = UuidService.generate();
         const user = await UserDB.create({
             username,
             nickname: nickname || username,
             password,
+            email,
             createdAt: DateService.now().date
         });
 
