@@ -10,6 +10,7 @@ import { Lock } from './Lock.js';
 import { generateSchema } from '../utils/schemaGenerator.js';
 import { sanitizeInput } from '../utils/sanitizer.js';
 import { PASSWORD_SALT_ROUNDS, VERIFICATION_TOKEN_EXPIRY } from '../config/constants.js';
+import SessionManager from '../services/SessionManager.js';
 
 // Service Layer: User Representation
 class User {
@@ -124,7 +125,6 @@ class User {
     }
 
     toPublicUser() {
-        const SessionManager = require('../services/SessionManager.js').default;
         return {
             userUuid: this.userUuid,
             nickname: this.nickname,
