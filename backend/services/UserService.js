@@ -50,7 +50,14 @@ class UserService {
         const existingUser = await UserDB.findOne({ username });
         if (existingUser) {
             logger.error('❌ Registration failed: Username already exists');
-            throw new ValidationError('Username already exists');
+            const errorObj = new ValidationError('Username already exists');
+            logger.error('Backend Error Object Details:', {
+                name: errorObj.name,
+                message: errorObj.message,
+                toString: errorObj.toString(),
+                stack: errorObj.stack
+            });
+            throw errorObj;
         }
 
         // Create user
@@ -387,7 +394,6 @@ class UserService {
         // Email verification disabled for initial development
         // This is a temporary change to simplify the registration flow
         // Will be re-enabled once email infrastructure is in place
-        // DO NOT REMOVE the verification code below
         /*
         const user = await UserDB.findOne({ verificationToken: token });
         if (!user) {

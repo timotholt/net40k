@@ -74,8 +74,25 @@ export default function Register() {
       await dispatch(registerUser(formData)).unwrap();
       navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
     } catch (err) {
-      console.error('Registration failed:', err);
-      setError(err);
+      console.log('Component Catch Block Error:', {
+        type: typeof err,
+        keys: Object.keys(err),
+        message: err.message,
+        name: err.name,
+        stringValue: String(err),
+        fullError: err,
+        toString: err.toString ? err.toString() : 'No toString method'
+      });
+      
+      // Attempt to extract error message from different possible locations
+      const errorMessage = 
+        err.message || 
+        err.response?.data?.message || 
+        err.response?.data?.error || 
+        String(err) || 
+        'Registration failed. Please try again.';
+      
+      setError(errorMessage);
     }
   };
 

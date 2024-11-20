@@ -34,19 +34,59 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('Axios Interceptor Raw Error:', {
+      type: typeof error,
+      keys: Object.keys(error),
+      response: error.response,
+      request: error.request,
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      toString: error.toString()
+    });
+
     if (error.response) {
+      console.log('Server Response Error Details:', {
+        data: error.response.data,
+        status: error.response.status,
+        headers: error.response.headers
+      });
+      
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       console.error('API Error Response:', error.response.data);
-      return Promise.reject(error.response.data.message || 'An error occurred');
+      
+      // Check for specific error types from backend
+      const errorMessage = 
+        error.response.data.message || 
+        error.response.data.error || 
+        'An unexpected error occurred';
+      
+      const errorType = 
+        error.response.data.name || 
+        error.response.status;
+
+      return Promise.reject({
+        message: errorMessage,
+        type: errorType,
+        status: error.response.status
+      });
     } else if (error.request) {
       // The request was made but no response was received
       console.error('API Request Error:', error.request);
-      return Promise.reject('No response received from server');
+      return Promise.reject({
+        message: 'No response received from server',
+        type: 'NetworkError',
+        status: null
+      });
     } else {
       // Something happened in setting up the request that triggered an Error
       console.error('API Setup Error:', error.message);
-      return Promise.reject('Error setting up the request');
+      return Promise.reject({
+        message: 'Error setting up the request',
+        type: 'SetupError',
+        status: null
+      });
     }
   }
 );

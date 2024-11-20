@@ -36,10 +36,25 @@ export const registerUser = createAsyncThunk(
       };
     } catch (error) {
       console.error('Auth: Registration error:', error);
+      console.log('Redux Thunk Catch Block Error:', {
+        type: typeof error,
+        keys: Object.keys(error),
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        toString: error.toString()
+      });
+
+      // Attempt to extract error details
+      if (error.response) {
+        console.log('Error Response Details:', {
+          data: error.response.data,
+          status: error.response.status
+        });
+      }
+
       return rejectWithValue(
-        error?.response?.data?.message || 
-        error?.response?.data?.error || 
-        error?.message || 
+        error.message || 
         'Registration failed'
       );
     }
@@ -70,10 +85,26 @@ export const loginUser = createAsyncThunk(
       };
     } catch (error) {
       console.error('Auth: Login error:', error);
+      console.log('Redux Thunk Catch Block Error:', {
+        type: typeof error,
+        keys: Object.keys(error),
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        toString: error.toString()
+      });
+
+      // Attempt to extract error details
+      if (error.response) {
+        console.log('Error Response Details:', {
+          data: error.response.data,
+          status: error.response.status
+        });
+      }
+
       return rejectWithValue(
-        error?.response?.data?.message || 
-        error?.response?.data?.error || 
-        error?.message || 
+        error.message || 
+        String(error) ||
         'Login failed'
       );
     }
