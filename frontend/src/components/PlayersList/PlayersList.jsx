@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import PlayersListHeader from './components/PlayersListHeader';
 import PlayersListFilters from './components/PlayersListFilters';
 import PlayerListItem from './components/PlayerListItem';
@@ -21,6 +21,10 @@ export default function PlayersList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Polling configuration
+  const POLLING_INTERVAL = 5000; // 5 seconds
+  const pollingTimeoutRef = useRef(null);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -39,9 +43,28 @@ export default function PlayersList() {
     }
   }, [pagination.page, pagination.limit]);
 
+  // Setup polling
   useEffect(() => {
+    // Initial fetch
     fetchUsers();
-  }, [fetchUsers]);
+
+    // Setup polling interval
+    const startPolling = () => {
+      pollingTimeoutRef.current = setTimeout(async () => {
+        await fetchUsers();
+        startPolling(); // Schedule next poll after current one completes
+      }, POLLING_INTERVAL);
+    };
+
+    startPolling();
+
+    // Cleanup function
+    return () => {
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+      }
+    };
+  }, [fetchUsers]); // Only re-run if fetchUsers changes
 
   const tabs = [
     { id: 'all', label: `All (${pagination.total})` },
