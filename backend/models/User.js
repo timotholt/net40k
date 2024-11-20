@@ -272,7 +272,7 @@ export const UserDB = {
         try {
             const user = await this.findOne({ username, isDeleted: false });
             if (!user) {
-                throw new AuthError('Invalid credentials');
+                throw new AuthError('Username not found');
             }
 
             // Add debug logging
@@ -283,7 +283,7 @@ export const UserDB = {
             logger.debug(`Password match result: ${isMatch}`);
 
             if (!isMatch) {
-                throw new AuthError('Invalid credentials');
+                throw new AuthError('Invalid password');
             }
 
             if (user.isBanned) {

@@ -107,7 +107,7 @@ class UserService {
         } catch (error) {
             // Log the error but don't expose internal details
             logger.error('Login failed:', error.message);
-            throw new AuthError('Invalid credentials');
+            throw new AuthError('Username not found');
         }
     }
 

@@ -75,7 +75,7 @@ axiosInstance.interceptors.response.use(
       // The request was made but no response was received
       console.error('API Request Error:', error.request);
       return Promise.reject({
-        message: 'No response received from server',
+        message: "Can't connect to game server",
         type: 'NetworkError',
         status: null
       });
