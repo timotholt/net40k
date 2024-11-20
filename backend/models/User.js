@@ -124,12 +124,14 @@ class User {
     }
 
     toPublicUser() {
+        const SessionManager = require('../services/SessionManager.js').default;
         return {
             userUuid: this.userUuid,
             nickname: this.nickname,
             isAdmin: this.isAdmin || false,
             profilePicture: this.profilePicture,
-            bio: this.bio
+            bio: this.bio,
+            isOnline: SessionManager.isUserOnline(this.userUuid)
         };
     }
 

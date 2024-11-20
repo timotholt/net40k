@@ -4,6 +4,7 @@ class SessionManager {
     static sessions = new Map();
     static cleanupInterval = 60 * 60 * 1000; // 1 hour
     static sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
+    static ONLINE_THRESHOLD = 1 * 60 * 1000; // 5 minutes - time before user is considered offline
 
     static {
         // Display startup message
@@ -48,6 +49,17 @@ class SessionManager {
                 this.sessions.delete(token);
             }
         }
+    }
+
+    static isUserOnline(userUuid) {
+        const now = Date.now();
+        for (const session of this.sessions.values()) {
+            if (session.userUuid === userUuid && 
+                (now - session.lastActive) < this.ONLINE_THRESHOLD) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static cleanup() {
