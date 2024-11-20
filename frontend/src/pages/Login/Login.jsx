@@ -64,7 +64,6 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted', formData);
     
     if (!validateForm()) {
       console.log('Form validation failed');
@@ -73,7 +72,6 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      console.log('Attempting login...');
       const result = await dispatch(loginUser({ username: formData.username, password: formData.password }));
       
       // Check if the login was unsuccessful
@@ -87,7 +85,7 @@ export default function Login() {
       }
       
       console.log('Login successful');
-      navigate('/lobby');
+      // Remove direct navigation, let ProtectedRoute handle it
     } catch (error) {
       console.log('Unexpected error:', error);
       window.alert('Login failed');
