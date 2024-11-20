@@ -46,44 +46,44 @@ const formatStatus = (status) => {
 };
 
 export default function PlayerListItem({ player, isSelected, onSelect }) {
-  const handlePlayerAction = (action, playerId) => {
+  const handlePlayerAction = (action, playerUuid) => {
     switch (action) {
       case 'invite':
-        console.log('Invite player:', playerId);
+        console.log('Invite player:', playerUuid);
         break;
       case 'whisper':
-        console.log('Whisper to player:', playerId);
+        console.log('Whisper to player:', playerUuid);
         break;
       case 'friend':
-        console.log('Add friend:', playerId);
+        console.log('Add friend:', playerUuid);
         break;
       case 'mute':
-        console.log('Mute player:', playerId);
+        console.log('Mute player:', playerUuid);
         break;
       case 'report':
-        console.log('Report player:', playerId);
+        console.log('Report player:', playerUuid);
         break;
       case 'block':
-        console.log('Block player:', playerId);
+        console.log('Block player:', playerUuid);
         break;
       default:
-        console.log('Unknown action:', action, playerId);
+        console.log('Unknown action:', action, playerUuid);
     }
   };
 
-  const contextMenuItems = createPlayerContextMenuItems(player.id, handlePlayerAction);
+  const contextMenuItems = createPlayerContextMenuItems(player.userUuid, handlePlayerAction);
 
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelect(player.id);
+    onSelect(player.userUuid);
   };
 
   const handleContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isSelected) {
-      onSelect(player.id);
+      onSelect(player.userUuid);
     }
   };
 
@@ -115,7 +115,7 @@ export default function PlayerListItem({ player, isSelected, onSelect }) {
 
 PlayerListItem.propTypes = {
   player: PropTypes.shape({
-    id: PropTypes.string.isRequired,
+    userUuid: PropTypes.string.isRequired,
     nickname: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
     isOnline: PropTypes.bool,
