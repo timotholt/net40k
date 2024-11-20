@@ -7,16 +7,28 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tabId, setTabId] = useState('');
   const navigate = useNavigate();
 
+  // Initialize tab ID in useEffect
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    if (!window.name) {
+      window.name = crypto.randomUUID();
+    }
+    setTabId(window.name);
+  }, []);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    if (!tabId) return; // Don't check until we have a tabId
+
+    const storedUser = localStorage.getItem(`user_${tabId}`);
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
       setIsAuthenticated(true);
     }
-  }, []);
+  }, [tabId]);
 
   const login = async (username, password) => {
     console.log('AuthContext: Attempting login for user:', username);
@@ -41,16 +53,20 @@ export function AuthProvider({ children }) {
 
       const data = await response.json();
       console.log('AuthContext: Login successful, received data:', data);
+      console.log('AuthContext: Session token from response:', data.sessionToken);
+      console.log('AuthContext: Current tab ID:', tabId);
 
       const userData = {
-        id: data.userId,
-        username: data.username,
-        nickname: data.nickname || data.username,
+        id: data.user.userId,
+        username: data.user.username,
+        nickname: data.user.nickname || data.user.username,
       };
 
       setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem(`user_${tabId}`, JSON.stringify(userData));
+      localStorage.setItem(`sessionToken_${tabId}`, data.sessionToken);
+      console.log('AuthContext: Stored session token with key:', `sessionToken_${tabId}`);
       
       return data;
     } catch (error) {
@@ -63,16 +79,19 @@ export function AuthProvider({ children }) {
     console.log('AuthContext: Logging out user');
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
+    if (tabId) {
+      localStorage.removeItem(`user_${tabId}`);
+      localStorage.removeItem(`sessionToken_${tabId}`);
+    }
     navigate('/');
   };
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
-      login, 
-      logout 
+      user,
+      isAuthenticated,
+      login,
+      logout
     }}>
       {children}
     </AuthContext.Provider>

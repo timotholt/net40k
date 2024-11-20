@@ -59,9 +59,14 @@ export const loginUser = createAsyncThunk(
 
       console.log('Auth: Login successful, received data:', data);
 
-      // Store sessionToken
+      // Store sessionToken with tab ID
       if (data.sessionToken) {
-        localStorage.setItem('sessionToken', data.sessionToken);
+        const tabId = window.name || crypto.randomUUID();
+        if (!window.name) {
+          window.name = tabId;
+        }
+        localStorage.setItem(`sessionToken_${tabId}`, data.sessionToken);
+        localStorage.setItem(`user_${tabId}`, JSON.stringify(data.user));
       }
 
       return transformUserForRedux(data.user);
@@ -107,7 +112,11 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('sessionToken');
+      const tabId = window.name;
+      if (tabId) {
+        localStorage.removeItem(`sessionToken_${tabId}`);
+        localStorage.removeItem(`user_${tabId}`);
+      }
     },
     clearError: (state) => {
       state.error = null;
