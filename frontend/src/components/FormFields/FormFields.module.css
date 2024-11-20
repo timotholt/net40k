@@ -2,6 +2,10 @@
   margin-bottom: 1rem;
   text-align: left;
   position: relative;
+  font-size: 1.1rem;
+  -webkit-text-size-adjust: none;
+  -ms-text-size-adjust: none;
+  text-size-adjust: none;
 }
 
 .label {
@@ -63,13 +67,49 @@
   background: none;
   border: none;
   color: var(--color-soft-white);
-  font-size: 1.1rem;
+  font-size: 1.1rem !important;
   padding: 0;
   min-width: 0;
+  font-family: inherit;
+  -webkit-text-size-adjust: none !important;
+  -ms-text-size-adjust: none !important;
+  text-size-adjust: none !important;
 }
 
+.input[data-required="true"]::after {
+  content: " (required)";
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Placeholder styles */
 .input::placeholder {
   color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem !important;
+  opacity: 1;
+  font-family: inherit;
+}
+
+/* Microsoft Edge */
+.input::-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+  opacity: 1;
+  font-family: inherit;
+}
+
+/* Internet Explorer */
+.input:-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+  opacity: 1;
+  font-family: inherit;
+}
+
+/* Focus state */
+.input:focus::placeholder {
+  opacity: 1;
+  font-size: 1.1rem;
+  font-family: inherit;
 }
 
 .input:focus {
@@ -79,11 +119,18 @@
 /* Override browser autofill styles */
 .input:-webkit-autofill,
 .input:-webkit-autofill:hover,
-.input:-webkit-autofill:focus {
+.input:-webkit-autofill:focus,
+.input:-internal-autofill-selected,
+.input:-internal-autofill-previewed {
   -webkit-text-fill-color: var(--color-soft-white);
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
   transition: background-color 5000s ease-in-out 0s;
   background-clip: content-box !important;
+  font-size: 1.1rem !important;
+  font-family: inherit;
+  -webkit-text-size-adjust: none !important;
+  -ms-text-size-adjust: none !important;
+  text-size-adjust: none !important;
 }
 
 .errorMessage {
