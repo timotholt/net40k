@@ -426,12 +426,18 @@ class UserService {
         const skip = (page - 1) * limit;
         
         const [users, total] = await Promise.all([
-            UserDB.find(query, { sort: { isOnline: -1, lastActive: -1 }, skip, limit }),
+            UserDB.find(query, { sort: { lastActive: -1 }, skip, limit }),
             UserDB.count(query)
         ]);
 
+        // Add real-time online status from SessionManager
+        const usersWithOnlineStatus = users.map(user => ({
+            ...user,
+            isOnline: SessionManager.isUserOnline(user.userUuid)
+        }));
+
         return {
-            users,
+            users: usersWithOnlineStatus,
             pagination: {
                 page,
                 limit,
