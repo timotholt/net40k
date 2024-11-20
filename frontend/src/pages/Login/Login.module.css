@@ -63,7 +63,7 @@
   font-size: 0.9rem;
   width: 100%;
   text-shadow: var(--glow-text);
-  line-height: 2rem;
+  line-height: 1rem;
 }
 
 .success {
