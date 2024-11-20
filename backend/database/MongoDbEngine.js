@@ -222,16 +222,6 @@ export class MongoDbEngine extends BaseDbEngine {
         return await db.collection(collection.toLowerCase()).aggregate(pipeline).toArray();
     }
 
-    async findByUuid(collection, uuid) {
-        if (typeof collection !== 'string') {
-            throw new Error('Invalid collection: must be a string');
-        }
-
-        const db = await this._ensureConnected();
-        logger.debug('MongoDB FindByUuid:', { collection, uuid });
-        return await db.collection(collection.toLowerCase()).findOne({ uuid });
-    }
-
     async withTransaction(callback) {
         const db = await this._ensureConnected();
         const session = this.client.startSession();
