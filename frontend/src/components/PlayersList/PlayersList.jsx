@@ -17,7 +17,7 @@ export default function PlayersList() {
   const [activeTab, setActiveTab] = useState('all');
   const [filter, setFilter] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+  const [selectedUserUuid, setSelectedUserUuid] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -71,16 +71,21 @@ export default function PlayersList() {
     }
   }, [currentTabIndex, tabs, filter, searchFocused]);
 
-  const handleSelect = (playerId) => {
-    setSelectedPlayerId(playerId === selectedPlayerId ? null : playerId);
+  const handleSelect = (userUuid) => {
+    console.log('PlayersList - handleSelect:', { 
+      userUuid, 
+      currentSelectedUuid: selectedUserUuid,
+      willSelect: userUuid === selectedUserUuid ? null : userUuid 
+    });
+    setSelectedUserUuid(userUuid === selectedUserUuid ? null : userUuid);
   };
 
-  const handleWhisper = (playerId) => {
-    console.log('Whisper to:', playerId);
+  const handleWhisper = (userUuid) => {
+    console.log('Whisper to:', userUuid);
   };
 
-  const handleAddFriend = (playerId) => {
-    console.log('Add friend:', playerId);
+  const handleAddFriend = (userUuid) => {
+    console.log('Add friend:', userUuid);
   };
 
   const handleContainerContextMenu = (e) => {
@@ -128,9 +133,9 @@ export default function PlayersList() {
         ) : filteredPlayers.length > 0 ? (
           filteredPlayers.map(player => (
             <PlayerListItem
-              key={player.id}
+              key={player.userUuid}
               player={player}
-              isSelected={selectedPlayerId === player.id}
+              isSelected={selectedUserUuid === player.userUuid}
               onSelect={handleSelect}
               onWhisper={handleWhisper}
               onAddFriend={handleAddFriend}

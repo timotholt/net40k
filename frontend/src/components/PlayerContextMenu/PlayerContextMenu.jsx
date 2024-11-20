@@ -1,22 +1,22 @@
 import PropTypes from 'react';
 import { GameIcon, WhisperIcon, FriendIcon, MuteIcon, ReportIcon, BlockIcon } from '../Icons/MenuIcons';
 
-export function createPlayerContextMenuItems(playerId, onAction = () => {}) {
+export function createPlayerContextMenuItems(userUuid, onAction = () => {}) {
   return [
     {
       label: 'Invite to game',
       icon: <GameIcon />,
-      onClick: () => onAction('invite', playerId)
+      onClick: () => onAction('invite', userUuid)
     },
     {
       label: 'Whisper',
       icon: <WhisperIcon />,
-      onClick: () => onAction('whisper', playerId)
+      onClick: () => onAction('whisper', userUuid)
     },
     {
       label: 'Add friend',
       icon: <FriendIcon />,
-      onClick: () => onAction('friend', playerId)
+      onClick: () => onAction('friend', userUuid)
     },
     { type: 'separator' },
     {
@@ -25,17 +25,17 @@ export function createPlayerContextMenuItems(playerId, onAction = () => {}) {
         {
           label: 'Mute',
           icon: <MuteIcon />,
-          onClick: () => onAction('mute', playerId)
+          onClick: () => onAction('mute', userUuid)
         },
         {
           label: 'Report',
           icon: <ReportIcon />,
-          onClick: () => onAction('report', playerId)
+          onClick: () => onAction('report', userUuid)
         },
         {
           label: 'Block',
           icon: <BlockIcon />,
-          onClick: () => onAction('block', playerId)
+          onClick: () => onAction('block', userUuid)
         }
       ]
     }

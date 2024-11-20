@@ -76,12 +76,20 @@ export default function PlayerListItem({ player, isSelected, onSelect }) {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('PlayerListItem - handleClick:', {
+      playerUuid: player.userUuid,
+      isCurrentlySelected: isSelected
+    });
     onSelect(player.userUuid);
   };
 
   const handleContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('PlayerListItem - handleContextMenu:', {
+      playerUuid: player.userUuid,
+      isCurrentlySelected: isSelected
+    });
     if (!isSelected) {
       onSelect(player.userUuid);
     }
