@@ -82,8 +82,7 @@ class UserService {
         });
 
         logger.info('✅ User created successfully:', user.userUuid);
-        const sanitizedUser = this.sanitizeUser(user);
-        return sanitizedUser;
+        return user.toMediumUser();
     }
 
     async login(username, password) {
@@ -101,7 +100,7 @@ class UserService {
 
             logger.info('Login successful for user:', username);
             return {
-                user: this.sanitizeUser(user),
+                user: user.toMediumUser(),
                 sessionToken
             };
         } catch (error) {
@@ -146,7 +145,7 @@ class UserService {
         if (!user) {
             throw new NotFoundError('User not found');
         }
-        return this.sanitizeUser(user);
+        return user.toMediumUser();
     }
 
     async updateProfile(userUuid, updates) {
@@ -171,7 +170,18 @@ class UserService {
             throw new NotFoundError('User not found');
         }
 
-        return this.sanitizeUser(user);
+        return user.toMediumUser();
+    }
+
+    async getUsers(query = {}, options = {}) {
+        const { skip = 0, limit = 10 } = options;
+
+        const users = await UserDB.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        return users.map(user => user.toSmallUser());
     }
 
     // Security features
@@ -312,7 +322,7 @@ class UserService {
             .skip(skip)
             .limit(limit);
 
-        return users.map(user => this.sanitizeUser(user));
+        return users.map(user => user.toMediumUser());
     }
 
     async banUser(userUuid, reason, duration) {
@@ -363,22 +373,14 @@ class UserService {
     }
 
     // Utility methods
-    sanitizeUser(user) {
-        if (!user) return null;
-        
-        // Create a new object with only the fields we want to expose
-        return {
-            userUuid: user.userUuid,
-            username: user.username,
-            nickname: user.nickname,
-            email: user.email,
-            createdAt: user.createdAt,
-            lastLoginAt: user.lastLoginAt,
-            isAdmin: user.isAdmin,
-            isActive: user.isActive,
-            isVerified: user.isVerified,
-            preferences: user.preferences
-        };
+    async getServerUsers() {
+        try {
+            const users = await UserDB.find({});
+            return users.map(user => user.toSmallUser());
+        } catch (error) {
+            logger.error('Error fetching server users:', error);
+            return [];
+        }
     }
 
     async sendVerificationEmail(user) {
@@ -423,7 +425,7 @@ class UserService {
             }
         );
 
-        return this.sanitizeUser(user);
+        return user.toMediumUser();
         */
         return true;
     }

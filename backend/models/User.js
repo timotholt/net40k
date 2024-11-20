@@ -50,6 +50,8 @@ class User {
         this.banExpiresAt = sanitizedData.banExpiresAt || null;
         this.preferences = sanitizedData.preferences || {};
         this.lastModified = DateService.now().date;
+        this.profilePicture = sanitizedData.profilePicture || null;
+        this.bio = sanitizedData.bio || null;
     }
 
     validate() {
@@ -78,6 +80,36 @@ class User {
     });
 
     toJSON() {
+        return this.toLargeUserJSON();
+    }
+
+    // Sent to clients to represent other users on the server
+    toSmallUserJSON() {
+        return {
+            userUuid: this.userUuid,
+            nickname: this.nickname,
+            isMuted: this.isMuted || false,
+            isAdmin: this.isAdmin || false
+        };
+    }
+
+    // Sent to clients to represent the current user
+    toMediumUserJSON() {
+        return {
+            userUuid: this.userUuid,
+            username: this.username,
+            nickname: this.nickname,
+            email: this.email,
+            isAdmin: this.isAdmin,
+            isActive: this.isActive,
+            preferences: this.preferences,
+            createdAt: this.createdAt,
+            lastLoginAt: this.lastLoginAt
+        };
+    }
+
+    // NOT sent to clients. This is server side only
+    toLargeUserJSON() {
         const data = {
             userUuid: this.userUuid,
             username: this.username,
@@ -96,7 +128,7 @@ class User {
             banReason: this.banReason,
             banExpiresAt: this.banExpiresAt,
             preferences: this.preferences,
-            lastModified: this.lastModified
+            lastModified: this.lastModified,
         };
 
         // Remove undefined values
@@ -109,16 +141,52 @@ class User {
         return data;
     }
 
-    toPublicJSON() {
-        return {
-            userUuid: this.userUuid,
-            username: this.username,
-            nickname: this.nickname,
-            isAdmin: this.isAdmin,
-            isActive: this.isActive,
-            isBanned: this.isBanned,
-            isVerified: this.isVerified
-        };
+    // Safely convert to MediumUser
+    toMediumUser() {
+        // Ensure only specific fields are copied
+        const mediumUser = {};
+        const allowedFields = [
+            'userUuid', 
+            'username', 
+            'nickname', 
+            'email', 
+            'isAdmin', 
+            'isActive', 
+            'preferences', 
+            'createdAt', 
+            'lastLoginAt'
+        ];
+
+        allowedFields.forEach(field => {
+            if (this[field] !== undefined) {
+                mediumUser[field] = this[field];
+            }
+        });
+
+        return mediumUser;
+    }
+
+    // Safely convert to SmallUser
+    toSmallUser() {
+        // Ensure only specific fields are copied
+        const smallUser = {};
+        const allowedFields = [
+            'userUuid', 
+            'nickname', 
+            'isMuted', 
+            'isAdmin'
+        ];
+
+        allowedFields.forEach(field => {
+            // Use default values for boolean fields if undefined
+            if (field === 'isMuted' || field === 'isAdmin') {
+                smallUser[field] = this[field] || false;
+            } else if (this[field] !== undefined) {
+                smallUser[field] = this[field];
+            }
+        });
+
+        return smallUser;
     }
 }
 

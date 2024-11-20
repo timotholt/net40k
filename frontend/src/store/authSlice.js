@@ -32,7 +32,13 @@ export const registerUser = createAsyncThunk(
       return {
         id: data.user.userUuid,
         username: data.user.username,
-        nickname: data.user.nickname || data.user.username,
+        nickname: data.user.nickname,
+        email: data.user.email,
+        isAdmin: data.user.isAdmin,
+        isActive: data.user.isActive,
+        preferences: data.user.preferences,
+        createdAt: data.user.createdAt,
+        lastLoginAt: data.user.lastLoginAt
       };
     } catch (error) {
       console.error('Auth: Registration error:', error);
@@ -71,7 +77,13 @@ export const loginUser = createAsyncThunk(
       return {
         id: data.user.userUuid,
         username: data.user.username,
-        nickname: data.user.nickname || data.user.username,
+        nickname: data.user.nickname,
+        email: data.user.email,
+        isAdmin: data.user.isAdmin,
+        isActive: data.user.isActive,
+        preferences: data.user.preferences,
+        createdAt: data.user.createdAt,
+        lastLoginAt: data.user.lastLoginAt
       };
     } catch (error) {
       console.error('Auth: Login error:', error);
