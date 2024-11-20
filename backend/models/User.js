@@ -88,37 +88,6 @@ class User {
         return this.toLargeUserJSON();
     }
 
-    // Sent to clients to represent other users on the server
-    toSmallUserJSON() {
-        return {
-            userUuid: this.userUuid,
-            nickname: this.nickname,
-            isMuted: this.isMuted || false,
-            isAdmin: this.isAdmin || false
-        };
-    }
-
-    // Serialization method for user data
-    toMediumUserJSON() {
-        return {
-            userUuid: this.userUuid,
-            username: this.username,
-            nickname: this.nickname,
-            email: this.email,
-            isAdmin: this.isAdmin,
-            isActive: this.isActive,
-            isVerified: this.isVerified,
-            preferences: this.preferences || {},
-            createdAt: this.createdAt,
-            lastLoginAt: this.lastLoginAt
-        };
-    }
-
-    // Alias for backward compatibility
-    toMediumUser() {
-        return this.toMediumUserJSON()
-    }
-
     // NOT sent to clients. This is server side only
     toLargeUserJSON() {
         const data = {
@@ -154,52 +123,63 @@ class User {
         return data;
     }
 
-    // Safely convert to MediumUser
-    toMediumUser() {
-        // Ensure only specific fields are copied
-        const mediumUser = {};
-        const allowedFields = [
-            'userUuid', 
-            'username', 
-            'nickname', 
-            'email', 
-            'isAdmin', 
-            'isActive', 
-            'preferences', 
-            'createdAt', 
-            'lastLoginAt'
-        ];
-
-        allowedFields.forEach(field => {
-            if (this[field] !== undefined) {
-                mediumUser[field] = this[field];
-            }
-        });
-
-        return mediumUser;
+    // New semantic serialization methods
+    toPublicUser() {
+        return {
+            userUuid: this.userUuid,
+            nickname: this.nickname,
+            isAdmin: this.isAdmin || false,
+            profilePicture: this.profilePicture,
+            bio: this.bio
+        };
     }
 
-    // Safely convert to SmallUser
+    toPrivateUser() {
+        return {
+            userUuid: this.userUuid,
+            username: this.username,
+            nickname: this.nickname,
+            email: this.email,
+            isAdmin: this.isAdmin,
+            isActive: this.isActive,
+            isVerified: this.isVerified,
+            preferences: this.preferences || {},
+            createdAt: this.createdAt,
+            lastLoginAt: this.lastLoginAt,
+            profilePicture: this.profilePicture,
+            bio: this.bio,
+            mutedUserUuids: this.mutedUserUuids,
+            blockedUserUuids: this.blockedUserUuids
+        };
+    }
+
+    toFullUser() {
+        return this.toLargeUserJSON();
+    }
+
+    // Deprecated methods - will be removed in future versions
+    /** @deprecated Use toPublicUser() instead */
     toSmallUser() {
-        // Ensure only specific fields are copied
-        const smallUser = {};
-        const allowedFields = [
-            'userUuid', 
-            'nickname', 
-            'isMuted', 
-            'isAdmin'
-        ];
+        logger.warn('toSmallUser() is deprecated. Use toPublicUser() instead');
+        return this.toPublicUser();
+    }
 
-        allowedFields.forEach(field => {
-            // Use default values for boolean fields if undefined
-            if (field === 'isMuted' || field === 'isAdmin') {
-                smallUser[field] = this[field] || false;
-            } else if (this[field] !== undefined) {
-                smallUser[field] = this[field];
-            }
-        });
+    /** @deprecated Use toPrivateUser() instead */
+    toMediumUser() {
+        logger.warn('toMediumUser() is deprecated. Use toPrivateUser() instead');
+        return this.toPrivateUser();
+    }
 
-        return smallUser;
+    /** @deprecated Use toPublicUser() instead */
+    toSmallUserJSON() {
+        logger.warn('toSmallUserJSON() is deprecated. Use toPublicUser() instead');
+        return this.toPublicUser();
+    }
+
+    /** @deprecated Use toPrivateUser() instead */
+    toMediumUserJSON() {
+        logger.warn('toMediumUserJSON() is deprecated. Use toPrivateUser() instead');
+        return this.toPrivateUser();
     }
 }
 
@@ -266,7 +246,7 @@ export const UserDB = {
 
             const result = await db.create(this.collection, user.toJSON());
             logger.info(`User created successfully: ${user.username}`);
-            return result;
+            return this._toUserInstance(result);
         } catch (error) {
             logger.error(`Failed to create user: ${error.message}`);
             throw error instanceof ValidationError ? error : new DatabaseError('Failed to create user');
@@ -277,7 +257,8 @@ export const UserDB = {
 
     async findAll() {
         try {
-            return await db.find(this.collection, { isDeleted: false });
+            const dbUsers = await db.find(this.collection, { isDeleted: false });
+            return dbUsers.map(user => this._toUserInstance(user));
         } catch (error) {
             logger.error(`Failed to fetch users: ${error.message}`);
             throw new DatabaseError('Failed to fetch users');
@@ -287,7 +268,8 @@ export const UserDB = {
     async findOne(query) {
         try {
             logger.debug(`Finding user with query: ${JSON.stringify(query)}`);
-            return await db.findOne(this.collection, query);
+            const dbUser = await db.findOne(this.collection, query);
+            return this._toUserInstance(dbUser);
         } catch (error) {
             logger.error(`Failed to find user: ${error.message}`);
             throw new DatabaseError('Failed to find user');
@@ -297,7 +279,8 @@ export const UserDB = {
     async findById(userUuid) {
         try {
             logger.debug(`Finding user by UUID: ${userUuid}`);
-            return await db.findOne(this.collection, { userUuid, isDeleted: false });
+            const dbUser = await db.findOne(this.collection, { userUuid, isDeleted: false });
+            return this._toUserInstance(dbUser);
         } catch (error) {
             logger.error(`Failed to find user by UUID: ${error.message}`);
             throw new DatabaseError('Failed to find user');
@@ -306,12 +289,12 @@ export const UserDB = {
 
     async findActive() {
         try {
-            const activeUsers = await db.find(this.collection, { 
+            const dbUsers = await db.find(this.collection, { 
                 isActive: true,
                 isDeleted: false,
                 isBanned: false
             });
-            return activeUsers;
+            return dbUsers.map(user => this._toUserInstance(user));
         } catch (error) {
             logger.error(`Failed to fetch active users: ${error.message}`);
             throw new DatabaseError('Failed to fetch active users');
@@ -357,25 +340,24 @@ export const UserDB = {
         }
     },
 
+    _toUserInstance(dbObject) {
+        if (!dbObject) return null;
+        return new User(dbObject);
+    },
+
     async findByCredentials(username, password) {
         try {
             logger.debug(`Attempting to find user with username: ${username}`);
             
-            // Log all users for debugging
-            const allUsers = await this.findAll();
-            logger.debug('All registered users:', allUsers.map(u => u.username));
-
-            const user = await this.findOne({ username, isDeleted: false });
+            const dbUser = await this.findOne({ username, isDeleted: false });
             
-            if (!user) {
+            if (!dbUser) {
                 logger.error(`No user found with username: ${username}`);
                 throw new AuthError('Username not found');
             }
 
-            // Add debug logging
-            logger.debug(`Found user: ${user.username}`);
-            logger.debug(`Stored password hash length: ${user.password?.length}`);
-            logger.debug(`Provided password length: ${password?.length}`);
+            // Convert to User instance
+            const user = this._toUserInstance(dbUser);
 
             const isMatch = await bcrypt.compare(password, user.password);
             logger.debug(`Password match result: ${isMatch}`);

@@ -9,14 +9,14 @@ export const API_CONFIG = {
   BASE_URL: API_URL,
   ENDPOINTS: {
     // Authentication
-    LOGIN: '/user/login',
-    REGISTER: '/user/register',
-    LOGOUT: '/user/logout',
+    LOGIN: '/users/login',
+    REGISTER: '/users/register',
+    LOGOUT: '/users/logout',
 
     // Profile Management
-    CHANGE_NICKNAME: '/user/change-nickname',
-    CHANGE_PASSWORD: '/user/change-password',
-    DELETE_ACCOUNT: '/user', // :userId will be appended
+    CHANGE_NICKNAME: '/users/change-nickname',
+    CHANGE_PASSWORD: '/users/change-password',
+    DELETE_ACCOUNT: '/users', // :userId will be appended
 
     // Game Lobby
     LOBBY: '/lobby',
@@ -29,7 +29,7 @@ export const API_CONFIG = {
     DELETE_CHAT: '/chat/game', // :gameId will be appended
 
     // Admin
-    ADMIN_URL: '/user/admin-url',
+    ADMIN_URL: '/users/admin-url',
     CREATE_DB: '/admin/createdb'
   }
 };

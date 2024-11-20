@@ -81,21 +81,8 @@ class UserService {
                 createdAt: DateService.now().date
             });
 
-            // Ensure we have a method to convert user to medium representation
-            const userJson = typeof user.toMediumUser === 'function' 
-                ? user.toMediumUser() 
-                : {
-                    userUuid: user.userUuid || user._id,
-                    username: user.username,
-                    nickname: user.nickname || user.username,
-                    email: user.email,
-                    isAdmin: user.isAdmin || false,
-                    isActive: user.isActive !== undefined ? user.isActive : true,
-                    isVerified: user.isVerified || false,
-                    preferences: user.preferences || {},
-                    createdAt: user.createdAt,
-                    lastLoginAt: user.lastLoginAt
-                };
+            // Return private user info since this is their own profile
+            const userJson = user.toPrivateUser();
 
             logger.info('✅ User created successfully:', userJson);
             return userJson;
@@ -123,22 +110,9 @@ class UserService {
             // Update last login time
             await UserDB.updateLastLogin(user.userUuid);
 
-            // Ensure we have a method to convert user to medium representation
-            const userJson = user.toMediumUserJSON ? user.toMediumUserJSON() : {
-                userUuid: user.userUuid,
-                username: user.username,
-                nickname: user.nickname,
-                email: user.email,
-                isAdmin: user.isAdmin,
-                isActive: user.isActive,
-                preferences: user.preferences,
-                createdAt: user.createdAt,
-                lastLoginAt: user.lastLoginAt
-            };
-
-            logger.info('Login successful for user:', username);
+            // Return user data
             return {
-                user: userJson,
+                user: user.toPrivateUser(),
                 sessionToken
             };
         } catch (error) {
@@ -190,7 +164,7 @@ class UserService {
         if (!user) {
             throw new NotFoundError('User not found');
         }
-        return user.toMediumUser();
+        return user.toPrivateUser();
     }
 
     async updateProfile(userUuid, updates) {
@@ -215,7 +189,7 @@ class UserService {
             throw new NotFoundError('User not found');
         }
 
-        return user.toMediumUser();
+        return user.toPrivateUser();
     }
 
     async getUsers(query = {}, options = {}) {
@@ -226,7 +200,7 @@ class UserService {
             .skip(skip)
             .limit(limit);
 
-        return users.map(user => user.toSmallUser());
+        return users.map(user => user.toPublicUser());
     }
 
     // Security features
@@ -410,15 +384,43 @@ class UserService {
 
     // Admin methods
     async getActiveUsers({ page = 1, limit = 50, filter = {} }) {
-        const query = { ...filter };
+        const query = { 
+            isActive: true,
+            isBanned: { $ne: true }
+        };
+
+        // Add text search if filter is provided
+        if (filter) {
+            query.$or = [
+                { nickname: { $regex: filter, $options: 'i' } }
+            ];
+        }
+
         const skip = (page - 1) * limit;
+        
+        const [users, total] = await Promise.all([
+            UserDB.find(query)
+                .select('userUuid nickname isOnline lastActive')
+                .sort({ isOnline: -1, lastActive: -1 })
+                .skip(skip)
+                .limit(limit),
+            UserDB.countDocuments(query)
+        ]);
 
-        const users = await UserDB.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        return users.map(user => user.toMediumUser());
+        return {
+            users: users.map(user => ({
+                userUuid: user.userUuid,
+                nickname: user.nickname,
+                isOnline: user.isOnline,
+                lastActive: user.lastActive
+            })),
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        };
     }
 
     async deleteUser(username) {
@@ -462,7 +464,7 @@ class UserService {
     async getServerUsers() {
         try {
             const users = await UserDB.find({});
-            return users.map(user => user.toSmallUser());
+            return users.map(user => user.toPublicUser());
         } catch (error) {
             logger.error('Error fetching server users:', error);
             return [];
@@ -511,7 +513,7 @@ class UserService {
             }
         );
 
-        return user.toMediumUser();
+        return user.toPrivateUser();
         */
         return true;
     }

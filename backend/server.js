@@ -89,8 +89,8 @@ async function main() {
         });
 
         // API Routes
-        logger.info('Mounting user routes at /user');
-        app.use('/user', userRoutes);
+        logger.info('Mounting user routes at /users');
+        app.use('/users', userRoutes);
         //app.use('/lobby', lobbyRoutes);
         //app.use('/admin', adminRoutes);
         //app.use('/chat', chatRoutes);

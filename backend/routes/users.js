@@ -570,46 +570,29 @@ router.get('/blocked', authenticateUser, async (req, res) => {
  * Get Active Users Endpoint
  * 
  * @description
- * Retrieves the list of active users.
- * 
- * Security Considerations:
- * - Requires user authentication to prevent unauthorized access
- * - Returns only the active users
- * - Prevents exposure of user information to unauthorized parties
+ * Retrieves a paginated list of active users. This endpoint is used for features
+ * like displaying online users, user search, and friend lists.
  * 
  * Query Parameters:
- * @param {number} page - Page number for pagination
- * @param {number} limit - Number of users per page
- * @param {object} filter - Filter criteria for users
+ * @param {number} page - Page number for pagination (default: 1)
+ * @param {number} limit - Number of users per page (default: 50)
+ * @param {string} filter - Optional filter criteria for username/nickname
  * 
  * Response:
- * - 200 OK: Returns list of active users
- * - 500 Internal Server Error: Retrieval failed
- * 
- * Workflow:
- * 1. Authenticate the requesting user
- * 2. Retrieve the list of active users
- * 3. Apply pagination and filtering
- * 4. Return the list of active users
+ * - 200 OK: Returns the list of users with pagination info
+ * - 500 Error: Server error while retrieving users
  */
 router.get('/list', authenticateUser, async (req, res) => {
     try {
-        const { page = 1, limit = 50, filter = {} } = req.query;
-        const users = await userService.getActiveUsers({ 
-            page: Number(page), 
-            limit: Number(limit), 
-            filter: {
-                ...filter,
-                // Exclude sensitive information
-                projection: { 
-                    password: 0, 
-                    email: 0, 
-                    sensitiveData: 0 
-                }
-            }
+        const { page, limit, filter } = req.query;
+        const users = await userService.getActiveUsers({
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || 50,
+            filter
         });
         res.json({ success: true, users });
     } catch (error) {
+        logger.error('Error getting user list:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -652,46 +635,6 @@ router.delete('/delete/:username', async (req, res) => {
 });
 
 // Admin routes
-/**
- * Get Active Users Endpoint (Admin)
- * 
- * @description
- * Retrieves the list of active users for administrative purposes.
- * 
- * Security Considerations:
- * - Requires admin authentication to prevent unauthorized access
- * - Returns only the active users
- * - Prevents exposure of user information to unauthorized parties
- * 
- * Query Parameters:
- * @param {number} page - Page number for pagination
- * @param {number} limit - Number of users per page
- * @param {object} filter - Filter criteria for users
- * 
- * Response:
- * - 200 OK: Returns list of active users
- * - 500 Internal Server Error: Retrieval failed
- * 
- * Workflow:
- * 1. Authenticate the requesting admin
- * 2. Retrieve the list of active users
- * 3. Apply pagination and filtering
- * 4. Return the list of active users
- */
-router.get('/list', authenticateAdmin, async (req, res) => {
-    try {
-        const { page, limit, filter } = req.query;
-        const users = await userService.getActiveUsers({
-            page: parseInt(page) || 1,
-            limit: parseInt(limit) || 50,
-            filter: filter ? JSON.parse(filter) : {}
-        });
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
 /**
  * Ban User Endpoint
  * 
