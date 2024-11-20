@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { loginUser } from '../../store/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, selectIsAuthenticated } from '../../store/authSlice';
 import { InputField, PasswordField } from '../../components/FormFields';
 import { validation } from '../../utils/validation';
 import styles from './Login.module.css';
@@ -10,6 +10,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -17,6 +19,13 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+
+  // Navigate to lobby when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/lobby');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Clear the success message from location state after displaying it
   useEffect(() => {
@@ -88,7 +97,6 @@ export default function Login() {
       // Remove direct navigation, let ProtectedRoute handle it
     } catch (error) {
       console.log('Unexpected error:', error);
-      window.alert('Login failed');
       
       setErrors({
         form: 'Login failed'
