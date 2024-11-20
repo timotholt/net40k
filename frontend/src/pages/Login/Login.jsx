@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser, selectIsAuthenticated } from '../../store/authSlice';
+import { loginUser, selectIsAuthenticated, selectAuthError, resetAuthState } from '../../store/authSlice';
 import { InputField, PasswordField } from '../../components/FormFields';
 import { validation } from '../../utils/validation';
 import styles from './Login.module.css';
@@ -34,6 +34,10 @@ export default function Login() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state?.message]);
+
+  useEffect(() => {
+    dispatch(resetAuthState());
+  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

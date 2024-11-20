@@ -29,17 +29,7 @@ export const registerUser = createAsyncThunk(
         localStorage.setItem('token', data.token);
       }
 
-      return {
-        id: data.user.userUuid,
-        username: data.user.username,
-        nickname: data.user.nickname,
-        email: data.user.email,
-        isAdmin: data.user.isAdmin,
-        isActive: data.user.isActive,
-        preferences: data.user.preferences,
-        createdAt: data.user.createdAt,
-        lastLoginAt: data.user.lastLoginAt
-      };
+      return transformUserForRedux(data.user);
     } catch (error) {
       console.error('Auth: Registration error:', error);
       
@@ -74,17 +64,7 @@ export const loginUser = createAsyncThunk(
         localStorage.setItem('token', data.token);
       }
 
-      return {
-        id: data.user.userUuid,
-        username: data.user.username,
-        nickname: data.user.nickname,
-        email: data.user.email,
-        isAdmin: data.user.isAdmin,
-        isActive: data.user.isActive,
-        preferences: data.user.preferences,
-        createdAt: data.user.createdAt,
-        lastLoginAt: data.user.lastLoginAt
-      };
+      return transformUserForRedux(data.user);
     } catch (error) {
       console.error('Auth: Login error:', error);
       
@@ -102,18 +82,42 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Transforms a user object from the backend to a format suitable for the Redux store
+const transformUserForRedux = (user) => ({
+  id: user.userUuid,
+  username: user.username,
+  nickname: user.nickname,
+  email: user.email,
+  isAdmin: user.isAdmin,
+  isActive: user.isActive,
+  preferences: user.preferences,
+  createdAt: user.createdAt,
+  lastLoginAt: user.lastLoginAt
+});
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     setUser: (state, action) => {
-      state.user = action.payload;
+      // Use the same transformation for consistency
+      state.user = transformUserForRedux(action.payload);
       state.isAuthenticated = !!action.payload;
     },
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+    },
+    clearError: (state) => {
+      state.error = null;
+      state.status = 'idle';
+    },
+    resetAuthState: (state) => {
+      state.error = null;
+      state.status = 'idle';
+      state.isAuthenticated = false;
+      state.user = null;
     },
   },
   extraReducers: (builder) => {
@@ -151,7 +155,7 @@ const authSlice = createSlice({
   }
 });
 
-export const { setUser, logout } = authSlice.actions;
+export const { setUser, logout, clearError, resetAuthState } = authSlice.actions;
 
 // Selectors
 export const selectUser = (state) => state.auth.user;

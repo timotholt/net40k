@@ -81,7 +81,7 @@ class UserService {
             createdAt: DateService.now().date
         });
 
-        logger.info('✅ User created successfully:', user.userUuid);
+        logger.info('✅ User created successfully:', user.toMediumUser());
         return user.toMediumUser();
     }
 
