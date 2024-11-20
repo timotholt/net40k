@@ -1,5 +1,5 @@
 import { db } from '../database/database.js';
-import { createGameUuid } from '../constants/GameUuids.js';
+import { createGameUuid } from '@net40k/shared';
 import DateService from '../services/DateService.js';
 import { Lock } from './Lock.js';
 

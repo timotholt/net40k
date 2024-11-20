@@ -1,7 +1,7 @@
 import { db } from '../database/database.js';
 import { UuidService } from '../services/UuidService.js';
 import DateService from '../services/DateService.js';
-import { createMessageUuid } from '../constants/GameUuids.js';
+import { createMessageUuid } from '@net40k/shared';
 
 class Chat {
     constructor(data = {}) {

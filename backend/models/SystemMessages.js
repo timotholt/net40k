@@ -1,4 +1,4 @@
-import { SYSTEM_USERS, SYSTEM_ROOMS } from '../constants/GameUuids.js';
+import { SYSTEM_USERS, SYSTEM_ROOMS } from '@net40k/shared';
 import { UserDB } from './User.js';
 import { chatService } from '../services/ChatService.js';
 import { Lock } from './Lock.js';

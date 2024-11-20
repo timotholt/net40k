@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@net40k/shared": "file:../shared",
     "@firebase/app": "^0.10.16",
     "@firebase/firestore": "^4.7.5",
     "bcryptjs": "^2.4.3",
