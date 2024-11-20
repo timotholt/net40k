@@ -3,9 +3,9 @@ import { db } from '../database/database.js';
 import { createUserUuid } from '../constants/GameUuids.js';
 import DateService from '../services/DateService.js';
 import crypto from 'crypto';
+import logger from '../utils/logger.js';
 import { ValidationError, DatabaseError, AuthError } from '../utils/errors.js';
 import { isFeatureEnabled, noOpAsync } from '../config/features.js';
-import logger from '../utils/logger.js';
 import { Lock } from './Lock.js';
 import { generateSchema } from '../utils/schemaGenerator.js';
 import { sanitizeInput } from '../utils/sanitizer.js';
@@ -211,6 +211,14 @@ export const UserDB = {
             await db.createIndex(this.collection, { userUuid: 1 }, { unique: true });
         } else {
             logger.info('Database engine does not support explicit indexes, skipping index creation');
+        }
+
+        // Initialize system users
+        try {
+            const SystemUserService = await import('../services/SystemUserService.js');
+            await SystemUserService.default.initializeSystemUsers();
+        } catch (error) {
+            logger.error('Failed to initialize system users:', error);
         }
     },
 
