@@ -23,12 +23,6 @@ export const registerUser = createAsyncThunk(
       });
 
       console.log('Auth: Registration successful, received data:', data);
-
-      // Store sessionToken
-      if (data.sessionToken) {
-        localStorage.setItem('sessionToken', data.sessionToken);
-      }
-
       return transformUserForRedux(data.user);
     } catch (error) {
       console.error('Auth: Registration error:', error);
@@ -136,10 +130,8 @@ const authSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.status = 'succeeded';
-        state.user = action.payload;
-        state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
