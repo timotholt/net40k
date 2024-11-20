@@ -1,5 +1,5 @@
 import { UserDB } from '../models/User.js';
-import { SYSTEM_USERS } from '../constants/GameUuids.js';
+import { SYSTEM_USERS, createUserUuid } from '../../shared/constants/GameUuids.js';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import DateService from '../services/DateService.js';

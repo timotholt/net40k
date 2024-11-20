@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { db } from '../database/database.js';
-import { createUserUuid } from '../constants/GameUuids.js';
+import { createUserUuid } from '../../shared/constants/GameUuids.js';
 import DateService from '../services/DateService.js';
 import crypto from 'crypto';
 import logger from '../utils/logger.js';
