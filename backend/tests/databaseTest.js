@@ -44,7 +44,8 @@ async function cleanupCollections() {
         'test_parents',
         'test_children',
         'test_integrity',
-        'test_indexes'
+        'test_indexes',
+        'test_findone'
     ];
 
     try {
@@ -196,23 +197,133 @@ async function testArrayHandling() {
 
 // Query operations test
 async function testQueryOperations() {
-    // Create test data
+    // Create test data for basic queries
     const items = [
         { uuid: 'query-1', value: 10, category: 'A' },
         { uuid: 'query-2', value: 20, category: 'A' },
         { uuid: 'query-3', value: 30, category: 'B' }
     ];
 
+    // Create test users for username queries
+    const users = [
+        { uuid: 'user-1', username: 'TestUser123', value: 15, category: 'A' },
+        { uuid: 'user-2', username: 'testuser123', value: 25, category: 'A' },
+        { uuid: 'user-3', username: 'OtherUser', value: 35, category: 'B' }
+    ];
+
+    // Insert all test data
     for (const item of items) {
         await db.create('test_queries', item);
     }
+    for (const user of users) {
+        await db.create('test_queries', user);
+    }
 
-    // Test different queries
+    // Test 1: Basic category query using find
     const categoryA = await db.find('test_queries', { category: 'A' });
-    assert(categoryA.length === 2, 'Should find 2 items in category A');
+    assert(categoryA.length === 4, 'Should find 4 items in category A');
 
+    // Test 2: Value comparison using find
     const highValue = await db.find('test_queries', { value: { $gt: 20 } });
-    assert(highValue.length === 1, 'Should find 1 item with value > 20');
+    assert(highValue.length === 3, 'Should find 3 items with value > 20');
+
+    // Test 3: Exact username match using findOne
+    const exactMatch = await db.findOne('test_queries', { username: 'TestUser123' });
+    assert(exactMatch, 'Should find exact username match');
+    assert.strictEqual(exactMatch.username, 'TestUser123', 'Username should match exactly');
+
+    // Test 4: Case-sensitive username using findOne
+    const caseMatch = await db.findOne('test_queries', { username: 'testuser123' });
+    assert(caseMatch, 'Should find case-sensitive username match');
+    assert.strictEqual(caseMatch.username, 'testuser123', 'Username case should match exactly');
+
+    // Test 5: Non-existent username using findOne
+    const nonExistent = await db.findOne('test_queries', { username: 'NonExistentUser' });
+    assert(!nonExistent, 'Should not find non-existent username');
+
+    // Test 6: Combined criteria using findOne
+    const combined = await db.findOne('test_queries', { 
+        username: 'TestUser123',
+        category: 'A'
+    });
+    assert(combined, 'Should find user matching both criteria');
+    assert.strictEqual(combined.username, 'TestUser123', 'Should match exact username in combined query');
+
+    // Test 7: Sort by value
+    const sorted = await db.find('test_queries', { category: 'A' }, { sort: { value: 1 } });
+    assert(sorted.length === 4, 'Should find all category A items');
+    assert(sorted[0].value < sorted[1].value, 'Results should be sorted by value ascending');
+
+    // Test 8: Single field queries (no index required)
+    const valueQuery = await db.find('test_queries', { value: 20 });
+    assert(valueQuery.length === 1, 'Should find exactly one item with value 20');
+
+    // Test 9: Handle potential index errors gracefully
+    try {
+        // This query might require an index, so we wrap it in try-catch
+        const complexQuery = await db.find('test_queries', { 
+            category: 'A',
+            value: { $lt: 20 }
+        });
+        // If query succeeds, verify results
+        if (complexQuery) {
+            assert(Array.isArray(complexQuery), 'Complex query should return array');
+        }
+    } catch (err) {
+        // Log index requirement but don't fail the test
+        if (err.code === 'failed-precondition' && err.message.includes('index')) {
+            console.log('Note: Complex query requires an index. Create the index or use single-field queries.');
+        } else {
+            throw err; // Re-throw if it's not an index error
+        }
+    }
+}
+
+// FindOne operations test
+async function testFindOneOperations() {
+    log('Testing findOne operations...');
+    const testCollection = 'test_findone';
+    
+    // Test data
+    const testDocs = [
+        { id: '1', username: 'user1', value: 10, category: 'A' },
+        { id: '2', username: 'user2', value: 20, category: 'B' },
+        { id: '3', username: 'user3', value: 30, category: 'A' }
+    ];
+
+    try {
+        // Setup: Insert test documents
+        for (const doc of testDocs) {
+            await db.create(testCollection, doc);
+        }
+
+        // Test 1: Find by exact match
+        const result1 = await db.findOne(testCollection, { username: 'user1' });
+        assert.ok(result1, 'Should find document by username');
+        assert.strictEqual(result1.value, 10, 'Should match correct document');
+
+        // Test 2: Find with multiple criteria
+        const result2 = await db.findOne(testCollection, { category: 'A', value: 10 });
+        assert.ok(result2, 'Should find document with multiple criteria');
+        assert.strictEqual(result2.username, 'user1', 'Should match correct document');
+
+        // Test 3: Non-existent document
+        const result3 = await db.findOne(testCollection, { username: 'nonexistent' });
+        assert.strictEqual(result3, null, 'Should return null for non-existent document');
+
+        // Test 4: Find with numeric comparison
+        const result4 = await db.findOne(testCollection, { value: { $gt: 25 } });
+        assert.ok(result4, 'Should find document with numeric comparison');
+        assert.strictEqual(result4.username, 'user3', 'Should match correct document');
+
+        log('✅ All findOne tests passed');
+    } catch (error) {
+        log('❌ FindOne test failed:', error);
+        throw error;
+    } finally {
+        // Cleanup
+        await db.delete(testCollection, {});
+    }
 }
 
 // Load test data from JSON files
@@ -493,6 +604,7 @@ export async function testDatabaseEngine() {
             ['Date Handling', testDateHandling],
             ['Array Handling', testArrayHandling],
             ['Query Operations', testQueryOperations],
+            ['FindOne Operations', testFindOneOperations],
             ['Index Management', testIndexManagement],
             ['Data Integrity', testDataIntegrity],
             ['Performance', testPerformance],
