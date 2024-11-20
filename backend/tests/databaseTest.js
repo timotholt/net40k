@@ -97,7 +97,7 @@ async function testDatabaseInitialization() {
 // Basic CRUD operations test
 async function testBasicCRUD() {
     const testData = {
-        uuid: 'test-crud-1',
+        userUuid: 'test-crud-1',
         name: 'Test Item',
         created: new Date(),
         tags: ['test', 'crud'],
@@ -108,10 +108,10 @@ async function testBasicCRUD() {
     const created = await db.create('test_collection', testData);
     console.log('Created data:', created);
     console.log('Created date type:', created.created instanceof Date);
-    assert(created.uuid === testData.uuid, 'Created item should have the same UUID');
+    assert(created.userUuid === testData.userUuid, 'Created item should have the same UUID');
 
     // Read
-    const found = await db.findOne('test_collection', { uuid: testData.uuid });
+    const found = await db.findOne('test_collection', { userUuid: testData.userUuid });
     console.log('\nDate Comparison:');
     console.log('Original date:', {
         value: testData.created,
@@ -138,13 +138,13 @@ async function testBasicCRUD() {
 
     // Update
     const updateData = { name: 'Updated Item' };
-    await db.update('test_collection', { uuid: testData.uuid }, updateData);
-    const updated = await db.findOne('test_collection', { uuid: testData.uuid });
+    await db.update('test_collection', { userUuid: testData.userUuid }, updateData);
+    const updated = await db.findOne('test_collection', { userUuid: testData.userUuid });
     assert(updated.name === 'Updated Item', 'Item should be updated');
 
     // Delete
-    await db.delete('test_collection', { uuid: testData.uuid });
-    const deleted = await db.findOne('test_collection', { uuid: testData.uuid });
+    await db.delete('test_collection', { userUuid: testData.userUuid });
+    const deleted = await db.findOne('test_collection', { userUuid: testData.userUuid });
     assert(!deleted, 'Item should be deleted');
 }
 
@@ -394,25 +394,27 @@ async function testConcurrentOperations() {
 // Performance and load testing
 async function testPerformance() {
     // Test with minimal documents to avoid hitting Firestore quotas
-    const testDoc = {
-        uuid: 'perf-test-1',
-        value: 'test-1',
-        number: 1,
-        nested: {
-            field1: 'nested-1',
-            field2: 2
-        }
+    const testData = {
+        userUuid: 'perf-test-1',
+        number: 42,
+        name: 'Performance Test',
+        created: new Date(),
+        nested: { field1: 1, field2: 2 }
     };
-    
-    // Test single write and read
-    await db.create('test_performance', testDoc);
-    const savedDoc = await db.findOne('test_performance', { uuid: 'perf-test-1' });
+
+    // Insert test data
+    await db.create('test_performance', testData);
+
+    // Verify insertion
+    const savedDoc = await db.findOne('test_performance', { userUuid: testData.userUuid });
+    assert(savedDoc.number === 42, 'Should correctly store and retrieve number');
+    assert(savedDoc.nested.field1 === 1, 'Should correctly store and retrieve nested data');
     assert(savedDoc.nested.field2 === 2, 'Should correctly store and retrieve nested data');
 
     // Test simple query with sort
     const sortedDoc = await db.find('test_performance', {}, { sort: { number: -1 }, limit: 1 });
     assert(sortedDoc.length === 1, 'Should return single document');
-    assert(sortedDoc[0].uuid === 'perf-test-1', 'Should return correct document');
+    assert(sortedDoc[0].userUuid === 'perf-test-1', 'Should return correct document');
 }
 
 // Error recovery testing

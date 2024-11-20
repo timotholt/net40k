@@ -119,11 +119,6 @@ export class MongoDbEngine extends BaseDbEngine {
             docToInsert._id = UuidService.generate();
         }
 
-        // Ensure UUID is generated if not provided
-        if (!docToInsert.uuid) {
-            docToInsert.uuid = UuidService.generate();
-        }
-
         const db = await this._ensureConnected();
         logger.debug('MongoDB Insert:', { collection, data });
         const normalizedData = this._normalizeDates(docToInsert);

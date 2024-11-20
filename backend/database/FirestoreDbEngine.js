@@ -560,11 +560,6 @@ export class FirestoreDbEngine extends BaseDbEngine {
             // Make a copy of the data to avoid modifying the input
             const docToInsert = { ...data };
 
-            // Ensure UUID is generated if not provided
-            if (!docToInsert.uuid) {
-                docToInsert.uuid = UuidService.generate();
-            }
-            
             // Convert data to Firestore-compatible format
             const firestoreData = this._convertToFirestoreData(docToInsert);
             
