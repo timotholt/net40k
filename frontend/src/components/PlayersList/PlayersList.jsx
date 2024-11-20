@@ -1,19 +1,40 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import PlayersListHeader from './components/PlayersListHeader';
 import PlayersListFilters from './components/PlayersListFilters';
 import PlayerListItem from './components/PlayerListItem';
 import EmptyState from './components/EmptyState';
+import userService from '../../services/userService';
 import styles from './PlayersList.module.css';
 
-export default function PlayersList({
-  players = [],
-  activeTab,
-  onTabChange,
-  filter,
-  onFilterChange
-}) {
+export default function PlayersList() {
+  const [players, setPlayers] = useState([]);
+  const [activeTab, setActiveTab] = useState('all');
+  const [filter, setFilter] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedUsers = await userService.getUsers({}, { 
+        page: 1, 
+        limit: 50 
+      });
+      setPlayers(fetchedUsers);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch users');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const tabs = [
     { id: 'all', label: `All (${players.length})` },
@@ -29,19 +50,19 @@ export default function PlayersList({
       const nextIndex = (currentTabIndex + (e.shiftKey ? -1 : 1)) % tabs.length;
       // Handle wrapping
       const newIndex = nextIndex < 0 ? tabs.length - 1 : nextIndex;
-      onTabChange(tabs[newIndex].id);
+      setActiveTab(tabs[newIndex].id);
       return;
     }
 
     if (e.key === 'Escape' && filter) {
       e.preventDefault();
-      onFilterChange('');
+      setFilter('');
       if (searchFocused) {
         e.target.blur();
         setSearchFocused(false);
       }
     }
-  }, [currentTabIndex, tabs, onTabChange, filter, onFilterChange, searchFocused]);
+  }, [currentTabIndex, tabs, filter, searchFocused]);
 
   const handleSelect = (playerId) => {
     setSelectedPlayerId(playerId === selectedPlayerId ? null : playerId);
@@ -84,7 +105,7 @@ export default function PlayersList({
       <PlayersListHeader 
         tabs={tabs}
         activeTab={activeTab}
-        onTabClick={onTabChange}
+        onTabClick={setActiveTab}
       />
 
       <div 
@@ -93,7 +114,11 @@ export default function PlayersList({
         aria-labelledby={`tab-${activeTab}`}
         onContextMenu={handleContainerContextMenu}
       >
-        {filteredPlayers.length > 0 ? (
+        {loading ? (
+          <EmptyState message="Loading..." />
+        ) : error ? (
+          <EmptyState message={error} />
+        ) : filteredPlayers.length > 0 ? (
           filteredPlayers.map(player => (
             <PlayerListItem
               key={player.id}
@@ -111,7 +136,7 @@ export default function PlayersList({
 
       <PlayersListFilters
         filter={filter}
-        onFilterChange={onFilterChange}
+        onFilterChange={setFilter}
         onKeyDown={handleKeyDown}
         onFocus={() => setSearchFocused(true)}
         onBlur={() => setSearchFocused(false)}

@@ -313,41 +313,92 @@ class UserService {
 
     // Social features
     async muteUser(userUuid, targetUserUuid) {
-        await UserDB.updateOne(
-            { userUuid },
-            { $addToSet: { mutedUsers: targetUserUuid } }
-        );
-    }
+        try {
+            const user = await UserDB.findOne({ userUuid });
+            if (!user) {
+                throw new NotFoundError('User not found');
+            }
 
-    async unmuteUser(userUuid, targetUserUuid) {
-        await UserDB.updateOne(
-            { userUuid },
-            { $pull: { mutedUsers: targetUserUuid } }
-        );
-    }
+            // Ensure mutedUserUuids is unique
+            if (!user.mutedUserUuids.includes(targetUserUuid)) {
+                user.mutedUserUuids.push(targetUserUuid);
+            }
 
-    async blockUser(userUuid, targetUserUuid) {
-        await UserDB.updateOne(
-            { userUuid },
-            { $addToSet: { blockedUsers: targetUserUuid } }
-        );
+            await UserDB.update({ userUuid }, { 
+                mutedUserUuids: user.mutedUserUuids 
+            });
+
+            return { 
+                success: true, 
+                message: 'User muted',
+                mutedUserUuids: user.mutedUserUuids
+            };
+        } catch (error) {
+            logger.error(`Failed to mute user ${targetUserUuid} for user ${userUuid}:`, error.message);
+            throw error;
+        }
     }
 
     async unblockUser(userUuid, targetUserUuid) {
-        await UserDB.updateOne(
-            { userUuid },
-            { $pull: { blockedUsers: targetUserUuid } }
-        );
+        try {
+            const user = await UserDB.findOne({ userUuid });
+            if (!user) {
+                throw new NotFoundError('User not found');
+            }
+
+            // Remove the targetUserUuid from blockedUserUuids
+            const updatedBlockedUuids = user.blockedUserUuids.filter(uuid => uuid !== targetUserUuid);
+
+            await UserDB.update({ userUuid }, { 
+                blockedUserUuids: updatedBlockedUuids 
+            });
+
+            return { 
+                success: true, 
+                message: 'User unblocked',
+                blockedUserUuids: updatedBlockedUuids
+            };
+        } catch (error) {
+            logger.error(`Failed to unblock user ${targetUserUuid} for user ${userUuid}:`, error.message);
+            throw error;
+        }
+    }
+
+    async blockUser(userUuid, targetUserUuid) {
+        try {
+            const user = await UserDB.findOne({ userUuid });
+            if (!user) {
+                throw new NotFoundError('User not found');
+            }
+
+            // Ensure blockedUserUuids is unique
+            if (!user.blockedUserUuids.includes(targetUserUuid)) {
+                user.blockedUserUuids.push(targetUserUuid);
+            }
+
+            await UserDB.update({ userUuid }, { 
+                blockedUserUuids: user.blockedUserUuids 
+            });
+
+            return { 
+                success: true, 
+                message: 'User blocked',
+                blockedUserUuids: user.blockedUserUuids
+            };
+        } catch (error) {
+            logger.error(`Failed to block user ${targetUserUuid} for user ${userUuid}:`, error.message);
+            throw error;
+        }
     }
 
     async getMutedUsers(userUuid) {
         const user = await UserDB.findOne({ userUuid });
-        return user ? user.mutedUsers : [];
+        return user ? user.mutedUserUuids : [];
     }
 
     async getBlockedUsers(userUuid) {
         const user = await UserDB.findOne({ userUuid });
-        return user ? user.blockedUsers : [];
+        return user ? user.blockedUserUuids : [];
     }
 
     // TODO: Game Session Integration
@@ -370,49 +421,39 @@ class UserService {
         return users.map(user => user.toMediumUser());
     }
 
-    async banUser(userUuid, reason, duration) {
-        const banExpiry = duration ? DateService.now().date.getTime() + duration : null;
-        
-        await UserDB.updateOne(
-            { userUuid },
-            { 
-                $set: { 
-                    banned: true,
-                    banReason: reason,
-                    banExpiry,
-                    updatedAt: DateService.now().date
-                }
-            }
-        );
-
-        // Terminate all sessions when banned
-        SessionManager.removeUserSessions(userUuid);
-    }
-
-    async unbanUser(userUuid) {
-        await UserDB.updateOne(
-            { userUuid },
-            { 
-                $set: { 
-                    banned: false,
-                    banReason: null,
-                    banExpiry: null,
-                    updatedAt: DateService.now().date
-                }
-            }
-        );
-    }
-
     async deleteUser(username) {
         try {
             const user = await UserDB.findOne({ username });
             if (!user) {
-                throw new ValidationError('User not found');
+                throw new NotFoundError('User not found');
             }
-            await UserDB.delete({ username });
-            return { success: true };
+            await UserDB.update({ username }, { 
+                isDeleted: true, 
+                deletedAt: new Date() 
+            });
+            return { success: true, message: 'User soft deleted' };
         } catch (error) {
             logger.error(`Failed to delete user ${username}:`, error.message);
+            throw error;
+        }
+    }
+
+    async banUser(userUuid, reason, duration) {
+        try {
+            await UserDB.ban(userUuid, reason, duration);
+            return { success: true, message: 'User banned' };
+        } catch (error) {
+            logger.error(`Failed to ban user ${userUuid}:`, error.message);
+            throw error;
+        }
+    }
+
+    async unbanUser(userUuid) {
+        try {
+            await UserDB.unban(userUuid);
+            return { success: true, message: 'User unbanned' };
+        } catch (error) {
+            logger.error(`Failed to unban user ${userUuid}:`, error.message);
             throw error;
         }
     }

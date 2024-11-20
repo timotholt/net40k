@@ -52,6 +52,11 @@ class User {
         this.lastModified = DateService.now().date;
         this.profilePicture = sanitizedData.profilePicture || null;
         this.bio = sanitizedData.bio || null;
+        // Muted users configuration
+        this.mutedUserUuids = sanitizedData.mutedUserUuids || [];
+        // Blocked users configuration
+        this.blockedUserUuids = sanitizedData.blockedUserUuids || [];
+
     }
 
     validate() {
@@ -135,6 +140,8 @@ class User {
             banExpiresAt: this.banExpiresAt,
             preferences: this.preferences,
             lastModified: this.lastModified,
+            mutedUserUuids: this.mutedUserUuids,
+            blockedUserUuids: this.blockedUserUuids,
         };
 
         // Remove undefined values
