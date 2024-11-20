@@ -85,7 +85,7 @@ export default function Login() {
       
       // Check if the login was unsuccessful
       if (result.type.includes('rejected')) {
-        window.alert(result.payload);
+        // window.alert(result.payload);
         
         setErrors({
           form: result.payload
