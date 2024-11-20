@@ -67,7 +67,7 @@ router.post('/logout', authenticateUser, async (req, res) => {
  * List Users Endpoint
  * 
  * @description
- * Retrieves a paginated list of users.
+ * Retrieves a paginated list of active users.
  * 
  * Security Considerations:
  * - Requires user authentication
@@ -76,19 +76,24 @@ router.post('/logout', authenticateUser, async (req, res) => {
  * Query Parameters:
  * @param {number} page - Page number (default: 1)
  * @param {number} limit - Number of users per page (default: 50)
+ * @param {string} filter - Optional text filter for usernames/nicknames
  * 
  * Response:
- * - 200 OK: Returns list of users
+ * - 200 OK: Returns list of users with pagination info
  * - 500 Internal Server Error: Server error
  */
 router.get('/list', authenticateUser, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
-        const skip = (page - 1) * limit;
+        const filter = req.query.filter || '';
 
-        const users = await userService.getUsers({}, { skip, limit });
-        res.json({ success: true, users });
+        const result = await userService.getActiveUsers({ page, limit, filter });
+        res.json({ 
+            success: true, 
+            users: result.users,
+            pagination: result.pagination
+        });
     } catch (error) {
         logger.error('Error fetching users list:', error);
         res.status(500).json({ success: false, message: error.message });

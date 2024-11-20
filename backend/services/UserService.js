@@ -135,22 +135,30 @@ class UserService {
 
     // Session management
     async validateSession(sessionToken) {
-        const session = SessionManager.getSession(sessionToken);
-        if (!session) {
-            throw new AuthError('Invalid session');
+        try {
+            const session = SessionManager.getSession(sessionToken);
+            if (!session) {
+                throw new AuthError('Invalid session');
+            }
+
+            const user = await UserDB.findOne({ userUuid: session.userUuid });
+            if (!user || user.banned) {
+                SessionManager.removeSession(sessionToken);
+                throw new AuthError('User not found or banned');
+            }
+
+            return {
+                ...session,
+                user: user.toPublicUser()
+            };
+        } catch (error) {
+            logger.error('Session validation error:', {
+                sessionToken,
+                error: error.message,
+                stack: error.stack
+            });
+            throw error;
         }
-
-        const user = await UserDB.findOne({ userUuid: session.userUuid });
-        if (!user || user.banned) {
-            SessionManager.removeSession(sessionToken);
-            throw new AuthError('User not found or banned');
-        }
-
-        return session;
-    }
-
-    validateSession(token) {
-        return SessionManager.validateSession(token);
     }
 
     async isAdmin(userUuid) {
@@ -193,14 +201,33 @@ class UserService {
     }
 
     async getUsers(query = {}, options = {}) {
-        const { skip = 0, limit = 10 } = options;
+        try {
+            const { page = 1, limit = 50 } = options;
+            const skip = (page - 1) * limit;
 
-        const users = await UserDB.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+            // Get users with pagination
+            const users = await UserDB.find(query, { 
+                sort: { createdAt: -1 },
+                skip,
+                limit
+            });
 
-        return users.map(user => user.toPublicUser());
+            // Get total count for pagination
+            const total = await UserDB.count(query);
+            
+            return {
+                users,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit)
+                }
+            };
+        } catch (error) {
+            logger.error('Error getting users:', error);
+            throw error;
+        }
     }
 
     // Security features
@@ -399,16 +426,12 @@ class UserService {
         const skip = (page - 1) * limit;
         
         const [users, total] = await Promise.all([
-            UserDB.find(query)
-                .select('userUuid username nickname isOnline lastActive isAdmin isActive isVerified preferences createdAt lastLoginAt profilePicture bio')
-                .sort({ isOnline: -1, lastActive: -1 })
-                .skip(skip)
-                .limit(limit),
-            UserDB.countDocuments(query)
+            UserDB.find(query, { sort: { isOnline: -1, lastActive: -1 }, skip, limit }),
+            UserDB.count(query)
         ]);
 
         return {
-            users: users.map(user => user.toPublicUser()),
+            users,
             pagination: {
                 page,
                 limit,

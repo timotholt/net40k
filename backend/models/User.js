@@ -240,6 +240,57 @@ export const UserDB = {
         }
     },
 
+    async find(query = {}, options = {}) {
+        try {
+            logger.debug('Finding users with query:', query);
+            const { sort, skip, limit } = options;
+            
+            // Get the base query from MongoDB
+            let results = await db.find(this.collection, query);
+            
+            // Apply sorting if specified
+            if (sort) {
+                results = results.sort((a, b) => {
+                    const [field, order] = Object.entries(sort)[0];
+                    if (order === -1) {
+                        return b[field] - a[field];
+                    }
+                    return a[field] - b[field];
+                });
+            }
+            
+            // Apply pagination
+            if (typeof skip === 'number' && typeof limit === 'number') {
+                results = results.slice(skip, skip + limit);
+            }
+            
+            // Transform to User instances
+            return results.map(user => this._toUserInstance(user)).map(user => user.toPublicUser());
+        } catch (error) {
+            logger.error('Error finding users:', error);
+            throw new DatabaseError('Failed to find users');
+        }
+    },
+
+    async count(query = {}) {
+        try {
+            logger.debug('UserDB: Starting count operation with query:', query);
+            logger.debug('UserDB: Collection name:', this.collection);
+            const count = await db.count(this.collection, query);
+            logger.debug('UserDB: Count result:', count);
+            return count;
+        } catch (error) {
+            logger.error('UserDB: Error counting users:', error);
+            logger.error('UserDB: Error details:', {
+                collection: this.collection,
+                query,
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+            throw new DatabaseError('Failed to count users: ' + error.message);
+        }
+    },
+
     async findOne(query) {
         try {
             logger.debug(`Finding user with query: ${JSON.stringify(query)}`);

@@ -5,7 +5,7 @@ import { AuthError } from '../utils/errors.js';
  * Middleware to authenticate regular users
  * Checks if user is logged in and session is valid
  */
-export function authenticateUser(req, res, next) {
+export async function authenticateUser(req, res, next) {
     const sessionToken = req.headers.authorization?.split(' ')[1];
     
     if (!sessionToken) {
@@ -16,7 +16,7 @@ export function authenticateUser(req, res, next) {
     }
 
     try {
-        const session = userService.validateSession(sessionToken);
+        const session = await userService.validateSession(sessionToken);
         req.user = session;
         next();
     } catch (error) {
@@ -26,6 +26,7 @@ export function authenticateUser(req, res, next) {
                 error: error.message 
             });
         } else {
+            console.error('Authentication error:', error);
             res.status(500).json({ 
                 success: false, 
                 error: 'Internal server error' 

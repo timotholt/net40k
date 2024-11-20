@@ -185,6 +185,18 @@ class Database {
         }
     }
 
+    async count(collection, query = {}) {
+        await this.ensureConnection();
+        
+        try {
+            logger.debug(`Database: Counting in ${collection}:`, query);
+            return await this.#dbEngine.count(collection, query);
+        } catch (error) {
+            logger.error(`Database: Count operation failed in ${collection}:`, error);
+            throw error;
+        }
+    }
+
     async disconnect() {
         if (!this.isConnected()) {
             logger.info('Database: Already disconnected');
