@@ -123,7 +123,6 @@ class User {
         return data;
     }
 
-    // New semantic serialization methods
     toPublicUser() {
         return {
             userUuid: this.userUuid,
@@ -157,33 +156,9 @@ class User {
         return this.toLargeUserJSON();
     }
 
-    // Deprecated methods - will be removed in future versions
-    /** @deprecated Use toPublicUser() instead */
-    toSmallUser() {
-        logger.warn('toSmallUser() is deprecated. Use toPublicUser() instead');
-        return this.toPublicUser();
-    }
-
-    /** @deprecated Use toPrivateUser() instead */
-    toMediumUser() {
-        logger.warn('toMediumUser() is deprecated. Use toPrivateUser() instead');
-        return this.toPrivateUser();
-    }
-
-    /** @deprecated Use toPublicUser() instead */
-    toSmallUserJSON() {
-        logger.warn('toSmallUserJSON() is deprecated. Use toPublicUser() instead');
-        return this.toPublicUser();
-    }
-
-    /** @deprecated Use toPrivateUser() instead */
-    toMediumUserJSON() {
-        logger.warn('toMediumUserJSON() is deprecated. Use toPrivateUser() instead');
-        return this.toPrivateUser();
-    }
+    // Database Layer
 }
 
-// Database Layer
 export const UserDB = {
     collection: 'user',
 
