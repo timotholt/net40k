@@ -4,6 +4,7 @@ import { UserDB } from '../models/User.js';
 import { EmailService } from './EmailService.js';
 import SessionManager from './SessionManager.js';
 import { UuidService } from './UuidService.js';
+import DateService from './DateService.js';
 import logger from '../utils/logger.js';
 
 class UserService {
@@ -14,12 +15,26 @@ class UserService {
     }
 
     // Authentication methods
+    async checkUserExists(username) {
+        logger.info('🔍 Checking for existing user...', { username });
+        const existingUser = await UserDB.findOne({ username });
+        logger.info('🔍 FindOne result:', { 
+            exists: !!existingUser,
+            userData: existingUser ? {
+                username: existingUser.username,
+                userUuid: existingUser.userUuid,
+                createdAt: existingUser.createdAt
+            } : null
+        });
+        return existingUser;
+    }
+
     async register(userData) {
         const { username, nickname, password } = userData;
 
         logger.info('🚀 UserService: Starting registration process...');
-        logger.debug('📝 Registration details:', {
-            username,
+        logger.info('📝 Registration details:', { 
+            username, 
             nickname: nickname || username,
             passwordLength: password?.length || 'missing'
         });
@@ -42,14 +57,13 @@ class UserService {
         logger.debug('👤 Creating new user...');
         const userUuid = UuidService.generate();
         const user = await UserDB.create({
-            userUuid,
             username,
             nickname: nickname || username,
-            password, // Pass raw password, let User model handle hashing
-            createdAt: new Date()
+            password,
+            createdAt: DateService.now().date
         });
 
-        logger.info('✅ User created successfully:', user?.userUuid);
+        logger.info('✅ User created successfully:', user.userUuid);
         const sanitizedUser = this.sanitizeUser(user);
         return sanitizedUser;
     }
@@ -127,7 +141,7 @@ class UserService {
             }
         });
 
-        updateData.updatedAt = new Date();
+        updateData.updatedAt = DateService.now().date;
 
         const user = await UserDB.findOneAndUpdate(
             { userUuid },
@@ -162,7 +176,7 @@ class UserService {
             { 
                 $set: { 
                     password: hashedPassword,
-                    updatedAt: new Date()
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -186,8 +200,8 @@ class UserService {
             { 
                 $set: { 
                     resetToken,
-                    resetTokenExpiry: new Date(Date.now() + 3600000), // 1 hour
-                    updatedAt: new Date()
+                    resetTokenExpiry: DateService.now().date.getTime() + 3600000, // 1 hour
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -198,7 +212,7 @@ class UserService {
     async resetPassword(token, newPassword) {
         const user = await UserDB.findOne({
             resetToken: token,
-            resetTokenExpiry: { $gt: new Date() }
+            resetTokenExpiry: { $gt: DateService.now().date }
         });
         
         if (!user) {
@@ -215,7 +229,7 @@ class UserService {
                     password: hashedPassword,
                     resetToken: null,
                     resetTokenExpiry: null,
-                    updatedAt: new Date()
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -284,7 +298,7 @@ class UserService {
     }
 
     async banUser(userUuid, reason, duration) {
-        const banExpiry = duration ? new Date(Date.now() + duration) : null;
+        const banExpiry = duration ? DateService.now().date.getTime() + duration : null;
         
         await UserDB.updateOne(
             { userUuid },
@@ -293,7 +307,7 @@ class UserService {
                     banned: true,
                     banReason: reason,
                     banExpiry,
-                    updatedAt: new Date()
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -310,7 +324,7 @@ class UserService {
                     banned: false,
                     banReason: null,
                     banExpiry: null,
-                    updatedAt: new Date()
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -359,8 +373,8 @@ class UserService {
             { 
                 $set: { 
                     verificationToken,
-                    verificationTokenExpiry: new Date(Date.now() + 86400000), // 24 hours
-                    updatedAt: new Date()
+                    verificationTokenExpiry: DateService.now().date.getTime() + 86400000, // 24 hours
+                    updatedAt: DateService.now().date
                 }
             }
         );
@@ -387,7 +401,7 @@ class UserService {
                     isVerified: true,
                     verificationToken: null,
                     verificationTokenExpiry: null,
-                    updatedAt: new Date()
+                    updatedAt: DateService.now().date
                 }
             }
         );
