@@ -13,7 +13,7 @@ async function main() {
         // Only import server dependencies if not in test mode
         const express = (await import('express')).default;
         const { WebSocketServer } = await import('ws');
-        const { router: userRoutes } = await import('./routes/Users.js');
+        const { router: userRoutes } = await import('./routes/users.js');
         const { router: lobbyRoutes } = await import('./routes/lobby.js');
         const { router: adminRoutes } = await import('./routes/admin.js');
         const { router: chatRoutes } = await import('./routes/chat.js');
