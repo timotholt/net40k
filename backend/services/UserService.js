@@ -30,59 +30,84 @@ class UserService {
     }
 
     async register(userData) {
-        const { username, nickname, password } = userData;
+        try {
+            const { username, nickname, password } = userData;
 
-        logger.info('🚀 UserService: Starting registration process...');
-        logger.info('📝 Registration details:', { 
-            username, 
-            nickname: nickname || username,
-            passwordLength: password?.length || 'missing'
-        });
-
-        // Validate input
-        if (!username || !password) {
-            logger.error('❌ Registration failed: Missing required fields');
-            throw new ValidationError('Missing required fields');
-        }
-        
-        // Check for existing user
-        logger.debug('🔍 Checking for existing user...');
-        const email = UuidService.generate();
-        const existingUser = await UserDB.findOne({ 
-            $or: [
-                { username },
-                { email }
-            ]
-        });
-
-        if (existingUser) {
-            const errorMessage = existingUser.username === username 
-                ? 'Username already exists' 
-                : 'Email already exists';
-            
-            logger.error(`❌ Registration failed: ${errorMessage}`);
-            const errorObj = new ValidationError(errorMessage);
-            logger.error('Backend Error Object Details:', {
-                name: errorObj.name,
-                message: errorObj.message,
-                toString: errorObj.toString(),
-                stack: errorObj.stack
+            logger.info('🚀 UserService: Starting registration process...');
+            logger.info('📝 Registration details:', { 
+                username, 
+                nickname: nickname || username,
+                passwordLength: password?.length || 'missing'
             });
-            throw errorObj;
+
+            // Validate input
+            if (!username || !password) {
+                logger.error('❌ Registration failed: Missing required fields');
+                throw new ValidationError('Missing required fields');
+            }
+            
+            // Check for existing user
+            logger.debug('🔍 Checking for existing user...');
+            const email = UuidService.generate();
+            const existingUser = await UserDB.findOne({ 
+                $or: [
+                    { username },
+                    { email }
+                ]
+            });
+
+            if (existingUser) {
+                const errorMessage = existingUser.username === username 
+                    ? 'Username already exists' 
+                    : 'Email already exists';
+                
+                logger.error(`❌ Registration failed: ${errorMessage}`);
+                const errorObj = new ValidationError(errorMessage);
+                logger.error('Backend Error Object Details:', {
+                    name: errorObj.name,
+                    message: errorObj.message,
+                    toString: errorObj.toString(),
+                    stack: errorObj.stack
+                });
+                throw errorObj;
+            }
+
+            // Create user
+            const user = await UserDB.create({
+                username,
+                nickname: nickname || username,
+                password,
+                email,
+                createdAt: DateService.now().date
+            });
+
+            // Ensure we have a method to convert user to medium representation
+            const userJson = typeof user.toMediumUser === 'function' 
+                ? user.toMediumUser() 
+                : {
+                    userUuid: user.userUuid || user._id,
+                    username: user.username,
+                    nickname: user.nickname || user.username,
+                    email: user.email,
+                    isAdmin: user.isAdmin || false,
+                    isActive: user.isActive !== undefined ? user.isActive : true,
+                    isVerified: user.isVerified || false,
+                    preferences: user.preferences || {},
+                    createdAt: user.createdAt,
+                    lastLoginAt: user.lastLoginAt
+                };
+
+            logger.info('✅ User created successfully:', userJson);
+            return userJson;
+        } catch (error) {
+            logger.error('Registration failed:', {
+                username: userData.username,
+                errorMessage: error.message,
+                errorName: error.name,
+                stack: error.stack
+            });
+            throw error;
         }
-
-        // Create user
-        logger.debug('👤 Creating new user...');
-        const user = await UserDB.create({
-            username,
-            nickname: nickname || username,
-            password,
-            email,
-            createdAt: DateService.now().date
-        });
-
-        logger.info('✅ User created successfully:', user.toMediumUser());
-        return user.toMediumUser();
     }
 
     async login(username, password) {
@@ -98,15 +123,35 @@ class UserService {
             // Update last login time
             await UserDB.updateLastLogin(user.userUuid);
 
+            // Ensure we have a method to convert user to medium representation
+            const userJson = user.toMediumUserJSON ? user.toMediumUserJSON() : {
+                userUuid: user.userUuid,
+                username: user.username,
+                nickname: user.nickname,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isActive: user.isActive,
+                preferences: user.preferences,
+                createdAt: user.createdAt,
+                lastLoginAt: user.lastLoginAt
+            };
+
             logger.info('Login successful for user:', username);
             return {
-                user: user.toMediumUser(),
+                user: userJson,
                 sessionToken
             };
         } catch (error) {
-            // Log the error but don't expose internal details
-            logger.error('Login failed:', error.message);
-            throw new AuthError('Username not found');
+            // Log the error with full details
+            logger.error('Login failed:', {
+                username,
+                errorMessage: error.message,
+                errorName: error.name,
+                stack: error.stack
+            });
+            
+            // Rethrow the original error to preserve error type
+            throw error;
         }
     }
 

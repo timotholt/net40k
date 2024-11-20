@@ -93,7 +93,7 @@ class User {
         };
     }
 
-    // Sent to clients to represent the current user
+    // Serialization method for user data
     toMediumUserJSON() {
         return {
             userUuid: this.userUuid,
@@ -102,10 +102,16 @@ class User {
             email: this.email,
             isAdmin: this.isAdmin,
             isActive: this.isActive,
-            preferences: this.preferences,
+            isVerified: this.isVerified,
+            preferences: this.preferences || {},
             createdAt: this.createdAt,
             lastLoginAt: this.lastLoginAt
         };
+    }
+
+    // Alias for backward compatibility
+    toMediumUser() {
+        return this.toMediumUserJSON()
     }
 
     // NOT sent to clients. This is server side only
@@ -338,14 +344,23 @@ export const UserDB = {
 
     async findByCredentials(username, password) {
         try {
+            logger.debug(`Attempting to find user with username: ${username}`);
+            
+            // Log all users for debugging
+            const allUsers = await this.findAll();
+            logger.debug('All registered users:', allUsers.map(u => u.username));
+
             const user = await this.findOne({ username, isDeleted: false });
+            
             if (!user) {
+                logger.error(`No user found with username: ${username}`);
                 throw new AuthError('Username not found');
             }
 
             // Add debug logging
             logger.debug(`Found user: ${user.username}`);
-            logger.debug(`Comparing passwords...`);
+            logger.debug(`Stored password hash length: ${user.password?.length}`);
+            logger.debug(`Provided password length: ${password?.length}`);
 
             const isMatch = await bcrypt.compare(password, user.password);
             logger.debug(`Password match result: ${isMatch}`);
