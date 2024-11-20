@@ -3,7 +3,6 @@ import { AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
 import { useSound } from './context/SoundContext';
 import { ZoomProvider } from './context/ZoomContext';
-import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ServerStatus from './components/ServerStatus/ServerStatus';
 import AttractScreen from './components/AttractScreen/AttractScreen';
@@ -39,30 +38,28 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <ZoomProvider>
       <MainStatusBar />
-      <ZoomProvider>
-        <AttractScreen />
-        <div className={styles.contentWrapper}>
-          <ServerStatus />
-          <div className={styles.app}>
-            <AnimatePresence mode="wait">
-              <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<Login />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/lobby" element={<Lobby />} />
-                  <Route path="/game/:gameId" element={<Game />} />
-                </Route>
-              </Routes>
-            </AnimatePresence>
-          </div>
+      <AttractScreen />
+      <div className={styles.contentWrapper}>
+        <ServerStatus />
+        <div className={styles.app}>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/lobby" element={<Lobby />} />
+                <Route path="/game/:gameId" element={<Game />} />
+              </Route>
+            </Routes>
+          </AnimatePresence>
         </div>
-        <SoundControls />
-        <ContextMenuTest />
-      </ZoomProvider>
-    </AuthProvider>
+      </div>
+      <SoundControls />
+      <ContextMenuTest />
+    </ZoomProvider>
   );
 }
 

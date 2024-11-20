@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/authSlice';
 import Chat from '../../components/Chat/Chat';
 import PlayerList from '../../components/PlayersList/PlayersList';
 import GameBoard from '../../components/GameBoard/GameBoard';
@@ -10,7 +11,7 @@ import styles from './Game.module.css';
 export default function Game() {
   const { gameId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const [game, setGame] = useState(null);
   const [error, setError] = useState('');
 

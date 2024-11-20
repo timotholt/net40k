@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { userService } from '../api/userService';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../store/authSlice';
 
 export function useLoginForm() {
   const [formData, setFormData] = useState({
@@ -11,7 +11,7 @@ export function useLoginForm() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,11 +56,9 @@ export function useLoginForm() {
     }
 
     try {
-      const data = await userService.login(formData.username, formData.password);
-      login(data);
+      const result = await dispatch(loginUser({ username: formData.username, password: formData.password })).unwrap();
       navigate('/lobby');
     } catch (err) {
-      // Differentiate between network and authentication errors
       setServerError(err.message || 'Login failed. Please try again.');
     }
   };

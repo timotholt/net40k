@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/authSlice';
 import GamesList from '../../components/GamesList/GamesList';
 import PlayersList from '../../components/PlayersList/PlayersList';
 import TabbedChat from '../../components/TabbedChat/TabbedChat';
@@ -12,7 +13,7 @@ import styles from './Lobby.module.css';
 const MOCK_MODE = true;
 
 export default function Lobby() {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const [activeGamesTab, setActiveGamesTab] = useState('all');
   const [activePlayersTab, setActivePlayersTab] = useState('all');
   const [games, setGames] = useState(MOCK_MODE ? mockGames : []);

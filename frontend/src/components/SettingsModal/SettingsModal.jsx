@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/authSlice';
 import AccountTab from './tabs/AccountTab';
 import ProfileTab from './tabs/ProfileTab';
 import GraphicsTab from './tabs/GraphicsTab';
@@ -9,7 +10,7 @@ import styles from './SettingsModal.module.css';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('account');
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   const tabs = [
     { id: 'account', label: 'Account' },

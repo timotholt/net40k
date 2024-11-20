@@ -18,12 +18,8 @@ axiosInstance.interceptors.request.use(
     // Log the full request URL
     console.log('Making request to:', config.baseURL + config.url);
     
-    // Get sessionToken from tab-specific storage
+    // Get sessionToken from tab-specific local storage
     const sessionToken = localStorage.getItem(`sessionToken_${window.name}`);
-    console.log('Tab ID:', window.name);
-    console.log('Looking for session token with key:', `sessionToken_${window.name}`);
-    console.log('Found session token:', sessionToken);
-    
     if (sessionToken) {
       config.headers.Authorization = `Bearer ${sessionToken}`;
     }

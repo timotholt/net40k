@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/authSlice';
 // import { useSocket } from '../../context/SocketContext'; // Socket.io removed
 import { SYSTEM_IDS } from '../../config/systemIds';
 import ChatMessage from './ChatMessage';
@@ -21,7 +22,7 @@ export default function Chat({
   const [newMessage, setNewMessage] = useState('');
   const [isFilterMode, setIsFilterMode] = useState(false);
   const messagesEndRef = useRef(null);
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   // const socket = useSocket(); // Socket.io removed
 
   const isLobbyChat = endpoint.includes('lobby');
