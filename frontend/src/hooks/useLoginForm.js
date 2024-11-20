@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
+import { userService } from '../api/userService';
 
 export function useLoginForm() {
   const [formData, setFormData] = useState({
@@ -56,7 +56,7 @@ export function useLoginForm() {
     }
 
     try {
-      const data = await authService.login(formData.username, formData.password);
+      const data = await userService.login(formData.username, formData.password);
       login(data);
       navigate('/lobby');
     } catch (err) {
