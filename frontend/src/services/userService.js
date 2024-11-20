@@ -51,7 +51,7 @@ export const userService = {
 function transformUserData(user) {
 
   // This is temporary
-  user.status = (user.isOnline ? 'Lobby' : 'Offline');
+  user.status = (user.isOnline) ? 'Lobby' : 'Offline';
 
   return {
     userUuid: user.userUuid,
