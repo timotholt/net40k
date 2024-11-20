@@ -49,12 +49,18 @@ export const userService = {
 
 // Transform user data to match frontend expectations
 function transformUserData(user) {
+
+  // This is temporary
+  user.status = (user.isOnline ? 'Lobby' : 'Offline');
+
   return {
     userUuid: user.userUuid,
     nickname: user.nickname,
     isOnline: user.isOnline || false,
     lastActive: user.lastActive,
     isAdmin: user.isAdmin || false,
+    isCurrentUser: user.isCurrentUser || false,
+    status: user.status || 'TBD', // Use backend status if available, otherwise TBD
     // Only include these if they exist (private user data)
     ...(user.email && { email: user.email }),
     ...(user.isActive !== undefined && { isActive: user.isActive }),

@@ -108,7 +108,10 @@ export default function PlayerListItem({ player, isSelected, onSelect }) {
         <div className={styles.playerContent}>
           <div className={styles.playerName}>
             <span className={`${styles.onlineStatus} ${player.isOnline ? styles.online : styles.offline}`} />
-            {player.nickname}
+            <span className={styles.playerName}>
+              {player.nickname}
+              {player.isCurrentUser && <span className={styles.currentUser}> (You)</span>}
+            </span>
             {player.isFriend && <FriendBadgeIcon />}
             {player.isMuted && <MutedBadgeIcon />}
           </div>
@@ -128,7 +131,8 @@ PlayerListItem.propTypes = {
     status: PropTypes.string.isRequired,
     isOnline: PropTypes.bool,
     isFriend: PropTypes.bool,
-    isMuted: PropTypes.bool
+    isMuted: PropTypes.bool,
+    isCurrentUser: PropTypes.bool
   }).isRequired,
   isSelected: PropTypes.bool,
   onSelect: PropTypes.func.isRequired

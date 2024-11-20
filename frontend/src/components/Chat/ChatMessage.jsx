@@ -6,33 +6,33 @@ import { createPlayerContextMenuItems } from '../PlayerContextMenu/PlayerContext
 import styles from './ChatMessage.module.css';
 
 export default function ChatMessage({ message, isOwnMessage }) {
-  const isSpecialSender = Object.values(SYSTEM_IDS).includes(message.userId);
-  const isGameMasterMessage = message.userId === SYSTEM_IDS.GAME_MASTER;
-  const isNewsMessage = message.userId === SYSTEM_IDS.NEWS;
-  const isSystemMessage = message.userId === SYSTEM_IDS.SYSTEM;
+  const isSpecialSender = Object.values(SYSTEM_IDS).includes(message.userUuid);
+  const isGameMasterMessage = message.userUuid === SYSTEM_IDS.GAME_MASTER;
+  const isNewsMessage = message.userUuid === SYSTEM_IDS.NEWS;
+  const isSystemMessage = message.userUuid === SYSTEM_IDS.SYSTEM;
 
-  const handlePlayerAction = (action, playerId) => {
+  const handlePlayerAction = (action, playerUuid) => {
     switch (action) {
       case 'invite':
-        console.log('Chat Message: Invite player:', playerId);
+        console.log('Chat Message: Invite player:', playerUuid);
         break;
       case 'whisper':
-        console.log('Chat Message: Whisper to player:', playerId);
+        console.log('Chat Message: Whisper to player:', playerUuid);
         break;
       case 'friend':
-        console.log('Chat Message: Add friend:', playerId);
+        console.log('Chat Message: Add friend:', playerUuid);
         break;
       case 'mute':
-        console.log('Chat Message: Mute player:', playerId);
+        console.log('Chat Message: Mute player:', playerUuid);
         break;
       case 'report':
-        console.log('Chat Message: Report player:', playerId);
+        console.log('Chat Message: Report player:', playerUuid);
         break;
       case 'block':
-        console.log('Chat Message: Block player:', playerId);
+        console.log('Chat Message: Block player:', playerUuid);
         break;
       default:
-        console.log('Chat Message: Unknown action:', action, playerId);
+        console.log('Chat Message: Unknown action:', action, playerUuid);
     }
   };
 
@@ -87,16 +87,16 @@ export default function ChatMessage({ message, isOwnMessage }) {
     isSpecialSender ? (
       <span 
         className={styles.username} 
-        style={{ color: SPECIAL_SENDERS[message.userId].color }}
+        style={{ color: SPECIAL_SENDERS[message.userUuid].color }}
       >
-        {SPECIAL_SENDERS[message.userId].username}
+        {SPECIAL_SENDERS[message.userUuid].nickname}
       </span>
     ) : (
       <ContainerWithContextMenu 
-        contextMenuItems={createPlayerContextMenuItems(message.userId, handlePlayerAction)}
+        contextMenuItems={createPlayerContextMenuItems(message.userUuid, handlePlayerAction)}
         className={styles.username}
       >
-        {message.username}
+        {message.nickname}
       </ContainerWithContextMenu>
     )
   );

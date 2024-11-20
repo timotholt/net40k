@@ -89,11 +89,14 @@ router.get('/list', authenticateUser, async (req, res) => {
         const filter = req.query.filter || '';
 
         const result = await userService.getActiveUsers({ page, limit, filter });
-        res.json({ 
-            success: true, 
-            users: result.users,
-            pagination: result.pagination
-        });
+        
+        // Add isCurrentUser flag by comparing with authenticated user's UUID
+        result.users = result.users.map(user => ({
+            ...user,
+            isCurrentUser: user.userUuid === req.user.userUuid
+        }));
+        
+        res.json({ success: true, users: result.users, pagination: result.pagination });
     } catch (error) {
         logger.error('Error fetching users list:', error);
         res.status(500).json({ success: false, message: error.message });

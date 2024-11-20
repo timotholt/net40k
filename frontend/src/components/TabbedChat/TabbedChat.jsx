@@ -11,7 +11,7 @@ import {
 import styles from './TabbedChat.module.css';
 
 // Mock mode for development
-const MOCK_MODE = true;
+const MOCK_MODE = true;  // Force mock mode to true while we work on session management
 
 export default function TabbedChat() {
   const [activeTab, setActiveTab] = useState('lobby');

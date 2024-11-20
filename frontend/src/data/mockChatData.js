@@ -121,73 +121,24 @@ export const mockGameMasterMessages = [
 export const mockLobbyMessages = [
   {
     id: 1,
-    userId: "1",
-    username: "Player 1",
+    userUuid: "11111111-1111-1111-1111-111111111111",
+    nickname: "Player 1",
     message: "Hello everyone!",
     timestamp: getTimestamp(30)
   },
   {
     id: 2,
-    userId: "2",
-    username: "Player 2",
-    message: "Hi there!",
+    userUuid: "22222222-2222-2222-2222-222222222222",
+    nickname: "Player 2",
+    message: "Hi there! Anyone up for a game?",
     timestamp: getTimestamp(25)
   },
   {
     id: 3,
-    userId: "3",
-    username: "Player 3",
-    message: "Anyone up for a game?",
+    userUuid: SYSTEM_IDS.SYSTEM,
+    nickname: "System",
+    message: "Welcome to the lobby chat!",
     timestamp: getTimestamp(20)
-  },
-  {
-    id: 4,
-    userId: "4",
-    username: "Player 4",
-    message: "I'll join!",
-    timestamp: getTimestamp(15)
-  },
-  {
-    id: 5,
-    userId: "5",
-    username: "Player 5",
-    message: "Great match everyone!",
-    timestamp: getTimestamp(10)
-  },
-  {
-    id: 6,
-    userId: "6",
-    username: "Player 6",
-    message: "Thanks for the game",
-    timestamp: getTimestamp(8)
-  },
-  {
-    id: 7,
-    userId: "7",
-    username: "Player 7",
-    message: "Who's up for another round?",
-    timestamp: getTimestamp(6)
-  },
-  {
-    id: 8,
-    userId: "8",
-    username: "Player 8",
-    message: "Count me in!",
-    timestamp: getTimestamp(4)
-  },
-  {
-    id: 9,
-    userId: "9",
-    username: "Player 9",
-    message: "Good game!",
-    timestamp: getTimestamp(2)
-  },
-  {
-    id: 10,
-    userId: "10",
-    username: "Player 10",
-    message: "See you tomorrow!",
-    timestamp: getTimestamp(1)
   }
 ];
 

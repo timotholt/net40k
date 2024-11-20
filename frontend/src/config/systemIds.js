@@ -8,15 +8,15 @@ export const SYSTEM_IDS = {
 // Display names for special senders
 export const SPECIAL_SENDERS = {
   [SYSTEM_IDS.SYSTEM]: {
-    username: 'System',
+    nickname: 'System',
     color: '#ffff00' // Changed to yellow
   },
   [SYSTEM_IDS.GAME_MASTER]: {
-    username: 'Game Master',
+    nickname: 'Game Master',
     color: '#ffa500'
   },
   [SYSTEM_IDS.NEWS]: {
-    username: 'News',
+    nickname: 'News',
     color: '#00ff00'
   }
 };

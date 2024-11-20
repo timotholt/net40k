@@ -93,7 +93,7 @@ export default function Chat({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || isSpecialChat || isFilterMode) return;
+    if (!newMessage.trim() || isSpecialChat || isFilterMode || !user) return;
 
     const messageContent = newMessage.trim();
     setNewMessage('');
@@ -101,8 +101,8 @@ export default function Chat({
     if (initialMessages) {
       const mockMessage = {
         id: Date.now(),
-        userId: user.id,
-        username: user.nickname || "You",
+        userUuid: user.userUuid,
+        nickname: user.nickname || "You",
         message: messageContent,
         timestamp: new Date().toISOString(),
         isWhisper: isWhisperChat
@@ -118,7 +118,7 @@ export default function Chat({
         socket.emit('chat_message', {
           room: chatRoom,
           message: messageContent,
-          userId: user.id
+          userId: user.userUuid
         });
       } else {
       */
@@ -127,7 +127,7 @@ export default function Chat({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.id,
+          userUuid: user.userUuid,
           message: messageContent
         })
       });
@@ -169,9 +169,10 @@ export default function Chat({
     if (!filter) return messages;
     const searchTerm = filter.toLowerCase();
     return messages.filter(msg => {
+      if (!msg) return false;
       const messageText = msg.message?.toLowerCase() || '';
-      const username = msg.username?.toLowerCase() || '';
-      return messageText.includes(searchTerm) || username.includes(searchTerm);
+      const nickname = msg.nickname?.toLowerCase() || '';
+      return messageText.includes(searchTerm) || nickname.includes(searchTerm);
     });
   }, [messages, filter]);
 
@@ -182,13 +183,15 @@ export default function Chat({
     <div className={`${styles.chatContainer} ${styles[type]}`}>
       <div className={styles.messages}>
         {filteredMessages.length > 0 ? (
-          filteredMessages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              isOwnMessage={msg.userId === user.id}
-            />
-          ))
+          filteredMessages
+            .filter(msg => msg && msg.userUuid)  // Ensure message and userUuid exist
+            .map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                isOwnMessage={user && msg.userUuid === user.userUuid}
+              />
+            ))
         ) : filter ? (
           <EmptyState message="No messages match your search. Press <ESC> to clear." />
         ) : null}
