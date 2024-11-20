@@ -48,31 +48,31 @@
   text-shadow: var(--glow-text);
 }
 
-.errorContainer {
-  min-height: 3.5rem;
-  margin: 1.5rem 0;
+.messageContainer {
+  height: 2rem;
+  margin: 0.5rem 0 1rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.message {
+  padding: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  width: 100%;
+  text-shadow: var(--glow-text);
+  line-height: 2rem;
+}
+
+.success {
+  color: #4caf50;
 }
 
 .error {
   background: rgba(255, 68, 68, 0.1);
-  border: 1px solid #ff4444;
   color: #ff4444;
-  padding: 0.75rem;
-  border-radius: var(--border-radius-md);
-  font-size: 0.9rem;
-  width: 100%;
-}
-
-.successMessage {
-  background-color: #4caf50;
-  color: white;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-  text-align: center;
 }
 
 .loginButton {

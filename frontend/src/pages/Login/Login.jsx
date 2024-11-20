@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../../store/authSlice';
@@ -18,6 +18,14 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
 
+  // Clear the success message from location state after displaying it
+  useEffect(() => {
+    if (location.state?.message) {
+      // Clear the message from location state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state?.message]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     console.log('Input changed:', name, value);
@@ -26,12 +34,9 @@ export default function Login() {
       [name]: value
     }));
     
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    // Clear all errors and success message when user starts typing
+    setErrors({});
+    setSuccessMessage('');
   };
 
   const validateForm = () => {
@@ -94,11 +99,6 @@ export default function Login() {
 
   return (
     <div className={styles.loginContainer}>
-      {successMessage && (
-        <div className={styles.successMessage}>
-          {successMessage}
-        </div>
-      )}
       <form 
         onSubmit={handleSubmit} 
         className={styles.loginForm}
@@ -131,9 +131,14 @@ export default function Login() {
           required
         />
 
-        <div className={styles.errorContainer}>
+        <div className={styles.messageContainer}>
+          {successMessage && (
+            <div className={styles.message + ' ' + styles.success}>
+              {successMessage}
+            </div>
+          )}
           {(errors.form || errors.username || errors.password) && (
-            <div className={styles.error}>
+            <div className={styles.message + ' ' + styles.error}>
               {errors.form || errors.username || errors.password}
             </div>
           )}
