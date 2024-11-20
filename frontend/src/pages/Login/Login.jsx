@@ -76,17 +76,24 @@ export default function Login() {
       console.log('Attempting login...');
       const result = await dispatch(loginUser({ username: formData.username, password: formData.password }));
       
-      // Check if the login was successful
-      if (result.error) {
-        throw new Error(result.error);
+      // Check if the login was unsuccessful
+      if (result.type.includes('rejected')) {
+        window.alert(result.payload);
+        
+        setErrors({
+          form: result.payload
+        });
+        return;
       }
       
       console.log('Login successful');
       navigate('/lobby');
     } catch (error) {
-      console.log('Login failed:', error);
+      console.log('Unexpected error:', error);
+      window.alert('Login failed');
+      
       setErrors({
-        form: 'Login failed. Please check your credentials and try again.'
+        form: 'Login failed'
       });
     } finally {
       setIsLoading(false);

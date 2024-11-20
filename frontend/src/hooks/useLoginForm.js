@@ -60,7 +60,8 @@ export function useLoginForm() {
       login(data);
       navigate('/lobby');
     } catch (err) {
-      setServerError(err.message || 'Invalid username or password');
+      // Differentiate between network and authentication errors
+      setServerError(err.message || 'Login failed. Please try again.');
     }
   };
 

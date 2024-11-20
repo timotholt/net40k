@@ -45,13 +45,8 @@ export const registerUser = createAsyncThunk(
         response: error.response
       });
 
-      // More robust error handling
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
-        'Registration failed';
-
-      return rejectWithValue(errorMessage);
+     // Simplify error handling by directly returning error message
+     return rejectWithValue(error.message || 'Registration failed');
     }
   }
 );
@@ -89,13 +84,8 @@ export const loginUser = createAsyncThunk(
         response: error.response
       });
 
-      // More robust error handling
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
-        'Login failed';
-
-      return rejectWithValue(errorMessage);
+      // Simplify error handling by directly returning error message
+      return rejectWithValue(error.message || 'Login failed');
     }
   }
 );
