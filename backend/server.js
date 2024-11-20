@@ -102,11 +102,11 @@ async function main() {
         });
 
         // Static files - after API routes
-        app.use(express.static(path.join(__dirname, '../frontend/build')));
+        app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
         // Catch-all route to serve React's index.html
         app.get('*', (req, res) => {
-            res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+            res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
         });
 
         // Error handling
