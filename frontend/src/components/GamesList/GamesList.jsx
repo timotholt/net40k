@@ -225,15 +225,19 @@ export default function GamesList({
       // Fetch game settings
       const gameSettings = await gameService.getGameSettings(gameUuid);
       
-      console.log('GAMES LIST: Fetched Game Settings', { 
+      console.log('GAMES LIST: Fetched Game Settings FULL', { 
         gameUuid, 
-        gameSettings,
+        gameSettings: JSON.parse(JSON.stringify(gameSettings)),
         hasPassword: gameSettings.hasPassword,
-        password: gameSettings.password ? '[REDACTED]' : null
+        password: gameSettings.password ? '[REDACTED]' : null,
+        keys: Object.keys(gameSettings)
       });
 
-      // Open settings modal with fetched settings
-      setSettingsModalGame(gameSettings);
+      // Open settings modal with ALL fetched settings
+      setSettingsModalGame({
+        ...gameSettings,
+        gameUuid: gameSettings.gameUuid
+      });
     } catch (error) {
       console.error('Failed to fetch game settings:', {
         gameUuid,
@@ -385,17 +389,19 @@ export default function GamesList({
           title="Game Settings"
           actions={[]}
         >
-          <GameSettingsForm
-            initialGame={{
-              name: settingsModalGame.name,
-              description: settingsModalGame.description || '',
-              maxPlayers: settingsModalGame.maxPlayers,
-              turnLength: settingsModalGame.turnLength,
-              hasPassword: !!settingsModalGame.hasPassword
-            }}
-            onSubmit={handleUpdateGameSettings}
-            onCancel={() => setSettingsModalGame(null)}
-          />
+        <GameSettingsForm
+          initialGame={{
+            gameUuid: settingsModalGame.gameUuid,
+            name: settingsModalGame.name,
+            description: settingsModalGame.description || '',
+            maxPlayers: settingsModalGame.maxPlayers,
+            turnLength: settingsModalGame.turnLength,
+            hasPassword: !!settingsModalGame.hasPassword,
+            password: settingsModalGame.password || ''
+          }}
+          onSubmit={handleUpdateGameSettings}
+          onCancel={() => setSettingsModalGame(null)}
+        />
         </Modal>
       )}
 
