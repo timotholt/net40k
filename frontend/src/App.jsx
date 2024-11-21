@@ -140,7 +140,7 @@ function App() {
           </div>
         </div>
         <SoundControls />
-        <ContextMenuTest />
+        {/* <ContextMenuTest /> */}
         <ModalRenderer />
       </ZoomProvider>
     </ModalProvider>
