@@ -62,23 +62,14 @@ axiosInstance.interceptors.response.use(
       // Set global flag to invalid
       isTokenValid = false;
       
-      // Optional: Remove invalid session token
+      // Remove invalid session token
       localStorage.removeItem(`sessionToken_${window.name}`);
+      localStorage.removeItem(`user_${window.name}`);
       
-      // Check for specific error types from backend
-      const errorMessage = 
-        error.response.data.message || 
-        error.response.data.error || 
-        'An unexpected error occurred';
-      
-      const errorType = 
-        error.response.data.name || 
-        error.response.status;
-
       return Promise.reject({
-        message: errorMessage,
-        type: errorType,
-        status: error.response.status
+        message: 'Session terminated. Please login again.',
+        type: 'SessionError',
+        status: error.response?.status || 401
       });
     } else if (error.request) {
       // The request was made but no response was received
@@ -89,11 +80,11 @@ axiosInstance.interceptors.response.use(
         status: null
       });
     } else {
-      // Something happened in setting up the request that triggered an Error
+      // Something happened in setting up the request
       console.error('API Setup Error:', error.message);
       return Promise.reject({
-        message: 'Error setting up the request',
-        type: 'SetupError',
+        message: 'Session terminated. Please login again.',
+        type: 'SessionError',
         status: null
       });
     }
