@@ -65,7 +65,8 @@ router.patch('/:gameUuid', asyncMiddleware(async (req, res) => {
   try {
     const updatedGame = await GameService.updateGame(
       req.params.gameUuid, 
-      req.body
+      req.user.userUuid,  // Pass the user UUID for authorization
+      req.body           // Pass the updates
     );
     res.json(updatedGame);
   } catch (error) {

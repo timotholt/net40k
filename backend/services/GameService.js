@@ -96,15 +96,53 @@ class GameService {
     }
   }
 
-  async updateGame(gameUuid, updates) {
+  async updateGame(gameUuid, userUuid, updates) {
     try {
+      // Check user privileges first
+      const userPrivileges = await this.userService.hasSpecialPrivileges(userUuid);
+      
+      // Find the game first
+      const game = await GameDB.findOne({ gameUuid });
+      
+      if (!game) {
+        throw new ValidationError(`Game with UUID ${gameUuid} not found`);
+      }
+
+      // Authorization checks
+      const isCreator = game.creatorUuid === userUuid;
+      const hasSpecialAccess = userPrivileges.hasSpecialAccess;
+
+      // Only allow update if:
+      // 1. User is the game creator, OR
+      // 2. User has special access (admin, active)
+      if (!(isCreator || hasSpecialAccess)) {
+        throw new AuthorizationError('You are not authorized to update this game\'s settings');
+      }
+
       // Prevent modification of critical fields
       const safeUpdates = { ...updates };
       delete safeUpdates.gameUuid;
       delete safeUpdates.creatorUuid;
       delete safeUpdates.createdAt;
+    
+      // Validate updates
+      const allowedFields = ['name', 'description', 'maxPlayers', 'password', 'hasPassword'];
+      Object.keys(safeUpdates).forEach(key => {
+        if (!allowedFields.includes(key)) {
+          throw new ValidationError(`Cannot update field: ${key}`);
+        }
+      });
 
-      const updatedGame = await GameDB.update({ gameUuid }, safeUpdates);
+      // Add updatedAt timestamp
+      safeUpdates.updatedAt = DateService.now().date;
+
+      // Perform the update
+      await GameDB.update({ gameUuid }, safeUpdates);
+
+      // Retrieve and return the updated game
+      const updatedGame = await GameDB.findOne({ gameUuid });
+      
+      logger.info(`Game updated: ${gameUuid}`);
       return updatedGame.toFullGame();
     } catch (error) {
       logger.error(`Update game failed: ${error.message}`);

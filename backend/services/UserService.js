@@ -557,6 +557,34 @@ class UserService {
         }
     }
 
+    /**
+     * Checks if a user has special elevated privileges.
+     * 
+     * Privilege determination follows two criteria:
+     * 1. If the UUID is a predefined system user (via isSystemUser())
+     * 2. If the user is an admin in the database
+     * 
+     * @param {string} userUuid - The UUID of the user to check
+     * @returns {Promise<boolean>} - True if user has special privileges, false otherwise
+     */
+    async hasSpecialPrivileges(userUuid) {
+        try {
+            // First, check if this is a system user
+            if (isSystemUser(userUuid)) {
+                return true;
+            }
+
+            // If not a system user, check the database for admin status
+            const user = await UserDB.findOne({ userUuid });
+            
+            // Return true if user is found and is an admin
+            return user ? user.isAdmin === true : false;
+        } catch (error) {
+            logger.error(`Error checking user privileges: ${error.message}`);
+            return false;
+        }
+    }
+
     async sendVerificationEmail(user) {
         // Generate verification token
         const verificationToken = UuidService.generate();
