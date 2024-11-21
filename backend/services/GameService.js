@@ -363,51 +363,54 @@ class GameService {
         throw new AuthorizationError('You are not authorized to update this game\'s settings');
       }
 
+      // Prepare update object
+      const updateData = {};
+      
       // Validate and update settings
-      // Use explicit assignment to ensure all fields can be updated
       if ('name' in settingsData) {
-        game.name = settingsData.name === null ? '' : settingsData.name.trim();
+        updateData.name = settingsData.name === null ? '' : settingsData.name.trim();
       }
       
       if ('description' in settingsData) {
-        game.description = settingsData.description === null ? '' : settingsData.description.trim();
+        updateData.description = settingsData.description === null ? '' : settingsData.description.trim();
       }
       
       if ('maxPlayers' in settingsData) {
-        game.maxPlayers = settingsData.maxPlayers;
+        updateData.maxPlayers = settingsData.maxPlayers;
       }
       
       if ('turnLength' in settingsData) {
-        game.turnLength = settingsData.turnLength;
+        updateData.turnLength = settingsData.turnLength;
       }
       
       // Explicit password and hasPassword handling
       if ('password' in settingsData) {
         // Allow setting to empty string or null
-        game.password = settingsData.password === null ? '' : settingsData.password.trim();
+        updateData.password = settingsData.password === null ? '' : settingsData.password.trim();
         
         // Explicitly set hasPassword based on password presence
-        game.hasPassword = settingsData.password !== null && settingsData.password.trim() !== '';
+        updateData.hasPassword = settingsData.password !== null && settingsData.password.trim() !== '';
       }
       
       // If hasPassword is explicitly provided, override password-based logic
       if ('hasPassword' in settingsData) {
-        game.hasPassword = !!settingsData.hasPassword;
+        updateData.hasPassword = !!settingsData.hasPassword;
         
         // If hasPassword is false, clear the password
         if (!settingsData.hasPassword) {
-          game.password = '';
+          updateData.password = '';
         }
       }
 
-      await game.save();
+      // Update the game in the database
+      const updatedGame = await GameDB.update({ gameUuid }, updateData);
 
       logger.info(`Game settings updated: ${gameUuid}`, {
-        updatedFields: Object.keys(settingsData),
-        hasPassword: game.hasPassword
+        updatedFields: Object.keys(updateData),
+        hasPassword: updatedGame.hasPassword
       });
 
-      return game.toPublicGame();
+      return updatedGame.toPublicGame();
     } catch (error) {
       logger.error(`Update game settings failed: ${error.message}`, {
         gameUuid,
