@@ -76,7 +76,6 @@ class Game {
     password: { type: 'string', required: false }
   });
 
-  // Serialization methods
   toJSON() {
     return this.toFullGame();
   }
@@ -153,11 +152,20 @@ export const GameDB = {
         throw new ValidationError('game with this name already exists');
       }
 
+      console.log('GameDB.create - Attempting to create game:', game.toJSON());
+      console.log('GameDB.create - Using collection:', this.collection);
+      console.log('GameDB.create - Database object:', db);
+
       const result = await db.create(this.collection, game.toJSON());
       logger.info(`game created successfully: ${game.name}`);
       
       return this._toGameInstance(result);
     } catch (error) {
+      console.error('GameDB.create - Full error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       logger.error(`Failed to create game: ${error.message}`);
       throw error;
     } finally {
@@ -186,7 +194,7 @@ export const GameDB = {
   },
 
   _toGameInstance(dbObject) {
-    return dbObject ? new game(dbObject) : null;
+    return dbObject ? new Game(dbObject) : null;
   }
 };
 

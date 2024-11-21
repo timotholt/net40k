@@ -29,7 +29,7 @@ export default function CreateGameTab() {
     setError('');
     
     try {
-      const game = await gameService.creategame({
+      const game = await gameService.createGame({
         name: formData.name,
         description: formData.description,
         maxPlayers: parseInt(formData.maxPlayers),
@@ -38,7 +38,12 @@ export default function CreateGameTab() {
       console.log('game created successfully:', game);
     } catch (err) {
       console.error('Failed to create game:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to create game');
+      setError(
+        err.message || 
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        'Failed to create game'
+      );
     }
   };
 

@@ -29,6 +29,12 @@ class Database {
             const dbType = process.env.DB_TYPE || 'memory';
             logger.info(`Database: Initializing ${dbType} database`);
             
+            console.log('Database init - Environment:', {
+                DB_TYPE: process.env.DB_TYPE,
+                MONGODB_URI: process.env.MONGODB_URI,
+                MONGODB_DATABASE: process.env.MONGODB_DATABASE
+            });
+            
             // Create new engine instance if none exists
             if (!this.#dbEngine) {
                 this.#dbEngine = getDbEngine(dbType);
@@ -47,6 +53,11 @@ class Database {
             logger.info('Database: Successfully initialized and connected');
             return this;
         } catch (error) {
+            console.error('Database init - Full error details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
             logger.error('Database: Initialization failed:', error);
             this.#initialized = false;
             this.#dbEngine = null;

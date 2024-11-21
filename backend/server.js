@@ -52,7 +52,9 @@ async function main() {
         // Initialize models
         logger.info('Initializing models...');
         const { UserDB } = await import('./models/User.js');
+        const { GameDB } = await import('./models/Game.js');
         await UserDB.init();
+        await GameDB.init();
         logger.info('✓ Models initialized');
         
         // Initialize UserService
