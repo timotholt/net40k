@@ -154,22 +154,44 @@ export default function GamesList({
     navigate(`/game/${gameId}`);
   };
 
-  const handleDeleteGame = (gameId) => {
-    openModal(MODAL_TYPES.CONFIRM, {
+  const handleDeleteGame = useCallback(async (game) => {
+    // Only allow deletion of own games
+    if (!game.isYours) {
+      openModal(MODAL_TYPES.ALERT, {
+        title: 'Cannot Delete Game',
+        message: 'You can only delete your own games.'
+      });
+      return;
+    }
+
+    // Confirm deletion
+    const confirmed = await openModal(MODAL_TYPES.CONFIRM, {
       title: 'Delete Game',
-      message: 'Are you sure you want to delete this game?',
-      onConfirm: async () => {
-        try {
-          const response = await fetch(`/api/games/${gameId}`, {
-            method: 'DELETE'
-          });
-          if (!response.ok) throw new Error('Failed to delete game');
-        } catch (err) {
-          console.error('Failed to delete game:', err);
-        }
-      }
+      message: `Are you sure you want to delete the game "${game.name}"?`
     });
-  };
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await GameService.deleteGame(game.id);
+      
+      // Remove the game from the list
+      setGames(prevGames => prevGames.filter(g => g.id !== game.id));
+      
+      openModal(MODAL_TYPES.ALERT, {
+        title: 'Game Deleted',
+        message: `The game "${game.name}" has been successfully deleted.`
+      });
+    } catch (error) {
+      openModal(MODAL_TYPES.ALERT, {
+        title: 'Delete Failed',
+        message: error.response?.data?.error || 'Failed to delete game. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [openModal, setGames]);
 
   const getEmptyStateMessage = () => {
     if (filter) {
@@ -222,7 +244,7 @@ export default function GamesList({
               onSelect={() => setSelectedGameId(game.id)}
               onJoin={handleJoinGame}
               onView={handleViewGame}
-              onDelete={handleDeleteGame}
+              onDelete={() => handleDeleteGame(game)}
             />
           ))
         ) : (

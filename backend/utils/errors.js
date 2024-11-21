@@ -25,3 +25,11 @@ export class NotFoundError extends Error {
         this.name = 'NotFoundError';
     }
 }
+
+export class AuthorizationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'AuthorizationError';
+        this.statusCode = 403; // Forbidden
+    }
+}
