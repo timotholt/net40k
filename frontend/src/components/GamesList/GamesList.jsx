@@ -201,22 +201,20 @@ export default function GamesList({
     if (!deleteModalGame) return;
 
     try {
-      const response = await fetch(`/api/games/${deleteModalGame.gameUuid}`, {
-        method: 'DELETE'
-      });
+      // Call game service to delete the game
+      await gameService.deleteGame(deleteModalGame.gameUuid);
 
-      if (!response.ok) {
-        throw new Error('Failed to delete game');
-      }
+      // Optimistically remove the game from the local state
+      setGames(prevGames => 
+        prevGames.filter(game => game.gameUuid !== deleteModalGame.gameUuid)
+      );
 
-      // Remove the game from the list
-      setGames(prev => prev.filter(g => g.gameUuid !== deleteModalGame.gameUuid));
-      
-      // Close the modal
+      // Close the delete modal
       setDeleteModalGame(null);
     } catch (error) {
       console.error('Delete game error:', error);
       // Optionally set an error state to show in the modal
+      // You might want to add a more user-friendly error handling mechanism
     }
   }, [deleteModalGame]);
 
