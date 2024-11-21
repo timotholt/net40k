@@ -7,7 +7,7 @@ export const MIN_MESSAGE_LENGTH = 1;
 export class ChatBase {
     constructor(data = {}) {
         this.messageUuid = data.messageUuid || createMessageUuid();
-        this.roomUuid = data.roomUuid;
+        this.gameUuid = data.gameUuid;
         this.senderUuid = data.senderUuid;
         this.gameUuid = data.gameUuid;
         this.senderNickname = data.senderNickname;
@@ -35,7 +35,7 @@ export class ChatBase {
     toJSON() {
         const data = {
             messageUuid: this.messageUuid,
-            roomUuid: this.roomUuid,
+            gameUuid: this.gameUuid,
             senderUuid: this.senderUuid,
             gameUuid: this.gameUuid,
             senderNickname: this.senderNickname,
@@ -66,8 +66,8 @@ export class ChatBase {
         if (!this.message || this.message.trim().length === 0) {
             throw new Error('Message cannot be empty');
         }
-        if (!this.roomUuid) {
-            throw new Error('Room UUID is required');
+        if (!this.gameUuid) {
+            throw new Error('Game UUID is required');
         }
         if (!this.senderNickname) {
             throw new Error('Sender nickname is required');

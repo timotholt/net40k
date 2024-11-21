@@ -6,7 +6,7 @@
  * Enhanced UUID system for Net40k that provides:
  * 1. Chronological sorting (timestamp-first like UUID7)
  * 2. Resource type identification
- * 3. Country and room type classification
+ * 3. Country and game type classification
  * 4. Datacenter/worker identification
  * 
  * Format (based on UUID7 with custom variant):
@@ -18,7 +18,7 @@
  * CC: Country Code (8 bits, supports 256 countries)
  * L: Location/Datacenter ID (4 bits)
  * S: Sequence number (4 bits)
- * RR: Room type (8 bits)
+ * RR: Game type (8 bits)
  * NNNN: Random identifier (48 bits)
  */
 
@@ -32,7 +32,7 @@ let sequence = 0;
 // Resource type identifiers (4 bits = 16 types)
 export const RESOURCE_TYPE = {
     USER: '0',      // User accounts (including system users)
-    ROOM: '1',      // Chat rooms and channels
+    GAMES: '1',      // Chat games and channels
     MESSAGE: '2',   // Chat messages
     ENTITY: '3',    // Game entities (actors, monsters, items, etc)
     // 4-F reserved for future use
@@ -118,15 +118,15 @@ export const COUNTRY = {
     NG: '52',   // Nigeria (566 -> 52)
 };
 
-// Room types (8 bits = 256 room types)
-export const ROOM_TYPE = {
-    // System Rooms (0x range)
+// Game types (8 bits = 256 game types)
+export const GAME_TYPE = {
+    // System Games (0x range)
     SYSTEM: '00',      // System-wide announcements
     NEWS: '01',        // News and updates
     LOBBY: '02',       // Main lobby
     WHISPER: '03',     // Private messages
-    GAME: '04',        // Game instance rooms
-    GAMEMASTER: '05',  // Game master/admin room
+    GAME: '04',        // Game instance games
+    GAMEMASTER: '05',  // Game master/admin game
     // 06-FF reserved for future use
 };
 
@@ -148,21 +148,21 @@ export const SYSTEM_USERS = {
     GM: '00000000-0000-7000-0000-000000000003'
 };
 
-// Special system rooms - these are global rooms that exist across all regions
-export const SYSTEM_ROOMS = {
-    // System room for important system-wide announcements
+// Special system games - these are global games that exist across all regions
+export const SYSTEM_GAMES = {
+    // System game for important system-wide announcements
     SYSTEM: '00000000-0000-7100-0000-000000000001',
     
-    // News room for game updates and announcements
+    // News game for game updates and announcements
     NEWS: '00000000-0000-7100-0000-000000000002',
     
-    // Global lobby room
+    // Global lobby game
     LOBBY: '00000000-0000-7100-0000-000000000003',
     
-    // Game Master room for administrative functions
+    // Game Master game for administrative functions
     GAMEMASTER: '00000000-0000-7100-0000-000000000004',
     
-    // Template for whisper rooms (actual whisper rooms will use timestamps)
+    // Template for whisper games (actual whisper games will use timestamps)
     WHISPER_TEMPLATE: '{{timestamp}}-7100-0003-{{random}}'
 };
 
@@ -170,34 +170,34 @@ export const SYSTEM_ROOMS = {
 // Note: All using US_WEST datacenter for now
 export const LOBBY = {
     // North America
-    US: createChatRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // US Lobby
-    CA: createChatRoomUuid(COUNTRY.CA, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Canadian Lobby
-    MX: createChatRoomUuid(COUNTRY.MX, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Mexican Lobby
+    US: createChatGameUuid(COUNTRY.US, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // US Lobby
+    CA: createChatGameUuid(COUNTRY.CA, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Canadian Lobby
+    MX: createChatGameUuid(COUNTRY.MX, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Mexican Lobby
     
     // Europe
-    GB: createChatRoomUuid(COUNTRY.GB, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // UK Lobby
-    DE: createChatRoomUuid(COUNTRY.DE, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // German Lobby
-    FR: createChatRoomUuid(COUNTRY.FR, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // French Lobby
+    GB: createChatGameUuid(COUNTRY.GB, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // UK Lobby
+    DE: createChatGameUuid(COUNTRY.DE, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // German Lobby
+    FR: createChatGameUuid(COUNTRY.FR, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // French Lobby
     
     // Asia
-    JP: createChatRoomUuid(COUNTRY.JP, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Japan Lobby
-    KR: createChatRoomUuid(COUNTRY.KR, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Korea Lobby
-    SG: createChatRoomUuid(COUNTRY.SG, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Singapore Lobby
+    JP: createChatGameUuid(COUNTRY.JP, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Japan Lobby
+    KR: createChatGameUuid(COUNTRY.KR, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Korea Lobby
+    SG: createChatGameUuid(COUNTRY.SG, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Singapore Lobby
     
     // Oceania
-    AU: createChatRoomUuid(COUNTRY.AU, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Australian Lobby
-    NZ: createChatRoomUuid(COUNTRY.NZ, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // New Zealand Lobby
+    AU: createChatGameUuid(COUNTRY.AU, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Australian Lobby
+    NZ: createChatGameUuid(COUNTRY.NZ, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // New Zealand Lobby
     
     // South America
-    BR: createChatRoomUuid(COUNTRY.BR, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),     // Brazilian Lobby
+    BR: createChatGameUuid(COUNTRY.BR, GAME_TYPE.LOBBY, DATACENTER.US_WEST),     // Brazilian Lobby
 };
 
-// Example game room UUIDs
-export const EXAMPLE_GAME_ROOMS = {
-    // Examples of game rooms from different regions, all using US_WEST datacenter
-    US_GAME: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.GAME, DATACENTER.US_WEST),
-    EU_GAME: createGameRoomUuid(COUNTRY.GB, ROOM_TYPE.GAME, DATACENTER.US_WEST),
-    ASIA_GAME: createGameRoomUuid(COUNTRY.JP, ROOM_TYPE.GAME, DATACENTER.US_WEST)
+// Example game game UUIDs
+export const EXAMPLE_GAMES = {
+    // Examples of game from different regions, all using US_WEST datacenter
+    US_GAME: createGameUuid(COUNTRY.US, GAME_TYPE.GAME, DATACENTER.US_WEST),
+    EU_GAME: createGameUuid(COUNTRY.GB, GAME_TYPE.GAME, DATACENTER.US_WEST),
+    ASIA_GAME: createGameUuid(COUNTRY.JP, GAME_TYPE.GAME, DATACENTER.US_WEST)
 };
 
 /**
@@ -209,7 +209,7 @@ export const EXAMPLE_GAME_ROOMS = {
  * - CC: Country Code (8 bits)
  * - L: Datacenter Location (4 bits)
  * - S: Sequence Number (4 bits)
- * - RR: Room Type (8 bits)
+ * - RR: Game Type (8 bits)
  * - N: Random Identifier (48 bits)
  */
 
@@ -217,15 +217,15 @@ export function parseUuid(uuid) {
     const parts = uuid.split('-');
     if (parts.length !== 4) throw new Error('Invalid UUID format');
 
-    const [timestamp, version7AndType, locationAndRoom, random] = parts;
+    const [timestamp, version7AndType, locationAndGame, random] = parts;
     
     return {
         timestamp: new Date(parseInt(timestamp, 16)),
         resourceType: version7AndType.charAt(1),
         countryCode: version7AndType.substring(2),
-        datacenter: locationAndRoom.charAt(0),
-        sequence: parseInt(locationAndRoom.charAt(1), 16),
-        roomType: locationAndRoom.substring(2),
+        datacenter: locationAndGame.charAt(0),
+        sequence: parseInt(locationAndGame.charAt(1), 16),
+        gameType: locationAndGame.substring(2),
         randomId: random
     };
 }
@@ -245,7 +245,7 @@ export function getDatacenter(uuid) {
 }
 
 // Using regex-based implementation for more robust parsing
-export function getRoomType(uuid) {
+export function getGameType(uuid) {
     const match = uuid.match(/-\d\d(\d{2})-/);
     return match ? match[1] : null;
 }
@@ -262,8 +262,8 @@ export function isSystemUser(uuid) {
     return uuid === SYSTEM_USERS.SYSTEM || uuid === SYSTEM_USERS.NEWS || uuid === SYSTEM_USERS.GM;
 }
 
-export function isSystemRoom(uuid) {
-    return getRoomType(uuid) === ROOM_TYPE.SYSTEM;
+export function isSystemGame(uuid) {
+    return getGameType(uuid) === GAME_TYPE.SYSTEM;
 }
 
 export function validateUuid(uuid) {
@@ -273,7 +273,7 @@ export function validateUuid(uuid) {
         
         const resourceType = getResourceType(uuid);
         const datacenter = getDatacenter(uuid);
-        const roomType = getRoomType(uuid);
+        const gameType = getGameType(uuid);
         
         // Verify resource type exists
         if (!Object.values(RESOURCE_TYPE).includes(resourceType)) return false;
@@ -281,9 +281,9 @@ export function validateUuid(uuid) {
         // Verify datacenter exists
         if (!Object.values(DATACENTER).includes(datacenter)) return false;
         
-        // If it's a room, verify room type exists
-        if (resourceType === RESOURCE_TYPE.ROOM && 
-            !Object.values(ROOM_TYPE).includes(roomType)) return false;
+        // If it's a game, verify game type exists
+        if (resourceType === RESOURCE_TYPE.GAME && 
+            !Object.values(GAME_TYPE).includes(gameType)) return false;
             
         return true;
     } catch (e) {
@@ -292,13 +292,13 @@ export function validateUuid(uuid) {
 }
 
 /**
- * Generates a new UUID for a chat room with specific country
+ * Generates a new UUID for a chat game with specific country
  * @param {string} countryCode - Country code from COUNTRY enum
- * @param {string} roomType - Room type from ROOM_TYPE enum
+ * @param {string} gameType - Game type from GAME_TYPE enum
  * @param {string} datacenterId - Datacenter ID from DATACENTER enum
  * @returns {string} - Generated UUID
  */
-export function createChatRoomUuid(countryCode, roomType, datacenterId) {
+export function createChatGameUuid(countryCode, gameType, datacenterId) {
     // Get UUID7 for timestamp bits
     const uuid7 = uuidv7();
     
@@ -312,26 +312,26 @@ export function createChatRoomUuid(countryCode, roomType, datacenterId) {
     const random = crypto.getRandomValues(new Uint8Array(6))
         .reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
     
-    // Build UUID with country code and room type
-    return `${timestamp}-7${RESOURCE_TYPE.ROOM}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${roomType}-${random}`;
+    // Build UUID with country code and game type
+    return `${timestamp}-7${RESOURCE_TYPE.GAME}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${gameType}-${random}`;
 }
 
 /**
- * Creates a new UUID for a game room
+ * Creates a new UUID for a game game
  * @param {string} countryCode - Country code from COUNTRY enum
- * @param {string} roomType - Game room type from ROOM_TYPE enum
+ * @param {string} gameType - Game game type from GAME_TYPE enum
  * @param {string} datacenterId - Datacenter ID from DATACENTER enum
  * @returns {string} - Generated UUID
  */
-export function createGameRoomUuid(countryCode, roomType, datacenterId) {
+export function createGameGameUuid(countryCode, gameType, datacenterId) {
     const timestamp = uuidv7().split('-')[0]; // Get timestamp portion
     sequence = (sequence + 1) % MAX_SEQUENCE;
     const random = Math.random().toString(16).slice(2, 14).padEnd(12, '0');
     
-    // For game rooms, we use the full format to support thousands of concurrent games:
+    // For game games, we use the full format to support thousands of concurrent games:
     // timestamp-7TCC-LSRR-NNNNNNNNNNNN
-    // where T=GAME_ROOM resource type, CC=country, L=datacenter, S=sequence, RR=room type
-    return `${timestamp}-7${RESOURCE_TYPE.ROOM}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${roomType}-${random}`;
+    // where T=GAME_GAME resource type, CC=country, L=datacenter, S=sequence, RR=game type
+    return `${timestamp}-7${RESOURCE_TYPE.GAME}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${gameType}-${random}`;
 }
 
 /**
@@ -407,7 +407,7 @@ export function createMessageUuid(countryCode = COUNTRY.US, datacenterId = DATAC
  */
 export function createGameUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
     const baseUuid = uuidv7();
-    const resourceType = RESOURCE_TYPE.ROOM;
+    const resourceType = RESOURCE_TYPE.GAME;
     const sequence = Math.floor(Math.random() * 16).toString(16); // 4-bit sequence
     
     return baseUuid.substring(0, 8) + '-' + 

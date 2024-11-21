@@ -1,4 +1,4 @@
-import { SYSTEM_USERS, SYSTEM_ROOMS } from '@net40k/shared';
+import { SYSTEM_USERS, SYSTEM_GAMES } from '@net40k/shared';
 import { UserDB } from './User.js';
 import { chatService } from '../services/ChatService.js';
 import { Lock } from './Lock.js';
@@ -16,9 +16,9 @@ const NEWS_USER_ID = SYSTEM_USERS.NEWS;
 const NEWS_USERNAME = 'news';
 const NEWS_NICKNAME = '<News>';
 
-// System Rooms
-const SYSTEM_ROOM_ID = SYSTEM_ROOMS.SYSTEM;
-const LOBBY_ROOM_ID = SYSTEM_ROOMS.LOBBY;
+// System GAMEs
+const SYSTEM_GAME_ID = SYSTEM_GAMES.SYSTEM;
+const LOBBY_GAME_ID = SYSTEM_GAMES.LOBBY;
 
 export const SystemMessages = {
     async initialize() {
@@ -60,7 +60,7 @@ export const SystemMessages = {
     },
 
     async _sendToLobby(message) {
-        return chatService.createMessage(LOBBY_ROOM_ID, SYSTEM_USER_ID, message);
+        return chatService.createMessage(LOBBY_GAME_ID, SYSTEM_USER_ID, message);
     },
 
     async _sendToGame(gameUuid, message) {

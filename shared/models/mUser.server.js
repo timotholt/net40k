@@ -28,7 +28,7 @@ import crypto from 'crypto';
  * @property {string} banReason
  * @property {Date} banExpiresAt
  * @property {boolean} isVerified
- * @property {Set<string>} rooms
+ * @property {Set<string>} games
  * @property {Set<string>} activeGames
  * @property {Map<string, Session>} sessions
  * @property {Set<string>} mutedUsers - Set of userUuids that this user has muted
@@ -60,7 +60,7 @@ export function userCreateServer(data = {}) {
         banReason: data.banReason || '',
         banExpiresAt: data.banExpiresAt || null,
         isVerified: data.isVerified || false,
-        rooms: new Set(data.rooms || []),
+        games: new Set(data.games || []),
         activeGames: new Set(data.activeGames || []),
         sessions: new Map(),
         mutedUsers: new Set(data.mutedUsers || []),
@@ -171,26 +171,26 @@ export function userRemoveSession(user, sessionId) {
 }
 
 /**
- * Join a room
+ * Join a game
  * @param {User} user 
- * @param {string} roomUuid 
+ * @param {string} gameUuid 
  */
-export function userJoinRoom(user, roomUuid) {
-    if (!user.rooms.has(roomUuid)) {
-        user.rooms.add(roomUuid);
-        userBroadcastToSessions(user, 'room_joined', { roomUuid });
+export function userJoinRoom(user, gameUuid) {
+    if (!user.games.has(gameUuid)) {
+        user.games.add(gameUuid);
+        userBroadcastToSessions(user, 'game_joined', { gameUuid });
     }
 }
 
 /**
- * Leave a room
+ * Leave a game
  * @param {User} user 
- * @param {string} roomUuid 
+ * @param {string} gameUuid 
  */
-export function userLeaveRoom(user, roomUuid) {
-    if (user.rooms.has(roomUuid)) {
-        user.rooms.delete(roomUuid);
-        userBroadcastToSessions(user, 'room_left', { roomUuid });
+export function userLeaveRoom(user, gameUuid) {
+    if (user.games.has(gameUuid)) {
+        user.games.delete(gameUuid);
+        userBroadcastToSessions(user, 'game_left', { gameUuid });
     }
 }
 
@@ -273,7 +273,7 @@ export function userIsBlocked(user, targetUserUuid) {
 export function userToJSONServer(user) {
     return {
         ...user,
-        rooms: Array.from(user.rooms),
+        games: Array.from(user.games),
         activeGames: Array.from(user.activeGames),
         mutedUsers: Array.from(user.mutedUsers),
         blockedUsers: Array.from(user.blockedUsers),

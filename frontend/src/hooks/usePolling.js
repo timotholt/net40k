@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 
 /**
- * Custom hook for polling a list of rooms
- * @param {Function} fetchRoomsFn - Async function to fetch rooms list
+ * Custom hook for polling a list of games
+ * @param {Function} fetchgamesFn - Async function to fetch games list
  * @param {Object} options - Polling configuration options
  */
-export function useRoomPolling(fetchRoomsFn, options = {}) {
+export function usegamePolling(fetchgamesFn, options = {}) {
   const {
     interval = 5000,
     enabled = true,
@@ -17,7 +17,7 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
 
   const { isTokenValid } = useAuthContext();
 
-  const [rooms, setRooms] = useState([]);
+  const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -32,7 +32,7 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
     }
   }, []);
 
-  const fetchRoomsList = useCallback(async () => {
+  const fetchgamesList = useCallback(async () => {
     // Stop polling if token is invalid or component is unmounted
     if (!isMountedRef.current || !enabled || !isTokenValid) return;
 
@@ -40,9 +40,9 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
     setError(null);
 
     try {
-      const result = await fetchRoomsFn();
+      const result = await fetchgamesFn();
       if (isMountedRef.current) {
-        setRooms(result || []);
+        setgames(result || []);
         setRetryCount(0);
       }
     } catch (err) {
@@ -63,7 +63,7 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
       }
     }
   }, [
-    fetchRoomsFn, 
+    fetchgamesFn, 
     enabled, 
     isTokenValid, 
     onError, 
@@ -74,7 +74,7 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
 
   const startPolling = useCallback(() => {
     const poll = () => {
-      fetchRoomsList().then(() => {
+      fetchgamesList().then(() => {
         if (isMountedRef.current && enabled && isTokenValid) {
           pollingTimeoutRef.current = setTimeout(poll, interval);
         }
@@ -83,12 +83,12 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
 
     // Initial fetch if immediate is true
     if (immediate) {
-      fetchRoomsList();
+      fetchgamesList();
     }
 
     // Start polling
     poll();
-  }, [fetchRoomsList, interval, immediate, enabled, isTokenValid]);
+  }, [fetchgamesList, interval, immediate, enabled, isTokenValid]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -104,7 +104,7 @@ export function useRoomPolling(fetchRoomsFn, options = {}) {
   }, [enabled, isTokenValid, startPolling, stopPolling]);
 
   return {
-    rooms,
+    games,
     loading,
     error,
     stopPolling,

@@ -1,9 +1,9 @@
 import { 
     createUserUuid, 
-    createGameRoomUuid, 
+    createGameUuid, 
     createMessageUuid,
     COUNTRY,
-    ROOM_TYPE,
+    game_TYPE,
     DATACENTER,
     RESOURCE_TYPE
 } from '../constants/GameUuids.js';
@@ -27,7 +27,7 @@ export const testUsers = [
 // Games with proper UUID format
 export const testGames = [
     {
-        gameUuid: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.GAME, DATACENTER.US_WEST),
+        gameUuid: createGameUuid(COUNTRY.US, GAME_TYPE.GAME, DATACENTER.US_WEST),
         name: 'Siege of Terra',
         maxPlayers: 4,
         status: 'waiting',
@@ -41,7 +41,7 @@ export const testGames = [
         ]
     },
     {
-        gameUuid: createGameRoomUuid(COUNTRY.GB, ROOM_TYPE.GAME, DATACENTER.US_WEST),
+        gameUuid: createGameUuid(COUNTRY.GB, game_TYPE.GAME, DATACENTER.US_WEST),
         name: 'Defense of Cadia',
         maxPlayers: 6,
         status: 'in_progress',
@@ -61,13 +61,13 @@ export const testGames = [
 ];
 
 // Chat messages with proper UUID format
-export function createTestChats(senderUuid, roomUuid) {
+export function createTestChats(senderUuid, gameUuid) {
     const baseTime = new Date('2024-01-01T10:00:00Z').getTime();
     return [
         {
             messageUuid: createMessageUuid(),
             senderUuid: senderUuid,
-            roomUuid: roomUuid || createGameRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),
+            gameUuid: gameUuid || createGameUuid(COUNTRY.US, game_TYPE.LOBBY, DATACENTER.US_WEST),
             message: 'For the Emperor!',
             createdAt: new Date(baseTime),
             isWhisper: false
@@ -75,7 +75,7 @@ export function createTestChats(senderUuid, roomUuid) {
         {
             messageUuid: createMessageUuid(),
             senderUuid: senderUuid,
-            roomUuid: roomUuid || createGameRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),
+            gameUuid: gameUuid || createGameUuid(COUNTRY.US, game_TYPE.LOBBY, DATACENTER.US_WEST),
             message: 'Moving units to sector 5',
             createdAt: new Date(baseTime + 5 * 60 * 1000),
             isWhisper: false
@@ -83,7 +83,7 @@ export function createTestChats(senderUuid, roomUuid) {
         {
             messageUuid: createMessageUuid(),
             senderUuid: senderUuid,
-            roomUuid: roomUuid || createGameRoomUuid(COUNTRY.US, ROOM_TYPE.WHISPER, DATACENTER.US_WEST),
+            gameUuid: gameUuid || createGameUuid(COUNTRY.US, game_TYPE.WHISPER, DATACENTER.US_WEST),
             recipientUuid: testUsers[1].userUuid,
             message: 'Shall we form an alliance?',
             createdAt: new Date(baseTime + 10 * 60 * 1000),
@@ -104,7 +104,7 @@ export const testRichMessages = {
             messageUuid: createMessageUuid(),
             senderUuid: testUsers[0].userUuid,
             message: 'Hello everyone!',
-            roomUuid: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),
+            gameUuid: createGameUuid(COUNTRY.US, game_TYPE.LOBBY, DATACENTER.US_WEST),
             createdAt: new Date('2024-01-01T10:00:00Z'),
             isWhisper: false
         },
@@ -112,7 +112,7 @@ export const testRichMessages = {
             messageUuid: createMessageUuid(),
             senderUuid: testUsers[1].userUuid,
             message: 'Join my game!',
-            roomUuid: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),
+            gameUuid: createGameUuid(COUNTRY.US, game_TYPE.LOBBY, DATACENTER.US_WEST),
             createdAt: new Date('2024-01-01T10:05:00Z'),
             isWhisper: false,
             metadata: {
@@ -125,7 +125,7 @@ export const testRichMessages = {
             messageUuid: createMessageUuid(),
             senderUuid: testUsers[0].userUuid,
             message: 'Join our Discord server: https://discord.gg/warhammer40k',
-            roomUuid: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.LOBBY, DATACENTER.US_WEST),
+            gameUuid: createGameUuid(COUNTRY.US, game_TYPE.LOBBY, DATACENTER.US_WEST),
             createdAt: new Date('2024-01-01T10:10:00Z'),
             isWhisper: false,
             metadata: {
@@ -137,7 +137,7 @@ export const testRichMessages = {
             messageUuid: createMessageUuid(),
             senderUuid: testUsers[0].userUuid,
             message: 'Let\'s make an alliance',
-            roomUuid: createGameRoomUuid(COUNTRY.US, ROOM_TYPE.WHISPER, DATACENTER.US_WEST),
+            gameUuid: createGameUuid(COUNTRY.US, game_TYPE.WHISPER, DATACENTER.US_WEST),
             createdAt: new Date('2024-01-01T10:15:00Z'),
             isWhisper: true,
             recipientUuid: testUsers[1].userUuid

@@ -1,5 +1,5 @@
 import express from 'express';
-import RoomService from '../services/RoomService.js';
+import GameService from '../services/GameService.js';
 import { authenticateUser } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -12,13 +12,13 @@ const asyncMiddleware = (fn) => (req, res, next) => {
 // Middleware to apply authentication to all routes
 router.use(asyncMiddleware(authenticateUser));
 
-// Create a new room
+// Create a new game
 router.post('/', asyncMiddleware(async (req, res) => {
   try {
     const { name, description, maxPlayers, password } = req.body;
     const creatorUuid = req.user.userUuid;
     
-    const newRoom = await RoomService.createRoom(
+    const newGame = await GameService.createGame(
       name, 
       description, 
       creatorUuid, 
@@ -26,13 +26,13 @@ router.post('/', asyncMiddleware(async (req, res) => {
       password
     );
     
-    res.status(201).json(newRoom);
+    res.status(201).json(newGame);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }));
 
-// List rooms
+// List games
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     // Build query object, removing undefined values
@@ -40,66 +40,66 @@ router.get('/', asyncMiddleware(async (req, res) => {
     if (req.query.status) filters.status = req.query.status;
     if (req.query.maxPlayers) filters.maxPlayers = parseInt(req.query.maxPlayers);
 
-    const rooms = await RoomService.listRooms(filters);
-    res.json(rooms);
+    const games = await GameService.listGames(filters);
+    res.json(games);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }));
 
-// Get specific room
-router.get('/:roomUuid', asyncMiddleware(async (req, res) => {
+// Get specific game
+router.get('/:gameUuid', asyncMiddleware(async (req, res) => {
   try {
-    const room = await RoomService.getRoom(req.params.roomUuid);
-    res.json(room);
+    const game = await GameService.getGame(req.params.gameUuid);
+    res.json(game);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }));
 
-// Update room
-router.patch('/:roomUuid', asyncMiddleware(async (req, res) => {
+// Update game
+router.patch('/:gameUuid', asyncMiddleware(async (req, res) => {
   try {
-    const updatedRoom = await RoomService.updateRoom(
-      req.params.roomUuid, 
+    const updatedGame = await GameService.updateGame(
+      req.params.gameUuid, 
       req.body
     );
-    res.json(updatedRoom);
+    res.json(updatedGame);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }));
 
-// Join room
-router.post('/:roomUuid/join', asyncMiddleware(async (req, res) => {
+// Join game
+router.post('/:gameUuid/join', asyncMiddleware(async (req, res) => {
   try {
-    const room = await RoomService.joinRoom(
-      req.params.roomUuid, 
+    const game = await GameService.joinGame(
+      req.params.gameUuid, 
       req.user.userUuid
     );
-    res.json(room);
+    res.json(game);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }));
 
-// Leave room
-router.post('/:roomUuid/leave', asyncMiddleware(async (req, res) => {
+// Leave game
+router.post('/:gameUuid/leave', asyncMiddleware(async (req, res) => {
   try {
-    const room = await RoomService.leaveRoom(
-      req.params.roomUuid, 
+    const game = await GameService.leaveGame(
+      req.params.gameUuid, 
       req.user.userUuid
     );
-    res.json(room);
+    res.json(game);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }));
 
-// Delete room
-router.delete('/:roomUuid', asyncMiddleware(async (req, res) => {
+// Delete game
+router.delete('/:gameUuid', asyncMiddleware(async (req, res) => {
   try {
-    await RoomService.deleteRoom(req.params.roomUuid);
+    await GameService.deleteGame(req.params.gameUuid);
     res.status(204).send();
   } catch (error) {
     res.status(404).json({ error: error.message });

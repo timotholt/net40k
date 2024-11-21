@@ -28,7 +28,7 @@ export default function Chat({
   const isLobbyChat = endpoint.includes('lobby');
   const isWhisperChat = endpoint.includes('whisper');
   const isSpecialChat = endpoint.includes('news') || endpoint.includes('system') || endpoint.includes('games');
-  const chatRoom = endpoint.split('/').pop(); // Get the chat room from endpoint
+  const chatGame = endpoint.split('/').pop(); // Get the chat game from endpoint
 
   useEffect(() => {
     if (initialMessages) {
@@ -53,36 +53,36 @@ export default function Chat({
     /* Socket.io removed
     // Socket.io event handlers
     if (socket) {
-      // Join the chat room
-      socket.emit('join_chat', chatRoom);
+      // Join the chat game
+      socket.emit('join_chat', chatGame);
 
       // Listen for new messages
-      socket.on(`chat_message_${chatRoom}`, (message) => {
+      socket.on(`chat_message_${chatGame}`, (message) => {
         setMessages(prev => [...prev, message]);
       });
 
       // Listen for message updates (edits, deletions)
-      socket.on(`message_update_${chatRoom}`, ({ messageId, update }) => {
+      socket.on(`message_update_${chatGame}`, ({ messageId, update }) => {
         setMessages(prev => prev.map(msg => 
           msg.id === messageId ? { ...msg, ...update } : msg
         ));
       });
 
       // Listen for message deletions
-      socket.on(`message_delete_${chatRoom}`, (messageId) => {
+      socket.on(`message_delete_${chatGame}`, (messageId) => {
         setMessages(prev => prev.filter(msg => msg.id !== messageId));
       });
 
       // Cleanup
       return () => {
-        socket.emit('leave_chat', chatRoom);
-        socket.off(`chat_message_${chatRoom}`);
-        socket.off(`message_update_${chatRoom}`);
-        socket.off(`message_delete_${chatRoom}`);
+        socket.emit('leave_chat', chatGame);
+        socket.off(`chat_message_${chatGame}`);
+        socket.off(`message_update_${chatGame}`);
+        socket.off(`message_delete_${chatGame}`);
       };
     }
     */
-  }, [endpoint, initialMessages, chatRoom]);
+  }, [endpoint, initialMessages, chatGame]);
 
   useEffect(() => {
     scrollToBottom();
@@ -117,7 +117,7 @@ export default function Chat({
       if (socket) {
         // Emit message through socket
         socket.emit('chat_message', {
-          room: chatRoom,
+          game: chatGame,
           message: messageContent,
           userId: user.userUuid
         });

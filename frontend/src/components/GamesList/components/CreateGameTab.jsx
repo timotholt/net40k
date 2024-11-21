@@ -3,7 +3,7 @@ import { InputField } from '../../FormFields';
 import SharedPasswordField from '../../FormFields/SharedPasswordField';
 import { GameIcon, PlayersIcon } from '../../Icons/MenuIcons';
 import styles from './CreateGameTab.module.css';
-import roomService from '../../../services/roomService';
+import gameService from '../../../services/GameService';
 
 export default function CreateGameTab() {
   const [formData, setFormData] = useState({
@@ -29,16 +29,16 @@ export default function CreateGameTab() {
     setError('');
     
     try {
-      const room = await roomService.createRoom({
+      const game = await gameService.creategame({
         name: formData.name,
         description: formData.description,
         maxPlayers: parseInt(formData.maxPlayers),
         password: formData.password
       });
-      console.log('Room created successfully:', room);
+      console.log('game created successfully:', game);
     } catch (err) {
-      console.error('Failed to create room:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to create room');
+      console.error('Failed to create game:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to create game');
     }
   };
 

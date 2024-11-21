@@ -1,9 +1,8 @@
 import { 
-  createGameRoomUuid, 
+  createGameUuid, 
   COUNTRY, 
   DATACENTER, 
-  ROOM_TYPE 
-} from '../../shared/constants/GameUuids.js';
+} from '@net40k/shared/constants/GameUuids';
 import DateService from '../services/DateService.js';
 import logger from '../utils/logger.js';
 import { ValidationError } from '../utils/errors.js';
@@ -11,12 +10,11 @@ import { generateSchema } from '../utils/schemaGenerator.js';
 import { db } from '../database/database.js';
 import { Lock } from './Lock.js';
 
-class Room {
+class Game {
   constructor(data = {}) {
     // Sanitize and validate input data
-    this.roomUuid = data.roomUuid || createGameRoomUuid(
+    this.gameUuid = data.gameUuid || createGameUuid(
       data.country || COUNTRY.US,
-      data.roomType || ROOM_TYPE.LOBBY,
       data.datacenter || DATACENTER.US_WEST
     );
     
@@ -56,20 +54,20 @@ class Room {
 
   validate() {
     if (!this.name || this.name.length < 3) {
-      throw new ValidationError('Room name must be at least 3 characters long');
+      throw new ValidationError('game name must be at least 3 characters long');
     }
 
     if (!this.creatorUuid) {
-      throw new ValidationError('Room must have a creator');
+      throw new ValidationError('game must have a creator');
     }
 
     if (this.playerUuids.length > this.maxPlayers) {
-      throw new ValidationError('Too many players in the room');
+      throw new ValidationError('Too many players in the game');
     }
   }
 
   // Schema for database validation
-  static schema = generateSchema(new Room(), {
+  static schema = generateSchema(new Game(), {
     name: { type: 'string', required: true, minLength: 3 },
     creatorUuid: { type: 'string', required: true },
     status: { type: 'string', enum: ['WAITING', 'IN_PROGRESS', 'CLOSED'] },
@@ -80,12 +78,12 @@ class Room {
 
   // Serialization methods
   toJSON() {
-    return this.toFullRoom();
+    return this.toFullGame();
   }
 
-  toFullRoom() {
+  toFullGame() {
     return {
-      roomUuid: this.roomUuid,
+      gameUuid: this.gameUuid,
       name: this.name,
       description: this.description,
       creatorUuid: this.creatorUuid,
@@ -103,9 +101,9 @@ class Room {
     };
   }
 
-  toPublicRoom() {
+  toPublicGame() {
     return {
-      roomUuid: this.roomUuid,
+      gameUuid: this.gameUuid,
       name: this.name,
       description: this.description,
       playerCount: this.playerUuids.length,
@@ -115,20 +113,20 @@ class Room {
       isPrivate: this.isPrivate,
       createdBy: {
         uuid: this.creatorUuid,
-        nickname: this.creatorUuid // This will be replaced by actual nickname in RoomService
+        nickname: this.creatorUuid // This will be replaced by actual nickname in GameService
       }
     };
   }
 }
 
-export const RoomDB = {
-  collection: 'room',
+export const GameDB = {
+  collection: 'game',
 
   async init() {
     await db.createCollection(this.collection);
     
     if (db.supportsExplicitIndexes) {
-      await db.createIndex(this.collection, { roomUuid: 1 }, { unique: true });
+      await db.createIndex(this.collection, { gameUuid: 1 }, { unique: true });
       await db.createIndex(this.collection, { creatorUuid: 1 });
       await db.createIndex(this.collection, { status: 1 });
     } else {
@@ -136,31 +134,31 @@ export const RoomDB = {
     }
   },
 
-  async create(roomData) {
-    const lockId = `room-create-${roomData.name}-${roomData.creatorUuid}`;
+  async create(gameData) {
+    const lockId = `game-create-${gameData.name}-${gameData.creatorUuid}`;
     
     try {
       await Lock.acquire(lockId, 1000);
       
-      const room = new Room(roomData);
-      room.validate();
+      const game = new Game(gameData);
+      game.validate();
 
-      // Check for existing room with same name (optional)
-      const existingRoom = await this.findOne({ 
-        name: room.name, 
-        creatorUuid: room.creatorUuid 
+      // Check for existing game with same name (optional)
+      const existinggame = await this.findOne({ 
+        name: game.name, 
+        creatorUuid: game.creatorUuid 
       });
 
-      if (existingRoom) {
-        throw new ValidationError('Room with this name already exists');
+      if (existinggame) {
+        throw new ValidationError('game with this name already exists');
       }
 
-      const result = await db.create(this.collection, room.toJSON());
-      logger.info(`Room created successfully: ${room.name}`);
+      const result = await db.create(this.collection, game.toJSON());
+      logger.info(`game created successfully: ${game.name}`);
       
-      return this._toRoomInstance(result);
+      return this._toGameInstance(result);
     } catch (error) {
-      logger.error(`Failed to create room: ${error.message}`);
+      logger.error(`Failed to create game: ${error.message}`);
       throw error;
     } finally {
       await Lock.release(lockId);
@@ -169,17 +167,17 @@ export const RoomDB = {
 
   async findOne(query) {
     const result = await db.findOne(this.collection, query);
-    return result ? this._toRoomInstance(result) : null;
+    return result ? this._toGameInstance(result) : null;
   },
 
   async find(query = {}, options = {}) {
     const results = await db.find(this.collection, query, options);
-    return results.map(result => this._toRoomInstance(result));
+    return results.map(result => this._toGameInstance(result));
   },
 
   async update(query, updateData) {
     const result = await db.update(this.collection, query, updateData);
-    return this._toRoomInstance(result);
+    return this._toGameInstance(result);
   },
 
   async delete(query) {
@@ -187,9 +185,9 @@ export const RoomDB = {
     return true;
   },
 
-  _toRoomInstance(dbObject) {
-    return dbObject ? new Room(dbObject) : null;
+  _toGameInstance(dbObject) {
+    return dbObject ? new game(dbObject) : null;
   }
 };
 
-export default Room;
+export default Game;

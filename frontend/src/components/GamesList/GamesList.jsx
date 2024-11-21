@@ -5,7 +5,7 @@ import { MODAL_TYPES } from '../../context/ModalContext';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
 import EmptyState from './components/EmptyState';
-import roomService from '../../services/roomService';
+import GameService from '../../services/GameService';
 import styles from './GamesList.module.css';
 
 export default function GamesList({
@@ -39,8 +39,8 @@ export default function GamesList({
       if (activeTab === 'yours') filters.creatorUuid = user?.userUuid;
       if (hideFullGames) filters.status = 'WAITING';
 
-      const result = await roomService.getRooms(filters);
-      setGames(result.rooms || []);
+      const result = await GameService.getGames(filters);
+      setGames(result.Games || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch games');
       console.error('Games fetch error:', err);
