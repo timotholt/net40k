@@ -113,12 +113,36 @@ router.post('/:gameUuid/leave', asyncMiddleware(async (req, res) => {
 // Get game settings
 router.get('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
   try {
+    console.log('GAME ROUTES: Get Game Settings Request', {
+      gameUuid: req.params.gameUuid,
+      userUuid: req.user.userUuid,
+      fullRequest: {
+        method: req.method,
+        path: req.path,
+        params: req.params,
+        query: req.query,
+        body: req.body
+      }
+    });
+
     const { gameUuid } = req.params;
     const userUuid = req.user.userUuid;
 
     const gameSettings = await GameService.getGameSettings(gameUuid, userUuid);
+    
+    console.log('GAME ROUTES: Get Game Settings Response', {
+      gameSettings,
+      userUuid
+    });
+
     res.json(gameSettings);
   } catch (error) {
+    console.error('GAME ROUTES: Get Game Settings Error', {
+      gameUuid: req.params.gameUuid,
+      userUuid: req.user.userUuid,
+      error: error.message,
+      stack: error.stack
+    });
     res.status(400).json({ error: error.message });
   }
 }));
@@ -126,10 +150,16 @@ router.get('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
 // Update game settings
 router.patch('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
   try {
-    console.log('GAME ROUTES: Patch Game Settings Update', {
+    console.log('GAME ROUTES: Patch Game Settings Request', {
       gameUuid: req.params.gameUuid,
       userUuid: req.user.userUuid,
-      body: req.body
+      fullRequest: {
+        method: req.method,
+        path: req.path,
+        params: req.params,
+        query: req.query,
+        body: req.body
+      }
     });
 
     const { name, description, maxPlayers, turnLength, password, hasPassword } = req.body;
@@ -141,11 +171,18 @@ router.patch('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
       { name, description, maxPlayers, turnLength, password, hasPassword }
     );
     
+    console.log('GAME ROUTES: Patch Game Settings Response', {
+      updatedGame,
+      userUuid
+    });
+
     res.json(updatedGame);
   } catch (error) {
-    console.error('GAME ROUTES: Patch Game Settings Update Error', {
+    console.error('GAME ROUTES: Patch Game Settings Error', {
       gameUuid: req.params.gameUuid,
-      error: error.message
+      userUuid: req.user.userUuid,
+      error: error.message,
+      stack: error.stack
     });
     res.status(400).json({ error: error.message });
   }

@@ -408,14 +408,16 @@ export function createMessageUuid(countryCode = COUNTRY.US, datacenterId = DATAC
  */
 export function createGameUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
     const baseUuid = uuidv7();
-    const resourceType = RESOURCE_TYPE.GAME;
-    const sequence = Math.floor(Math.random() * 16).toString(16); // 4-bit sequence
+    const resourceType = RESOURCE_TYPE.GAMES; // Ensure plural
+    const sequence = Math.floor(Math.random() * 16).toString(16).padStart(1, '0');
     
-    return baseUuid.substring(0, 8) + '-' + 
-           baseUuid.substring(9, 13) + '-' +
-           '7' + resourceType + countryCode + '-' +
-           datacenterId + sequence + '00' + '-' + // '00' for game type (could be used for game modes later)
-           baseUuid.substring(24);
+    // Ensure all parts are defined and padded
+    const timePart = baseUuid.substring(0, 8) + '-' + baseUuid.substring(9, 13);
+    const resourcePart = '7' + resourceType + countryCode.padStart(2, '0');
+    const locationPart = datacenterId + sequence + '00';
+    const randomPart = baseUuid.substring(24);
+
+    return `${timePart}-${resourcePart}-${locationPart}-${randomPart}`;
 }
 
 // Helper functions for extracting information from UUIDs
