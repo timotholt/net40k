@@ -5,6 +5,9 @@
   padding: 1rem;
   max-width: 400px;
   margin: 0 auto;
+  background-color: var(--color-darker);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--glow-container);
 }
 
 .formGroup {
@@ -15,22 +18,44 @@
 
 .formGroup label {
   font-weight: 600;
-  color: var(--color-text-light);
+  color: var(--color-soft-white);
+  margin-bottom: var(--rem-between-label-and-input);
 }
 
 .formGroup input,
-.formGroup textarea,
-.formGroup select {
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
   padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background-color: var(--color-background-secondary);
-  color: var(--color-text);
+  border: 1px solid var(--color-green);
+  border-radius: var(--border-radius-sm);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--color-soft-white);
+  transition: all 0.3s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--color-green-hover);
+  box-shadow: var(--glow-focus);
 }
 
 .formGroup textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.formGroup input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.formGroup label[for="hasPassword"] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .formActions {
@@ -39,6 +64,9 @@
   margin-top: 1rem;
 }
 
-.formGroup input[type="checkbox"] {
-  margin-right: 0.5rem;
+/* Placeholder styles */
+.formGroup input::placeholder,
+.formGroup textarea::placeholder {
+  color: var(--color-gray-light);
+  opacity: 0.7;
 }
