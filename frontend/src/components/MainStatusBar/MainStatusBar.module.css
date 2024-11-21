@@ -81,9 +81,21 @@
   line-height: 1;
 }
 
+.settingsIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-green);
+  transition: all var(--transition-speed) ease;
+}
+
 .settingsButton:hover {
   opacity: 1;
   color: var(--color-green);
+  filter: drop-shadow(0 0 10px var(--color-green));
+}
+
+.settingsButton:hover .settingsIcon {
+  color: var(--color-soft-white);
   filter: drop-shadow(0 0 10px var(--color-green));
 }
 

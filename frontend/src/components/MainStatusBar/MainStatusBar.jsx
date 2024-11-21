@@ -5,6 +5,7 @@ import { useStatusBarVisibility } from '../../hooks/useStatusBarVisibility';
 import { useModal } from '../../context/ModalContext';
 import { MODAL_TYPES } from '../../context/ModalContext';
 import FPSCounter from '../FPSCounter/FPSCounter';
+import { GearIcon } from '../Icons/GearIcon';
 import styles from './MainStatusBar.module.css';
 
 export default function MainStatusBar() {
@@ -40,7 +41,9 @@ export default function MainStatusBar() {
             onMouseEnter={() => soundManager.play('hover')}
             aria-label="Settings"
           >
-            ⚙️
+            <GearIcon 
+              className={styles.settingsIcon} 
+            />
           </button>
           <FPSCounter className={styles.fpsCounter} />
         </div>

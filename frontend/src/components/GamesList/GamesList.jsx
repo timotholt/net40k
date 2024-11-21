@@ -6,6 +6,7 @@ import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
 import EmptyState from './components/EmptyState';
 import GameService from '../../services/GameService';
+import GameSettingsForm from './components/GameSettingsForm'; // Import GameSettingsForm component
 import styles from './GamesList.module.css';
 
 export default function GamesList({
@@ -21,7 +22,7 @@ export default function GamesList({
   user
 }) {
   const navigate = useNavigate();
-  const { openModal } = useModal();
+  const { openModal, closeModal } = useModal(); // Extract closeModal function
   const [games, setGames] = useState(initialGames);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -196,6 +197,52 @@ export default function GamesList({
     });
   }, [openModal, setGames, games]);
 
+  const handleGameSettings = useCallback((gameUuid) => {
+    const game = games.find(g => g.gameUuid === gameUuid);
+    
+    // Only allow settings for own games
+    if (!game || !game.isYours) {
+      openModal(MODAL_TYPES.ALERT, {
+        title: 'Cannot Edit Game',
+        message: 'You can only edit your own games.'
+      });
+      return;
+    }
+
+    // Open game settings modal
+    openModal(MODAL_TYPES.CUSTOM, {
+      title: 'Game Settings',
+      children: (
+        <GameSettingsForm 
+          initialGame={game}
+          onSubmit={async (updatedGame) => {
+            try {
+              // Call game update service
+              await GameService.updateGame(gameUuid, updatedGame);
+              
+              // Update local game state
+              setGames(prevGames => 
+                prevGames.map(g => 
+                  g.gameUuid === gameUuid 
+                    ? { ...g, ...updatedGame } 
+                    : g
+                )
+              );
+              
+              // Close modal
+              closeModal();
+            } catch (error) {
+              openModal(MODAL_TYPES.ALERT, {
+                title: 'Update Failed',
+                message: error.response?.data?.error || 'Failed to update game settings.'
+              });
+            }
+          }}
+        />
+      )
+    });
+  }, [openModal, games, setGames, closeModal]);
+
   const getEmptyStateMessage = () => {
     if (filter) {
       return "No games match your search. Press <ESC> to clear.";
@@ -248,6 +295,7 @@ export default function GamesList({
               onJoin={handleJoinGame}
               onView={handleViewGame}
               onDelete={() => handleDeleteGame(game.gameUuid)}
+              onSettings={() => handleGameSettings(game.gameUuid)}
             />
           ))
         ) : (
