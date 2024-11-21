@@ -171,21 +171,19 @@ export default function GamesList({
       return;
     }
 
-    // Use the new confirmation modal
+    // Use the new confirmation modal with custom buttons
     openModal(MODAL_TYPES.CONFIRM, {
+      title: 'Confirm Game Deletion',
       message: `Do you wish to delete this game?`,
-      onConfirm: async () => {
+      primaryButtonText: 'Delete',
+      secondaryButtonText: 'Cancel',
+      onPrimaryButtonClick: async () => {
         try {
           setLoading(true);
           await GameService.deleteGame(gameUuid);
           
           // Remove the game from the list
           setGames(prevGames => prevGames.filter(g => g.gameUuid !== gameUuid));
-          
-          openModal(MODAL_TYPES.ALERT, {
-            title: 'Game Deleted',
-            message: `The game "${game.name}" has been successfully deleted.`
-          });
         } catch (error) {
           openModal(MODAL_TYPES.ALERT, {
             title: 'Delete Failed',
@@ -194,9 +192,7 @@ export default function GamesList({
         } finally {
           setLoading(false);
         }
-      },
-      confirmText: 'Delete',
-      variant: 'destructive'
+      }
     });
   }, [openModal, setGames, games]);
 

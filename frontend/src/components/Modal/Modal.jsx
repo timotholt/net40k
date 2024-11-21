@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
+import { PrimaryButton, SecondaryButton } from '../Buttons';
 import styles from './Modal.module.css';
 
 export default function Modal({ 
@@ -8,7 +9,12 @@ export default function Modal({
   onClose, 
   title, 
   children,
-  showCloseButton = true
+  primaryButtonText,
+  secondaryButtonText,
+  onPrimaryButtonClick,
+  onSecondaryButtonClick,
+  primaryButtonVariant = 'confirm',
+  secondaryButtonVariant = 'cancel'
 }) {
   useEffect(() => {
     const handleEscape = (e) => {
@@ -42,19 +48,28 @@ export default function Modal({
             <div className={styles.modal}>
               <div className={styles.header}>
                 <h2 className={styles.title}>{title}</h2>
-                {showCloseButton && (
-                  <button 
-                    className={styles.closeButton}
-                    onClick={onClose}
-                    aria-label="Close modal"
-                  >
-                    ×
-                  </button>
-                )}
               </div>
               <div className={styles.content}>
                 {children}
               </div>
+              {(primaryButtonText || secondaryButtonText) && (
+                <div className={styles.modalActionButtons}>
+                  {secondaryButtonText && (
+                    <SecondaryButton 
+                      onClick={onSecondaryButtonClick || onClose}
+                    >
+                      {secondaryButtonText}
+                    </SecondaryButton>
+                  )}
+                  {primaryButtonText && (
+                    <PrimaryButton 
+                      onClick={onPrimaryButtonClick}
+                    >
+                      {primaryButtonText}
+                    </PrimaryButton>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </>
@@ -68,5 +83,10 @@ Modal.propTypes = {
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
-  showCloseButton: PropTypes.bool
+  primaryButtonText: PropTypes.string,
+  secondaryButtonText: PropTypes.string,
+  onPrimaryButtonClick: PropTypes.func,
+  onSecondaryButtonClick: PropTypes.func,
+  primaryButtonVariant: PropTypes.oneOf(['confirm', 'destructive']),
+  secondaryButtonVariant: PropTypes.oneOf(['cancel', 'destructive'])
 };

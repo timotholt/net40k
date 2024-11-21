@@ -52,28 +52,18 @@ function ModalRenderer() {
             isOpen={true}
             onClose={() => closeModal(modal.id)}
             title={modal.props.title || 'Confirm Action'}
+            primaryButtonText={modal.props.secondaryButtonText || 'Cancel'}
+            secondaryButtonText={modal.props.primaryButtonText || 'Confirm'}
+            onPrimaryButtonClick={() => {
+              modal.props.onSecondaryButtonClick?.() || modal.props.onCancel?.();
+              closeModal(modal.id);
+            }}
+            onSecondaryButtonClick={() => {
+              modal.props.onPrimaryButtonClick?.() || modal.props.onConfirm?.();
+              closeModal(modal.id);
+            }}
           >
             <p>{modal.props.message}</p>
-            <div className={styles.modalActionButtons}>
-              <button 
-                className={`${styles.modalButton} ${styles.modalButtonCancel}`}
-                onClick={() => {
-                  modal.props.onCancel?.();
-                  closeModal(modal.id);
-                }}
-              >
-                Cancel
-              </button>
-              <button 
-                className={`${styles.modalButton} ${modal.props.variant === 'destructive' ? styles.modalButtonDestructive : styles.modalButtonConfirm}`}
-                onClick={() => {
-                  modal.props.onConfirm?.();
-                  closeModal(modal.id);
-                }}
-              >
-                {modal.props.confirmText || 'Confirm'}
-              </button>
-            </div>
           </Modal>
         );
       default:
