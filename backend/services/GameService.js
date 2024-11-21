@@ -52,13 +52,28 @@ class GameService {
 
   async listGames(filters = {}, userUuid = null) {
     try {
+      console.log('LIST GAMES - Input:', { 
+        filters, 
+        userUuid 
+      });
+
       // Find games based on initial filters
       const games = await GameDB.find(filters);
+      console.log('LIST GAMES - Initial Games Found:', games.map(g => ({
+        gameUuid: g.gameUuid,
+        name: g.name,
+        creatorUuid: g.creatorUuid
+      })));
       
       // If a user UUID is provided, find additional games created by this user
       let userGames = [];
       if (userUuid) {
         userGames = await GameDB.find({ creatorUuid: userUuid });
+        console.log('LIST GAMES - User Games Found:', userGames.map(g => ({
+          gameUuid: g.gameUuid,
+          name: g.name,
+          creatorUuid: g.creatorUuid
+        })));
       }
 
       // Combine games, removing duplicates
@@ -66,6 +81,12 @@ class GameService {
         (game, index, self) => 
           index === self.findIndex((t) => t.gameUuid === game.gameUuid)
       );
+      
+      console.log('LIST GAMES - Combined Games:', combinedGames.map(g => ({
+        gameUuid: g.gameUuid,
+        name: g.name,
+        creatorUuid: g.creatorUuid
+      })));
       
       // Get all unique creator UUIDs
       const creatorUuids = [...new Set(combinedGames.map(game => game.creatorUuid))];
@@ -75,13 +96,18 @@ class GameService {
         creatorUuids.map(uuid => UserDB.findOne({ userUuid: uuid }))
       );
       
+      console.log('LIST GAMES - Creators:', creators.map(c => ({
+        userUuid: c?.userUuid,
+        nickname: c?.nickname
+      })));
+      
       // Create a map of UUID to nickname
       const creatorMap = new Map(
         creators.filter(Boolean).map(user => [user.userUuid, user.nickname])
       );
 
       // Map games and populate creator info
-      return combinedGames.map(game => {
+      const result = combinedGames.map(game => {
         const publicGame = game.toPublicGame();
         publicGame.creatorNickname = creatorMap.get(game.creatorUuid) || 'Unknown';
         
@@ -90,8 +116,18 @@ class GameService {
         
         return publicGame;
       });
+
+      console.log('LIST GAMES - Final Result:', result.map(g => ({
+        gameUuid: g.gameUuid,
+        name: g.name,
+        creatorNickname: g.creatorNickname,
+        isYours: g.isYours
+      })));
+      
+      return result;
     } catch (error) {
       logger.error(`List games failed: ${error.message}`);
+      console.error('LIST GAMES - Detailed Error:', error);
       throw error;
     }
   }
