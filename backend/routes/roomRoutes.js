@@ -35,8 +35,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
 // List rooms
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const { status, maxPlayers } = req.query;
-    const rooms = await RoomService.listRooms({ status, maxPlayers });
+    // Build query object, removing undefined values
+    const filters = {};
+    if (req.query.status) filters.status = req.query.status;
+    if (req.query.maxPlayers) filters.maxPlayers = parseInt(req.query.maxPlayers);
+
+    const rooms = await RoomService.listRooms(filters);
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ error: error.message });

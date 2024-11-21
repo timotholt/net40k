@@ -17,7 +17,8 @@ export default function GamesList({
   hideFullGames,
   onHideFullGames,
   hidePasswordGames,
-  onHidePasswordGames
+  onHidePasswordGames,
+  user
 }) {
   const navigate = useNavigate();
   const { openModal } = useModal();
@@ -33,7 +34,12 @@ export default function GamesList({
     setLoading(true);
     setError(null);
     try {
-      const result = await roomService.getRooms();
+      // Only send filters if they have values
+      const filters = {};
+      if (activeTab === 'yours') filters.creatorUuid = user?.userUuid;
+      if (hideFullGames) filters.status = 'WAITING';
+
+      const result = await roomService.getRooms(filters);
       setGames(result.rooms || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch games');
@@ -41,7 +47,7 @@ export default function GamesList({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeTab, hideFullGames, user?.userUuid]);
 
   // Polling effect
   useEffect(() => {
