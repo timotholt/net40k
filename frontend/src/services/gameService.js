@@ -79,7 +79,7 @@ const gameService = {
   /**
    * Fetch specific game settings
    * @param {string} gameUuid - UUID of the game to fetch settings for
-   * @returns {Promise<Object>}
+   * @returns {Promise<Object>} Game settings object
    */
   getGameSettings: async (gameUuid) => {
     try {
@@ -95,11 +95,20 @@ const gameService = {
    * Update game settings
    * @param {string} gameUuid - UUID of the game to update
    * @param {Object} settingsData - Game settings to update
-   * @returns {Promise<Object>}
+   * @returns {Promise<Object>} Updated game settings
    */
   updateGameSettings: async (gameUuid, settingsData) => {
     try {
-      const response = await axiosInstance.put(`/games/${gameUuid}/settings`, settingsData);
+      // Ensure only specific fields are sent
+      const allowedFields = ['name', 'description', 'maxPlayers', 'turnLength', 'hasPassword', 'password'];
+      const safeSettingsData = Object.keys(settingsData)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = settingsData[key];
+          return obj;
+        }, {});
+
+      const response = await axiosInstance.patch(`/games/${gameUuid}`, safeSettingsData);
       return response.data;
     } catch (error) {
       console.error('Failed to update game settings:', error);

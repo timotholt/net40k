@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { PrimaryButton, SecondaryButton } from '../../Buttons';
 import { InputField, SharedPasswordField } from '../../FormFields';
 import { useModal } from '../../../context/ModalContext';
+import gameService from '../../../services/gameService';
 import styles from './GameSettingsForm.module.css';
 
 export default function GameSettingsForm({ 
@@ -22,12 +23,12 @@ export default function GameSettingsForm({
   }
 
   const [formData, setFormData] = useState({
-    name: initialGame.name,
-    description: initialGame.description || '',
-    maxPlayers: initialGame.maxPlayers,
-    turnLength: initialGame.turnLength,
-    hasPassword: initialGame.hasPassword,
-    password: '' // Only used when setting/changing password
+    name: initialGame?.name || '',
+    description: initialGame?.description || '',
+    maxPlayers: initialGame?.maxPlayers || 2,
+    turnLength: initialGame?.turnLength || 500,
+    hasPassword: initialGame?.hasPassword || false,
+    password: ''  // Only used when setting a new password
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -49,59 +50,61 @@ export default function GameSettingsForm({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Comprehensive validation
+
+    // Validate form data
     const errors = {};
+    if (!formData.name.trim()) errors.name = 'Game name is required';
+    if (formData.maxPlayers < 2 || formData.maxPlayers > 10) 
+      errors.maxPlayers = 'Players must be between 2 and 10';
+    if (formData.turnLength < 100 || formData.turnLength > 2000) 
+      errors.turnLength = 'Turn length must be between 100 and 2000';
 
-    // Name validation
-    if (!formData.name || formData.name.trim().length < 3) {
-      errors.name = 'Game name must be at least 3 characters long';
+    // If password is being changed, validate it
+    if (formData.hasPassword && !formData.password.trim()) {
+      errors.password = 'Password is required when hasPassword is true';
     }
 
-    // Max Players validation
-    const maxPlayersNum = parseInt(formData.maxPlayers, 10);
-    if (isNaN(maxPlayersNum) || maxPlayersNum < 2 || maxPlayersNum > 6) {
-      errors.maxPlayers = 'Max players must be between 2 and 6';
-    }
-
-    // Turn Length validation
-    const turnLengthNum = parseInt(formData.turnLength, 10);
-    const validTurnLengths = [500, 1000, 2000, 5000, 10000];
-    if (!validTurnLengths.includes(turnLengthNum)) {
-      errors.turnLength = 'Invalid turn length selected';
-    }
-
-    // Password validation (optional)
-    if (formData.hasPassword && (!formData.password || formData.password.length < 4)) {
-      errors.password = 'Password must be at least 4 characters long';
-    }
-
-    // If there are validation errors, log and stop submission
     if (Object.keys(errors).length > 0) {
-      console.error('GAMESETTINGSFORM: Validation Errors', { errors });
       setFormErrors(errors);
       return;
     }
 
-    // Validate form data
-    const updatedGame = {
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      maxPlayers: parseInt(formData.maxPlayers, 10),
-      turnLength: parseInt(formData.turnLength, 10),
-      hasPassword: !!formData.password,
-      ...(formData.password && { password: formData.password })
-    };
+    try {
+      // Prepare data for update
+      const updateData = {
+        name: formData.name,
+        description: formData.description,
+        maxPlayers: formData.maxPlayers,
+        turnLength: formData.turnLength,
+        hasPassword: formData.hasPassword
+      };
 
-    console.log('GAMESETTINGSFORM: handleSubmit', { 
-      updatedGame,
-      validationPassed: true 
-    });
+      // Only include password if it's being set
+      if (formData.hasPassword && formData.password.trim()) {
+        updateData.password = formData.password;
+      }
 
-    // Call onSubmit with validated data
-    onSubmit(updatedGame);
+      // Call update method
+      const result = await gameService.updateGameSettings(
+        initialGame.gameUuid, 
+        updateData
+      );
+
+      // Call the onSubmit prop if provided
+      if (onSubmit) {
+        onSubmit(result);
+      }
+
+      // Close the modal or perform any other necessary actions
+    } catch (error) {
+      console.error('Failed to update game settings:', error);
+      // Handle error (e.g., show error message to user)
+      setFormErrors({ 
+        submit: error.response?.data?.message || 'Failed to update game settings' 
+      });
+    }
   };
 
   const handleCancel = useCallback((e) => {
@@ -202,7 +205,7 @@ export default function GameSettingsForm({
             onChange={handleChange}
             className={`${styles.input} ${styles.select} ${formErrors.maxPlayers ? styles.inputError : ''}`}
           >
-            {[2, 3, 4, 5, 6].map(num => (
+            {[2, 3, 4].map(num => (
               <option key={num} value={num}>{num}</option>
             ))}
           </select>

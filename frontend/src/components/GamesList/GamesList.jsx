@@ -218,42 +218,36 @@ export default function GamesList({
     }
   }, [deleteModalGame]);
 
-  const handleGameSettings = useCallback((gameUuid) => {
-    console.log('GAMESLIST: handleGameSettings CALLED', { 
-      gameUuid, 
-      gameFound: !!gameUuid 
-    });
-    // Open settings modal for the specific game
-    const gameToEdit = games.find(g => g.gameUuid === gameUuid);
-    setSettingsModalGame(gameToEdit);
-  }, [games]);
+  const handleGameSettings = async (gameUuid) => {
+    try {
+      // Fetch only the game settings for the specific game
+      const gameSettings = await gameService.getGameSettings(gameUuid);
+      
+      // Set the game settings in the modal state
+      setSettingsModalGame({
+        gameUuid,  // Preserve the gameUuid
+        ...gameSettings  // Spread the fetched settings
+      });
+    } catch (error) {
+      console.error('Failed to fetch game settings:', error);
+      // Optionally show an error message to the user
+    }
+  };
 
   const handleUpdateGameSettings = useCallback(async (updatedGameData) => {
     if (!settingsModalGame) return;
 
     try {
-      // Call game service to update game settings
-      const response = await gameService.updateGameSettings(
-        settingsModalGame.gameUuid, 
-        updatedGameData
-      );
-
-      // Update local games state
-      setGames(prevGames => 
-        prevGames.map(game => 
-          game.gameUuid === settingsModalGame.gameUuid 
-            ? { ...game, ...updatedGameData } 
-            : game
-        )
-      );
-
       // Close the settings modal
       setSettingsModalGame(null);
+
+      // Refresh the games list to reflect the update
+      await fetchGames();
     } catch (error) {
-      console.error('Failed to update game settings', error);
-      // Optionally show an error modal or notification
+      console.error('Failed to update game settings:', error);
+      // Optionally show an error message to the user
     }
-  }, [settingsModalGame]);
+  }, [settingsModalGame, fetchGames]);
 
   const getEmptyStateMessage = () => {
     if (filter) {
