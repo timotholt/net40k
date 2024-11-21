@@ -3,6 +3,7 @@ import { InputField } from '../../FormFields';
 import SharedPasswordField from '../../FormFields/SharedPasswordField';
 import { GameIcon, PlayersIcon } from '../../Icons/MenuIcons';
 import styles from './CreateGameTab.module.css';
+import roomService from '../../../services/roomService';
 
 export default function CreateGameTab() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,8 @@ export default function CreateGameTab() {
     password: ''
   });
 
+  const [error, setError] = useState('');
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -21,9 +24,22 @@ export default function CreateGameTab() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Creating game:', formData);
+    setError('');
+    
+    try {
+      const room = await roomService.createRoom({
+        name: formData.name,
+        description: formData.description,
+        maxPlayers: parseInt(formData.maxPlayers),
+        password: formData.password
+      });
+      console.log('Room created successfully:', room);
+    } catch (err) {
+      console.error('Failed to create room:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to create room');
+    }
   };
 
   const handleKeyDown = useCallback((e) => {
@@ -63,6 +79,7 @@ export default function CreateGameTab() {
       onKeyDown={handleKeyDown}
     >
       <form onSubmit={handleSubmit} className={styles.form}>
+        {error && <div className={styles.error}>{error}</div>}
         <div className={styles.grid}>
           <div className={styles.nameField}>
             <InputField
