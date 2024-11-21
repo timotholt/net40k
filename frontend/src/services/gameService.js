@@ -96,9 +96,20 @@ const gameService = {
   getGameSettings: async (gameUuid) => {
     try {
       const response = await axiosInstance.get(`/games/${gameUuid}/settings`);
+      
+      console.log('GAME SERVICE: Get Game Settings Response', {
+        gameUuid,
+        responseData: response.data,
+        fullResponse: response
+      });
+
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch game settings:', error);
+      console.error('Failed to fetch game settings:', {
+        gameUuid,
+        error: error.response?.data || error.message,
+        fullError: error
+      });
       throw error;
     }
   },
