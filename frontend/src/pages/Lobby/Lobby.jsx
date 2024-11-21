@@ -5,16 +5,18 @@ import { selectUser } from '../../store/authSlice';
 import GamesList from '../../components/GamesList/GamesList';
 import PlayersList from '../../components/PlayersList/PlayersList';
 import TabbedChat from '../../components/TabbedChat/TabbedChat';
-import { mockGames } from '../../data/mockGameData';
+// import { mockGames } from '../../data/mockGameData';
 import styles from './Lobby.module.css';
 
 // Mock mode for development
-const MOCK_MODE = true;
+// const MOCK_MODE = true;
 
 export default function Lobby() {
   const user = useSelector(selectUser);
   const [activeGamesTab, setActiveGamesTab] = useState('all');
-  const [games] = useState(MOCK_MODE ? mockGames : []);
+
+  // const [games] = useState(MOCK_MODE ? mockGames : []);
+  const [games] = useState([]);
   const [gamesFilter, setGamesFilter] = useState('');
   const [hideFullGames, setHideFullGames] = useState(false);
   const [hidePasswordGames, setHidePasswordGames] = useState(false);

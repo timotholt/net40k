@@ -42,6 +42,18 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Commented out detailed error logging to reduce scary stack traces
+    // console.log('Axios Interceptor Raw Error:', {
+    //   type: typeof error,
+    //   keys: Object.keys(error),
+    //   response: error.response,
+    //   request: error.request,
+    //   message: error.message,
+    //   name: error.name,
+    //   stack: error.stack,
+    //   toString: error.toString()
+    // });
+
     console.log('API Error Response:', error.response?.data);
     
     // Check for invalid session conditions
