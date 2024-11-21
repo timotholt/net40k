@@ -16,22 +16,34 @@ const gameService = {
         }
       });
       
-      // Transform games to match existing GamesList expectations
-      const transformedGames = response.data.map(game => ({
-        id: game.gameUuid,
-        gameUuid: game.gameUuid,  // Explicitly add gameUuid
-        name: game.name,
-        description: game.description,
-        players: game.players || [],
-        maxPlayers: game.maxPlayers,
-        hasPassword: game.hasPassword,
-        creatorUuid: game.creatorUuid,
-        creatorNickname: game.creatorNickname || 'Unknown Creator',
-        turns: game.turns || 0, 
-        turnLength: game.turnLength || 500, 
-        isYours: game.isYours || false,
-        isFriendGame: false // Add logic for friend games if applicable
-      }));
+      console.log('Raw games from backend:', response.data);
+
+      const transformedGames = response.data.map(game => {
+        const transformed = {
+          id: game.gameUuid,
+          gameUuid: game.gameUuid,
+          name: game.name,
+          description: game.description,
+          players: game.players || [],
+          maxPlayers: game.maxPlayers,
+          hasPassword: game.hasPassword,
+          creatorUuid: game.creatorUuid,
+          creatorNickname: game.creatorNickname || 'Unknown Creator',
+          turns: game.turns || 0, 
+          turnLength: game.turnLength || 500, 
+          isYours: game.isYours || false,
+          isFriendGame: false
+        };
+
+        console.log(`Transformed game ${game.gameUuid}:`, {
+          hasPassword: transformed.hasPassword,
+          originalHasPassword: game.hasPassword
+        });
+
+        return transformed;
+      });
+
+      console.log('Transformed games:', transformedGames);
 
       return {
         games: transformedGames,
@@ -99,6 +111,11 @@ const gameService = {
    */
   updateGameSettings: async (gameUuid, settingsData) => {
     try {
+      console.log('Updating game settings:', { 
+        gameUuid, 
+        settingsData 
+      });
+
       // Ensure only specific fields are sent
       const allowedFields = ['name', 'description', 'maxPlayers', 'turnLength', 'hasPassword', 'password'];
       const safeSettingsData = Object.keys(settingsData)
@@ -108,10 +125,14 @@ const gameService = {
           return obj;
         }, {});
 
+      console.log('Safe settings data:', safeSettingsData);
+
       const response = await axiosInstance.patch(`/games/${gameUuid}`, safeSettingsData);
+      
+      console.log('Update game settings response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Failed to update game settings:', error);
+      console.error('Failed to update game settings:', error.response?.data || error.message);
       throw error;
     }
   }

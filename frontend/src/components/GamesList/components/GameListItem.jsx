@@ -65,7 +65,7 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
             {game.description && (
               <div className={styles.description}>{game.description}</div>
             )}
-            {game.isPasswordProtected && <LockIcon />}
+            {game.hasPassword && <LockIcon />}
           </div>
         </div>
         

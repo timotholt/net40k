@@ -97,6 +97,12 @@ class GameService {
   }
 
   async updateGame(gameUuid, userUuid, updates) {
+    console.log('Backend updateGame called with:', { 
+      gameUuid, 
+      userUuid, 
+      updates 
+    });
+
     try {
       // Check user privileges first
       const userPrivileges = await this.userService.hasSpecialPrivileges(userUuid);
@@ -119,20 +125,44 @@ class GameService {
         throw new AuthorizationError('You are not authorized to update this game\'s settings');
       }
 
+      // Validate update fields
+      const allowedFields = [
+        'name', 
+        'description', 
+        'maxPlayers', 
+        'turnLength', 
+        'hasPassword', 
+        'password'
+      ];
+      
+      // Filter out any unexpected fields
+      const safeUpdates = Object.keys(updates)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = updates[key];
+          return obj;
+        }, {});
+
+      console.log('Safe updates:', safeUpdates);
+      
+      // Specific password logic
+      if (safeUpdates.hasPassword !== undefined) {
+        if (safeUpdates.hasPassword && !safeUpdates.password) {
+          throw new ValidationError('Password is required when hasPassword is true');
+        }
+        if (!safeUpdates.hasPassword) {
+          // Clear password if hasPassword is false
+          safeUpdates.password = null;
+        }
+      }
+
+      console.log('Final safe updates:', safeUpdates);
+
       // Prevent modification of critical fields
-      const safeUpdates = { ...updates };
       delete safeUpdates.gameUuid;
       delete safeUpdates.creatorUuid;
       delete safeUpdates.createdAt;
     
-      // Validate updates
-      const allowedFields = ['name', 'description', 'maxPlayers', 'password', 'hasPassword'];
-      Object.keys(safeUpdates).forEach(key => {
-        if (!allowedFields.includes(key)) {
-          throw new ValidationError(`Cannot update field: ${key}`);
-        }
-      });
-
       // Add updatedAt timestamp
       safeUpdates.updatedAt = DateService.now().date;
 
