@@ -127,7 +127,7 @@ const gameService = {
 
       console.log('Safe settings data:', safeSettingsData);
 
-      const response = await axiosInstance.patch(`/games/${gameUuid}`, safeSettingsData);
+      const response = await axiosInstance.patch(`/games/${gameUuid}/settings`, safeSettingsData);
       
       console.log('Update game settings response:', response.data);
       return response.data;

@@ -63,6 +63,12 @@ router.get('/:gameUuid', asyncMiddleware(async (req, res) => {
 // Update game
 router.patch('/:gameUuid', asyncMiddleware(async (req, res) => {
   try {
+    console.log('GAME ROUTES: Patch Game Update', {
+      gameUuid: req.params.gameUuid,
+      userUuid: req.user.userUuid,
+      body: req.body
+    });
+
     const updatedGame = await GameService.updateGame(
       req.params.gameUuid, 
       req.user.userUuid,  // Pass the user UUID for authorization
@@ -70,6 +76,10 @@ router.patch('/:gameUuid', asyncMiddleware(async (req, res) => {
     );
     res.json(updatedGame);
   } catch (error) {
+    console.error('GAME ROUTES: Patch Game Update Error', {
+      gameUuid: req.params.gameUuid,
+      error: error.message
+    });
     res.status(400).json({ error: error.message });
   }
 }));
@@ -114,20 +124,29 @@ router.get('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
 }));
 
 // Update game settings
-router.put('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
+router.patch('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
   try {
-    const { gameUuid } = req.params;
-    const { name, description, maxPlayers, turnLength, password } = req.body;
+    console.log('GAME ROUTES: Patch Game Settings Update', {
+      gameUuid: req.params.gameUuid,
+      userUuid: req.user.userUuid,
+      body: req.body
+    });
+
+    const { name, description, maxPlayers, turnLength, password, hasPassword } = req.body;
     const userUuid = req.user.userUuid;
 
-    const updatedGame = await GameService.updateGameSettings(
-      gameUuid, 
+    const updatedGame = await GameService.updateGame(
+      req.params.gameUuid, 
       userUuid, 
-      { name, description, maxPlayers, turnLength, password }
+      { name, description, maxPlayers, turnLength, password, hasPassword }
     );
     
     res.json(updatedGame);
   } catch (error) {
+    console.error('GAME ROUTES: Patch Game Settings Update Error', {
+      gameUuid: req.params.gameUuid,
+      error: error.message
+    });
     res.status(400).json({ error: error.message });
   }
 }));
