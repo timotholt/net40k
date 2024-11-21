@@ -46,6 +46,13 @@ export const loginUser = createAsyncThunk(
   async ({ username, password }, { rejectWithValue }) => {
     try {
       console.log('Auth: Attempting login for user:', username);
+      
+      // Ensure we have a tab ID
+      if (!window.name) {
+        window.name = crypto.randomUUID();
+        console.log('Auth: Generated new tab ID:', window.name);
+      }
+
       const { data } = await axiosInstance.post(API_CONFIG.ENDPOINTS.LOGIN, {
         username,
         password
@@ -54,29 +61,16 @@ export const loginUser = createAsyncThunk(
       console.log('Auth: Login successful, received data:', data);
 
       // Store sessionToken with tab ID
-      if (data.sessionToken) {
-        const tabId = window.name || crypto.randomUUID();
-        if (!window.name) {
-          window.name = tabId;
-        }
-        localStorage.setItem(`sessionToken_${tabId}`, data.sessionToken);
-        localStorage.setItem(`user_${tabId}`, JSON.stringify(data.user));
-      }
-
+      localStorage.setItem(`sessionToken_${window.name}`, data.sessionToken);
+      localStorage.setItem(`user_${window.name}`, JSON.stringify(data.user));
+      
       return transformUserForRedux(data.user);
     } catch (error) {
       console.error('Auth: Login error:', error);
       
-      // Log full error details
-      console.log('Full Error Details:', {
-        error: error,
-        name: error.name,
-        message: error.message,
-        response: error.response
-      });
-
-      // Simplify error handling by directly returning error message
-      return rejectWithValue(error.message || 'Login failed');
+      // Handle errors
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      return rejectWithValue(errorMessage);
     }
   }
 );

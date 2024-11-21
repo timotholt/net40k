@@ -15,14 +15,9 @@ class SessionManager {
     }
 
     static createSession(userUuid) {
-        // Check if user already has an active session
+        // Remove any existing sessions for this user
         for (const [existingToken, session] of this.sessions.entries()) {
             if (session.userUuid === userUuid) {
-                // If the existing session is still active (within online threshold)
-                if (Date.now() - session.lastActive < this.ONLINE_THRESHOLD) {
-                    throw new Error('User already has an active session');
-                }
-                // If session exists but is inactive, remove it
                 this.sessions.delete(existingToken);
             }
         }
