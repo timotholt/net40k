@@ -326,12 +326,20 @@ class GameService {
         throw new AuthorizationError('You are not authorized to view this game\'s settings');
       }
 
+      console.log('GET GAME SETTINGS - Full Game Data', {
+        gameUuid,
+        userUuid,
+        hasPassword: game.hasPassword,
+        password: game.password ? '[REDACTED]' : null
+      });
+
       return {
         name: game.name,
         description: game.description || '',
         maxPlayers: game.maxPlayers,
         turnLength: game.turnLength || 500,
-        hasPassword: game.hasPassword
+        hasPassword: game.hasPassword,
+        password: game.hasPassword ? game.password : null
       };
     } catch (error) {
       logger.error(`Get game settings failed: ${error.message}`);
