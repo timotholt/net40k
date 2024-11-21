@@ -1,14 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import { MODAL_TYPES } from '../../context/ModalContext';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
 import EmptyState from './components/EmptyState';
+import roomService from '../../services/roomService';
 import styles from './GamesList.module.css';
 
 export default function GamesList({
-  games = [],
+  games: initialGames = [],
   activeTab,
   onTabChange,
   filter,
@@ -20,8 +21,43 @@ export default function GamesList({
 }) {
   const navigate = useNavigate();
   const { openModal } = useModal();
+  const [games, setGames] = useState(initialGames);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const pollingRef = useRef(null);
+
+  // Safely fetch games with minimal error handling
+  const fetchGames = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await roomService.getRooms();
+      setGames(result.rooms || []);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch games');
+      console.error('Games fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Polling effect
+  useEffect(() => {
+    // Initial fetch
+    fetchGames();
+
+    // Setup polling interval
+    pollingRef.current = setInterval(fetchGames, 5000);
+
+    // Cleanup function
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [fetchGames]);
 
   // Filter games based on criteria
   const filteredGames = games.filter(game => {
