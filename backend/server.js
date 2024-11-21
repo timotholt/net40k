@@ -18,6 +18,7 @@ async function main() {
         const { router: adminRoutes } = await import('./routes/admin.js');
         const { router: chatRoutes } = await import('./routes/chat.js');
         const { router: cacheRoutes } = await import('./routes/cache.js');
+        const { router: roomRoutes } = await import('./routes/roomRoutes.js');
         const { db } = await import('./database/database.js');
         const { requestLogger } = await import('./middleware/requestLogger.js');
         const { notFoundHandler, errorHandler } = await import('./middleware/errorHandling.js');
@@ -95,6 +96,7 @@ async function main() {
         //app.use('/admin', adminRoutes);
         //app.use('/chat', chatRoutes);
         //app.use('/cache', cacheRoutes);
+        app.use('/rooms', roomRoutes);
 
         // Root route
         app.get('/about', (req, res) => {
