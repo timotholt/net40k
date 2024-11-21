@@ -9,7 +9,7 @@ import GameBoard from '../../components/GameBoard/GameBoard';
 import styles from './Game.module.css';
 
 export default function Game() {
-  const { gameId } = useParams();
+  const { gameUuid } = useParams();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [game, setGame] = useState(null);
@@ -19,11 +19,11 @@ export default function Game() {
     fetchGame();
     const interval = setInterval(fetchGame, 3000);
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameUuid]);
 
   const fetchGame = async () => {
     try {
-      const response = await fetch(`/api/games/${gameId}`);
+      const response = await fetch(`/api/games/${gameUuid}`);
       if (!response.ok) throw new Error('Failed to fetch game');
       const data = await response.json();
       setGame(data);
@@ -34,10 +34,10 @@ export default function Game() {
 
   const handleLeaveGame = async () => {
     try {
-      await fetch(`/api/games/${gameId}/leave`, {
+      await fetch(`/api/games/${gameUuid}/leave`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id })
+        body: JSON.stringify({ userUuid: user.userUuid })
       });
       navigate('/lobby');
     } catch (err) {
@@ -47,10 +47,10 @@ export default function Game() {
 
   const handleStartGame = async () => {
     try {
-      await fetch(`/api/games/${gameId}/start`, {
+      await fetch(`/api/games/${gameUuid}/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id })
+        body: JSON.stringify({ userUuid: user.userUuid })
       });
       fetchGame();
     } catch (err) {
@@ -60,8 +60,8 @@ export default function Game() {
 
   if (!game) return null;
 
-  const isCreator = game.createdBy === user.id;
-  const canStartGame = isCreator && game.status === 'waiting' && game.players.length >= 2;
+  const isCreator = game.creatorUuid === user.userUuid;
+  const canStartGame = isCreator && game.status === 'WAITING' && game.players.length >= 2;
 
   return (
     <motion.div
@@ -72,9 +72,9 @@ export default function Game() {
       transition={{ duration: 0.5 }}
     >
       <div className={styles.header}>
-        <h2>Game #{gameId}</h2>
+        <h2>Game #{gameUuid}</h2>
         <div className={styles.headerButtons}>
-          {game.status === 'waiting' && (
+          {game.status === 'WAITING' && (
             isCreator ? (
               <button
                 onClick={handleStartGame}
@@ -101,20 +101,20 @@ export default function Game() {
         <div className={styles.gameArea}>
           <PlayerList
             players={game.players}
-            currentUserId={user.id}
-            creatorId={game.createdBy}
+            currentUserId={user.userUuid}
+            creatorId={game.creatorUuid}
           />
-          {game.status === 'playing' && (
+          {game.status === 'IN_PROGRESS' && (
             <GameBoard
               gameState={game.state}
-              playerId={user.id}
+              playerId={user.userUuid}
               onMove={fetchGame}
             />
           )}
         </div>
 
         <Chat
-          endpoint={`/api/chat/game/${gameId}`}
+          endpoint={`/api/chat/game/${gameUuid}`}
           placeholder="Game chat..."
           className={styles.chat}
         />

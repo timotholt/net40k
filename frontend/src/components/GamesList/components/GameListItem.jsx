@@ -82,7 +82,7 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
         
         <div className={styles.gameInfo}>
           <span className={styles.creator}>
-            By: {game.createdBy.nickname}
+            By: {game.creatorNickname}
           </span>
           <span className={styles.players}>
             Players: {game.players.length}/{game.maxPlayers}
@@ -100,7 +100,7 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
         <div className={styles.buttonWrapper}>
           <button 
             className={styles.actionButton}
-            onClick={() => onJoin(game.id)}
+            onClick={() => onJoin(game.gameUuid)}
             disabled={game.players.length >= game.maxPlayers}
           >
             Join
@@ -109,14 +109,14 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
         </div>
         <button 
           className={styles.actionButton}
-          onClick={() => onView(game.id)}
+          onClick={() => onView(game.gameUuid)}
         >
           View
         </button>
         {game.isYours && (
           <button 
             className={`${styles.actionButton} ${styles.deleteButton}`}
-            onClick={() => onDelete(game.id)}
+            onClick={() => onDelete(game.gameUuid)}
           >
             Delete
           </button>
@@ -131,16 +131,15 @@ GameListItem.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     name: PropTypes.string.isRequired,
     description: PropTypes.string,
-    createdBy: PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      nickname: PropTypes.string.isRequired
-    }).isRequired,
+    creatorUuid: PropTypes.string.isRequired,
+    creatorNickname: PropTypes.string.isRequired,
     players: PropTypes.array.isRequired,
     maxPlayers: PropTypes.number.isRequired,
     turns: PropTypes.number.isRequired,
     turnLength: PropTypes.number.isRequired,
     hasPassword: PropTypes.bool.isRequired,
-    isYours: PropTypes.bool.isRequired
+    isYours: PropTypes.bool.isRequired,
+    gameUuid: PropTypes.string.isRequired
   }).isRequired,
   isSelected: PropTypes.bool,
   onSelect: PropTypes.func.isRequired,

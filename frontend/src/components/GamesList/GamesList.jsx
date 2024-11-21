@@ -81,7 +81,7 @@ export default function GamesList({
     return (
       game.name.toLowerCase().includes(searchTerm) ||
       game.description.toLowerCase().includes(searchTerm) ||
-      game.createdBy.nickname.toLowerCase().includes(searchTerm) ||
+      game.creatorNickname.toLowerCase().includes(searchTerm) ||
       playersString.includes(searchTerm) ||
       turnString.includes(searchTerm) ||
       timeString.includes(searchTerm)
@@ -137,26 +137,29 @@ export default function GamesList({
     }
   }, [currentTabIndex, tabs, onTabChange, filter, onFilterChange, searchFocused]);
 
-  const handleJoinGame = (gameId) => {
-    const game = games.find(g => g.id === gameId);
-    if (game.isPasswordProtected) {
+  const handleJoinGame = (gameUuid) => {
+    const game = games.find(g => g.gameUuid === gameUuid);
+    if (game.hasPassword) {
       openModal(MODAL_TYPES.PASSWORD_PROMPT, {
         onSubmit: (password) => {
-          navigate(`/game/${gameId}`);
+          navigate(`/game/${gameUuid}`);
         }
       });
     } else {
-      navigate(`/game/${gameId}`);
+      navigate(`/game/${gameUuid}`);
     }
   };
 
-  const handleViewGame = (gameId) => {
-    navigate(`/game/${gameId}`);
+  const handleViewGame = (gameUuid) => {
+    navigate(`/game/${gameUuid}`);
   };
 
-  const handleDeleteGame = useCallback(async (game) => {
+  const handleDeleteGame = useCallback(async (gameUuid) => {
+    // Find the game to get its details
+    const game = games.find(g => g.gameUuid === gameUuid);
+    
     // Only allow deletion of own games
-    if (!game.isYours) {
+    if (!game || !game.isYours) {
       openModal(MODAL_TYPES.ALERT, {
         title: 'Cannot Delete Game',
         message: 'You can only delete your own games.'
@@ -164,34 +167,34 @@ export default function GamesList({
       return;
     }
 
-    // Confirm deletion
-    const confirmed = await openModal(MODAL_TYPES.CONFIRM, {
-      title: 'Delete Game',
-      message: `Are you sure you want to delete the game "${game.name}"?`
+    // Use the new confirmation modal
+    openModal(MODAL_TYPES.CONFIRM, {
+      message: `Do you wish to delete this game?`,
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          await GameService.deleteGame(gameUuid);
+          
+          // Remove the game from the list
+          setGames(prevGames => prevGames.filter(g => g.gameUuid !== gameUuid));
+          
+          openModal(MODAL_TYPES.ALERT, {
+            title: 'Game Deleted',
+            message: `The game "${game.name}" has been successfully deleted.`
+          });
+        } catch (error) {
+          openModal(MODAL_TYPES.ALERT, {
+            title: 'Delete Failed',
+            message: error.response?.data?.error || 'Failed to delete game. Please try again.'
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+      confirmText: 'Delete',
+      variant: 'destructive'
     });
-
-    if (!confirmed) return;
-
-    try {
-      setLoading(true);
-      await GameService.deleteGame(game.id);
-      
-      // Remove the game from the list
-      setGames(prevGames => prevGames.filter(g => g.id !== game.id));
-      
-      openModal(MODAL_TYPES.ALERT, {
-        title: 'Game Deleted',
-        message: `The game "${game.name}" has been successfully deleted.`
-      });
-    } catch (error) {
-      openModal(MODAL_TYPES.ALERT, {
-        title: 'Delete Failed',
-        message: error.response?.data?.error || 'Failed to delete game. Please try again.'
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [openModal, setGames]);
+  }, [openModal, setGames, games]);
 
   const getEmptyStateMessage = () => {
     if (filter) {
@@ -238,13 +241,13 @@ export default function GamesList({
         ) : tabFilteredGames.length > 0 ? (
           tabFilteredGames.map(game => (
             <GameListItem 
-              key={game.id} 
+              key={game.gameUuid} 
               game={game}
-              isSelected={selectedGameId === game.id}
-              onSelect={() => setSelectedGameId(game.id)}
+              isSelected={selectedGameId === game.gameUuid}
+              onSelect={() => setSelectedGameId(game.gameUuid)}
               onJoin={handleJoinGame}
               onView={handleViewGame}
-              onDelete={() => handleDeleteGame(game)}
+              onDelete={() => handleDeleteGame(game.gameUuid)}
             />
           ))
         ) : (

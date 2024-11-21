@@ -62,3 +62,52 @@
   padding: 1.5rem;
   color: var(--color-soft-white);
 }
+
+.modalActionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modalButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.modalButtonCancel {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.modalButtonCancel:hover {
+  background-color: #e0e0e0;
+}
+
+.modalButtonConfirm {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.modalButtonConfirm:hover {
+  background-color: #45a049;
+}
+
+.modalButtonDestructive {
+  background-color: #f44336;
+  color: white;
+}
+
+.modalButtonDestructive:hover {
+  background-color: #d32f2f;
+}
+
+.modalConfirmMessage {
+  margin: 0;
+  line-height: 1.5;
+  color: #333;
+}

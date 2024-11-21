@@ -24,10 +24,11 @@ const gameService = {
         players: game.players || [],
         maxPlayers: game.maxPlayers,
         hasPassword: game.hasPassword,
-        createdBy: game.createdBy,
+        creatorUuid: game.creatorUuid,
+        creatorNickname: game.creatorNickname || 'Unknown Creator',
         turns: 0, // Add appropriate mapping if available
         turnLength: 500, // Default value, map appropriately
-        isYours: game.isYours, // Use backend's isYours flag
+        isYours: game.creatorUuid === filters.creatorUuid,
         isFriendGame: false // Add logic for friend games if applicable
       }));
 

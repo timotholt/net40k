@@ -83,10 +83,7 @@ class GameService {
       // Map games and populate creator info
       return combinedGames.map(game => {
         const publicGame = game.toPublicGame();
-        publicGame.createdBy = {
-          uuid: game.creatorUuid,
-          nickname: creatorMap.get(game.creatorUuid) || 'Unknown'
-        };
+        publicGame.creatorNickname = creatorMap.get(game.creatorUuid) || 'Unknown';
         
         // Mark games created by the user
         publicGame.isYours = userUuid ? game.creatorUuid === userUuid : false;

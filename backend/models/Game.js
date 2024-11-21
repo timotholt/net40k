@@ -110,10 +110,8 @@ class Game {
       status: this.status,
       hasPassword: this.hasPassword,
       isPrivate: this.isPrivate,
-      createdBy: {
-        uuid: this.creatorUuid,
-        nickname: this.creatorUuid // This will be replaced by actual nickname in GameService
-      }
+      creatorUuid: this.creatorUuid,
+      creatorNickname: this.creatorNickname // This will be replaced by actual nickname in GameService
     };
   }
 }
