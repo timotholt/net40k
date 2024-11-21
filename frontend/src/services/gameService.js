@@ -19,6 +19,7 @@ const gameService = {
       // Transform games to match existing GamesList expectations
       const transformedGames = response.data.map(game => ({
         id: game.gameUuid,
+        gameUuid: game.gameUuid,  // Explicitly add gameUuid
         name: game.name,
         description: game.description,
         players: game.players || [],
@@ -26,9 +27,9 @@ const gameService = {
         hasPassword: game.hasPassword,
         creatorUuid: game.creatorUuid,
         creatorNickname: game.creatorNickname || 'Unknown Creator',
-        turns: 0, // Add appropriate mapping if available
-        turnLength: 500, // Default value, map appropriately
-        isYours: game.creatorUuid === filters.creatorUuid,
+        turns: game.turns || 0, 
+        turnLength: game.turnLength || 500, 
+        isYours: game.isYours || false,
         isFriendGame: false // Add logic for friend games if applicable
       }));
 

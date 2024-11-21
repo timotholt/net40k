@@ -44,7 +44,6 @@ class Game {
     
     // Additional metadata
     this.metadata = data.metadata || {};
-    this.isPrivate = data.isPrivate || false;
   }
 
   // Password verification method
@@ -96,7 +95,6 @@ class Game {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       metadata: this.metadata,
-      isPrivate: this.isPrivate
     };
   }
 
@@ -109,7 +107,6 @@ class Game {
       maxPlayers: this.maxPlayers,
       status: this.status,
       hasPassword: this.hasPassword,
-      isPrivate: this.isPrivate,
       creatorUuid: this.creatorUuid,
       creatorNickname: this.creatorNickname // This will be replaced by actual nickname in GameService
     };

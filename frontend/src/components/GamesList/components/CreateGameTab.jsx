@@ -53,12 +53,15 @@ export default function CreateGameTab() {
       e.stopPropagation();
       
       // Let the parent GamesList handle the tab navigation
-      const tabEvent = new KeyboardEvent('keydown', {
-        key: 'Tab',
-        shiftKey: e.shiftKey,
-        bubbles: true
-      });
-      document.querySelector('.gamesContainer').dispatchEvent(tabEvent);
+      const gamesContainer = document.querySelector('.gamesContainer');
+      if (gamesContainer) {
+        const tabEvent = new KeyboardEvent('keydown', {
+          key: 'Tab',
+          shiftKey: e.shiftKey,
+          bubbles: true
+        });
+        gamesContainer.dispatchEvent(tabEvent);
+      }
     }
   }, []);
 

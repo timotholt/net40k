@@ -39,7 +39,11 @@ export default function GamesList({
       if (activeTab === 'yours') filters.creatorUuid = user?.userUuid;
       if (hideFullGames) filters.status = 'WAITING';
 
-      const result = await GameService.getGames(filters);
+      const result = await GameService.getGames(filters, { 
+        page: 1, 
+        limit: 50,
+        currentUserUuid: user?.userUuid  // Pass current user UUID for ownership check
+      });
       setGames(result.games || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch games');
