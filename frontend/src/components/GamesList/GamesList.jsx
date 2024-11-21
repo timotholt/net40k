@@ -218,21 +218,31 @@ export default function GamesList({
     }
   }, [deleteModalGame]);
 
-  const handleGameSettings = async (gameUuid) => {
+  const handleGameSettings = useCallback(async (gameUuid) => {
     try {
-      // Fetch only the game settings for the specific game
+      console.log('GAMES LIST: Fetching Game Settings', { gameUuid });
+      
+      // Fetch game settings
       const gameSettings = await gameService.getGameSettings(gameUuid);
       
-      // Set the game settings in the modal state
-      setSettingsModalGame({
-        gameUuid,  // Preserve the gameUuid
-        ...gameSettings  // Spread the fetched settings
+      console.log('GAMES LIST: Fetched Game Settings', { 
+        gameUuid, 
+        gameSettings,
+        hasPassword: gameSettings.hasPassword,
+        password: gameSettings.password ? '[REDACTED]' : null
       });
+
+      // Open settings modal with fetched settings
+      setSettingsModalGame(gameSettings);
     } catch (error) {
-      console.error('Failed to fetch game settings:', error);
+      console.error('Failed to fetch game settings:', {
+        gameUuid,
+        error: error.response?.data || error.message,
+        fullError: error
+      });
       // Optionally show an error message to the user
     }
-  };
+  }, []);
 
   const handleUpdateGameSettings = useCallback(async (updatedGameData) => {
     if (!settingsModalGame) return;
@@ -296,15 +306,15 @@ export default function GamesList({
             <CreateGameTab />
           ) : tabFilteredGames.length > 0 ? (
             tabFilteredGames.map(game => (
-              <GameListItem 
-                key={game.gameUuid} 
+              <GameListItem
+                key={game.gameUuid}
                 game={game}
                 isSelected={selectedGameId === game.gameUuid}
                 onSelect={() => setSelectedGameId(game.gameUuid)}
                 onJoin={handleJoinGame}
                 onView={handleViewGame}
-                onDelete={() => handleDeleteGame(game.gameUuid)}
-                onGameSettings={() => handleGameSettings(game.gameUuid)}
+                onDelete={handleDeleteGame}
+                onGameSettings={handleGameSettings}
               />
             ))
           ) : (

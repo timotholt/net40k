@@ -330,16 +330,19 @@ class GameService {
         gameUuid,
         userUuid,
         hasPassword: game.hasPassword,
-        password: game.password ? '[REDACTED]' : null
+        password: game.password ? '[REDACTED]' : null,
+        fullGameData: game
       });
 
       return {
+        gameUuid: game.gameUuid,
         name: game.name,
         description: game.description || '',
         maxPlayers: game.maxPlayers,
         turnLength: game.turnLength || 500,
         hasPassword: game.hasPassword,
-        password: game.hasPassword ? game.password : null
+        password: game.hasPassword ? game.password : null,
+        creatorUuid: game.creatorUuid
       };
     } catch (error) {
       logger.error(`Get game settings failed: ${error.message}`);
