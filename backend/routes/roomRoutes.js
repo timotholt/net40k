@@ -1,16 +1,24 @@
 import express from 'express';
 import RoomService from '../services/RoomService.js';
-import authMiddleware from '../middleware/auth.js';
+import { authenticateUser } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Wrap async middleware to handle errors
+const asyncMiddleware = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// Middleware to apply authentication to all routes
+router.use(asyncMiddleware(authenticateUser));
+
 // Create a new room
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', asyncMiddleware(async (req, res) => {
   try {
     const { name, description, maxPlayers, password } = req.body;
-    const creatorUuid = req.user.uuid;
+    const creatorUuid = req.user.userUuid;
     
-    const newRoom = RoomService.createRoom(
+    const newRoom = await RoomService.createRoom(
       name, 
       description, 
       creatorUuid, 
@@ -22,33 +30,33 @@ router.post('/', authMiddleware, (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+}));
 
 // List rooms
-router.get('/', (req, res) => {
+router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const { status, maxPlayers } = req.query;
-    const rooms = RoomService.listRooms({ status, maxPlayers });
+    const rooms = await RoomService.listRooms({ status, maxPlayers });
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+}));
 
 // Get specific room
-router.get('/:roomUuid', (req, res) => {
+router.get('/:roomUuid', asyncMiddleware(async (req, res) => {
   try {
-    const room = RoomService.getRoom(req.params.roomUuid);
+    const room = await RoomService.getRoom(req.params.roomUuid);
     res.json(room);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
-});
+}));
 
 // Update room
-router.patch('/:roomUuid', authMiddleware, (req, res) => {
+router.patch('/:roomUuid', asyncMiddleware(async (req, res) => {
   try {
-    const updatedRoom = RoomService.updateRoom(
+    const updatedRoom = await RoomService.updateRoom(
       req.params.roomUuid, 
       req.body
     );
@@ -56,42 +64,42 @@ router.patch('/:roomUuid', authMiddleware, (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+}));
 
 // Join room
-router.post('/:roomUuid/join', authMiddleware, (req, res) => {
+router.post('/:roomUuid/join', asyncMiddleware(async (req, res) => {
   try {
-    const room = RoomService.joinRoom(
+    const room = await RoomService.joinRoom(
       req.params.roomUuid, 
-      req.user.uuid
+      req.user.userUuid
     );
     res.json(room);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+}));
 
 // Leave room
-router.post('/:roomUuid/leave', authMiddleware, (req, res) => {
+router.post('/:roomUuid/leave', asyncMiddleware(async (req, res) => {
   try {
-    const room = RoomService.leaveRoom(
+    const room = await RoomService.leaveRoom(
       req.params.roomUuid, 
-      req.user.uuid
+      req.user.userUuid
     );
     res.json(room);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+}));
 
 // Delete room
-router.delete('/:roomUuid', authMiddleware, (req, res) => {
+router.delete('/:roomUuid', asyncMiddleware(async (req, res) => {
   try {
-    RoomService.deleteRoom(req.params.roomUuid);
+    await RoomService.deleteRoom(req.params.roomUuid);
     res.status(204).send();
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
-});
+}));
 
-export default router;
+export { router };

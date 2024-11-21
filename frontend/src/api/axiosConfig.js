@@ -12,9 +12,17 @@ const axiosInstance = axios.create({
   }
 });
 
+// Global flag to track token validity
+let isTokenValid = true;
+
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Immediately reject requests if token is invalid
+    if (!isTokenValid) {
+      return Promise.reject(new Error('Session expired. Please log in again.'));
+    }
+    
     // Log the full request URL
     console.log('Making request to:', config.baseURL + config.url);
     
@@ -34,27 +42,16 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log('Axios Interceptor Raw Error:', {
-      type: typeof error,
-      keys: Object.keys(error),
-      response: error.response,
-      request: error.request,
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      toString: error.toString()
-    });
-
-    if (error.response) {
-      console.log('Server Response Error Details:', {
-        data: error.response.data,
-        status: error.response.status,
-        headers: error.response.headers
-      });
+    console.log('API Error Response:', error.response?.data);
+    
+    // Check for invalid session conditions
+    if (error.response?.status === 401 || 
+        error.response?.data?.message?.toLowerCase().includes('invalid session')) {
+      // Set global flag to invalid
+      isTokenValid = false;
       
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('API Error Response:', error.response.data);
+      // Optional: Remove invalid session token
+      localStorage.removeItem(`sessionToken_${window.name}`);
       
       // Check for specific error types from backend
       const errorMessage = 
@@ -92,3 +89,4 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
+export { isTokenValid }; // Export for potential use in other components
