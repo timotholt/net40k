@@ -209,6 +209,8 @@ export default function GamesList({
       return;
     }
 
+    console.log('Opening Game Settings Modal', { game, gameUuid });
+
     // Open game settings modal
     openModal(MODAL_TYPES.CUSTOM, {
       title: 'Game Settings',
@@ -217,6 +219,7 @@ export default function GamesList({
           initialGame={game}
           onSubmit={async (updatedGame) => {
             try {
+              console.log('Game Settings Submit', { updatedGame, gameUuid });
               // Call game update service
               await GameService.updateGame(gameUuid, updatedGame);
               
@@ -232,6 +235,7 @@ export default function GamesList({
               // Close modal
               closeModal();
             } catch (error) {
+              console.error('Game Settings Update Error', error);
               openModal(MODAL_TYPES.ALERT, {
                 title: 'Update Failed',
                 message: error.response?.data?.error || 'Failed to update game settings.'
@@ -298,7 +302,7 @@ export default function GamesList({
                 onJoin={handleJoinGame}
                 onView={handleViewGame}
                 onDelete={() => handleDeleteGame(game.gameUuid)}
-                onSettings={() => handleGameSettings(game.gameUuid)}
+                onGameSettings={() => handleGameSettings(game.gameUuid)}
               />
             ))
           ) : (

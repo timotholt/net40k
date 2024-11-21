@@ -21,7 +21,11 @@ import styles from './styles/App.module.css';
 function ModalRenderer() {
   const { modals, closeModal } = useModal();
 
+  console.log('Current Modals:', modals);
+
   return modals.map(modal => {
+    console.log('Rendering Modal:', modal);
+
     switch (modal.type) {
       case MODAL_TYPES.ALERT:
         return (
@@ -66,7 +70,20 @@ function ModalRenderer() {
             <p>{modal.props.message}</p>
           </Modal>
         );
+      case MODAL_TYPES.CUSTOM:
+        console.log('CUSTOM Modal Props:', modal.props);
+        return (
+          <Modal 
+            key={modal.id}
+            isOpen={true}
+            onClose={() => closeModal(modal.id)}
+            title={modal.props.title || 'Custom Modal'}
+          >
+            {modal.props.children}
+          </Modal>
+        );
       default:
+        console.log('Unhandled Modal Type:', modal.type);
         return null;
     }
   });
