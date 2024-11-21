@@ -5,6 +5,7 @@ import {
   ROOM_TYPE 
 } from '../../shared/constants/GameUuids.js';
 import { RoomDB } from '../models/Room.js';
+import { UserDB } from '../models/User.js';
 import logger from '../utils/logger.js';
 import { ValidationError } from '../utils/errors.js';
 
@@ -20,7 +21,8 @@ class RoomService {
         description,
         creatorUuid,
         maxPlayers,
-        password,
+        password: password.trim(),  // Trim password to handle empty strings
+        hasPassword: !!password.trim(),  // Set hasPassword based on password existence
         country: COUNTRY.US,
         roomType: ROOM_TYPE.LOBBY,
         datacenter: DATACENTER.US_WEST
@@ -51,7 +53,29 @@ class RoomService {
   async listRooms(filters = {}) {
     try {
       const rooms = await RoomDB.find(filters);
-      return rooms.map(room => room.toPublicRoom());
+      
+      // Get all unique creator UUIDs
+      const creatorUuids = [...new Set(rooms.map(room => room.creatorUuid))];
+      
+      // Fetch all creators in one query
+      const creators = await Promise.all(
+        creatorUuids.map(uuid => UserDB.findOne({ userUuid: uuid }))
+      );
+      
+      // Create a map of UUID to nickname
+      const creatorMap = new Map(
+        creators.filter(Boolean).map(user => [user.userUuid, user.nickname])
+      );
+
+      // Map rooms and populate creator info
+      return rooms.map(room => {
+        const publicRoom = room.toPublicRoom();
+        publicRoom.createdBy = {
+          uuid: room.creatorUuid,
+          nickname: creatorMap.get(room.creatorUuid) || 'Unknown'
+        };
+        return publicRoom;
+      });
     } catch (error) {
       logger.error(`List rooms failed: ${error.message}`);
       throw error;

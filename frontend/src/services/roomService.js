@@ -18,15 +18,13 @@ const roomService = {
       
       // Transform rooms to match existing GamesList expectations
       const transformedRooms = response.data.map(room => ({
-        id: room.uuid,
+        id: room.roomUuid,
         name: room.name,
         description: room.description,
         players: room.players || [],
         maxPlayers: room.maxPlayers,
-        isPasswordProtected: !!room.password,
-        createdBy: {
-          nickname: room.creatorUsername || 'Unknown'
-        },
+        hasPassword: room.hasPassword,
+        createdBy: room.createdBy,
         turns: 0, // Add appropriate mapping if available
         turnLength: 500, // Default value, map appropriately
         isYours: false, // Add logic to determine if current user created the room

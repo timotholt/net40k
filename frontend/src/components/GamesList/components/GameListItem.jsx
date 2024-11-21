@@ -33,7 +33,7 @@ const JoinButtonTooltip = ({ game }) => {
     );
   }
   
-  if (game.isPasswordProtected) {
+  if (game.hasPassword) {
     return (
       <div className={styles.tooltip}>
         <svg viewBox="0 0 24 24" width="14" height="14">
@@ -72,7 +72,7 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
           <div className={styles.titleRow}>
             <span className={styles.gameName}>
               {game.name}
-              {game.isPasswordProtected && <LockIcon />}
+              {game.hasPassword && <LockIcon />}
             </span>
             {game.description && (
               <span className={styles.description}>{game.description}</span>
@@ -139,7 +139,7 @@ GameListItem.propTypes = {
     maxPlayers: PropTypes.number.isRequired,
     turns: PropTypes.number.isRequired,
     turnLength: PropTypes.number.isRequired,
-    isPasswordProtected: PropTypes.bool.isRequired,
+    hasPassword: PropTypes.bool.isRequired,
     isYours: PropTypes.bool.isRequired
   }).isRequired,
   isSelected: PropTypes.bool,

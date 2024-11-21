@@ -26,7 +26,7 @@ class Room {
     
     // Secure password handling
     this.hasPassword = !!data.password;
-    this.password = data.password ? this.hashPassword(data.password) : null;
+    this.password = data.password || null;
     
     this.playerUuids = data.playerUuids || [data.creatorUuid].filter(Boolean);
     this.viewerUuids = data.viewerUuids || [];
@@ -49,11 +49,9 @@ class Room {
     this.isPrivate = data.isPrivate || false;
   }
 
-  // Password hashing method (similar to user password handling)
-  hashPassword(password) {
-    // Implement a secure password hashing mechanism
-    // This is a placeholder - replace with actual hashing
-    return password ? Buffer.from(password).toString('base64') : null;
+  // Password verification method
+  verifyPassword(inputPassword) {
+    return this.password === inputPassword;
   }
 
   validate() {
@@ -75,7 +73,9 @@ class Room {
     name: { type: 'string', required: true, minLength: 3 },
     creatorUuid: { type: 'string', required: true },
     status: { type: 'string', enum: ['WAITING', 'IN_PROGRESS', 'CLOSED'] },
-    maxPlayers: { type: 'number', min: 2, max: 10 }
+    maxPlayers: { type: 'number', min: 2, max: 10 },
+    hasPassword: { type: 'boolean', default: false },
+    password: { type: 'string', required: false }
   });
 
   // Serialization methods
@@ -94,6 +94,7 @@ class Room {
       maxPlayers: this.maxPlayers,
       status: this.status,
       hasPassword: this.hasPassword,
+      password: this.password,
       turn: this.turn,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -111,7 +112,11 @@ class Room {
       maxPlayers: this.maxPlayers,
       status: this.status,
       hasPassword: this.hasPassword,
-      isPrivate: this.isPrivate
+      isPrivate: this.isPrivate,
+      createdBy: {
+        uuid: this.creatorUuid,
+        nickname: this.creatorUuid // This will be replaced by actual nickname in RoomService
+      }
     };
   }
 }
