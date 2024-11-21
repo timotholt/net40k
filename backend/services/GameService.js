@@ -7,7 +7,7 @@ import {
 import { GameDB } from '../models/Game.js';
 import { UserDB } from '../models/User.js';
 import logger from '../utils/logger.js';
-import { ValidationError } from '../utils/errors.js';
+import { ValidationError, AuthorizationError } from '../utils/errors.js';
 
 class GameService {
   constructor() {
@@ -179,9 +179,32 @@ class GameService {
     }
   }
 
-  async deleteGame(gameUuid) {
+  async deleteGame(gameUuid, requestingUserUuid, isAdmin = false) {
     try {
+      // Find the game first
+      const game = await GameDB.findOne({ gameUuid });
+      
+      if (!game) {
+        throw new ValidationError(`Game with UUID ${gameUuid} not found`);
+      }
+
+      // Check if the requesting user is the game creator or an admin
+      const isCreator = game.creatorUuid === requestingUserUuid;
+      if (!isCreator && !isAdmin) {
+        throw new AuthorizationError('Not authorized to delete this game');
+      }
+
+      // If not an admin, additional checks on game status
+      if (!isAdmin && game.status !== 'WAITING') {
+        throw new ValidationError('Cannot delete a game that is not in waiting status');
+      }
+
+      // Perform deletion
       await GameDB.delete({ gameUuid });
+
+      // Optional: Log deletion event
+      logger.info(`Game deleted: ${gameUuid} by user ${requestingUserUuid} ${isAdmin ? '(ADMIN)' : ''}`);
+
       return true;
     } catch (error) {
       logger.error(`Delete game failed: ${error.message}`);
