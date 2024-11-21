@@ -1,27 +1,23 @@
 import { createContext, useContext, useReducer, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 
-const ModalContext = createContext(null);
-
-// Modal types
+// Define modal types
 export const MODAL_TYPES = {
-  GAME_CREATE: 'GAME_CREATE',
-  PASSWORD_PROMPT: 'PASSWORD_PROMPT',
-  SETTINGS: 'SETTINGS',
   ALERT: 'ALERT',
-  CONFIRM: 'CONFIRM'
+  CONFIRM: 'CONFIRM',
+  INPUT: 'INPUT',
+  CUSTOM: 'CUSTOM'
 };
 
-// Action types
+// Define action types
 const ACTIONS = {
-  OPEN: 'OPEN_MODAL',
-  CLOSE: 'CLOSE_MODAL',
-  CLOSE_ALL: 'CLOSE_ALL_MODALS'
+  OPEN: 'OPEN',
+  CLOSE: 'CLOSE',
+  CLOSE_ALL: 'CLOSE_ALL'
 };
 
 // Initial state
 const initialState = {
-  modals: [] // Stack of active modals
+  modals: []
 };
 
 // Reducer
@@ -30,7 +26,11 @@ function modalReducer(state, action) {
     case ACTIONS.OPEN:
       return {
         ...state,
-        modals: [...state.modals, action.payload]
+        modals: [...state.modals, { 
+          id: action.payload.id, 
+          type: action.payload.type, 
+          props: action.payload.props 
+        }]
       };
     case ACTIONS.CLOSE:
       return {
@@ -47,7 +47,9 @@ function modalReducer(state, action) {
   }
 }
 
-export function ModalProvider({ children }) {
+const ModalContext = createContext(null);
+
+function ModalProvider({ children }) {
   const [state, dispatch] = useReducer(modalReducer, initialState);
 
   const openModal = useCallback((modalType, props = {}) => {
@@ -79,10 +81,12 @@ export function ModalProvider({ children }) {
   );
 }
 
-export function useModal() {
+function useModal() {
   const context = useContext(ModalContext);
   if (!context) {
     throw new Error('useModal must be used within ModalProvider');
   }
   return context;
 }
+
+export { ModalProvider, useModal };
