@@ -150,39 +150,22 @@ router.get('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
 // Update game settings
 router.patch('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
   try {
-    console.log('GAME ROUTES: Patch Game Settings Request', {
+    console.log('GAME ROUTES: Patch Game Settings', {
       gameUuid: req.params.gameUuid,
       userUuid: req.user.userUuid,
-      fullRequest: {
-        method: req.method,
-        path: req.path,
-        params: req.params,
-        query: req.query,
-        body: req.body
-      }
+      body: req.body
     });
 
-    const { name, description, maxPlayers, turnLength, password, hasPassword } = req.body;
-    const userUuid = req.user.userUuid;
-
-    const updatedGame = await GameService.updateGame(
+    const updatedGameSettings = await GameService.updateGameSettings(
       req.params.gameUuid, 
-      userUuid, 
-      { name, description, maxPlayers, turnLength, password, hasPassword }
+      req.user.userUuid,  // Pass the user UUID for authorization
+      req.body           // Pass the settings updates
     );
-    
-    console.log('GAME ROUTES: Patch Game Settings Response', {
-      updatedGame,
-      userUuid
-    });
-
-    res.json(updatedGame);
+    res.json(updatedGameSettings);
   } catch (error) {
     console.error('GAME ROUTES: Patch Game Settings Error', {
       gameUuid: req.params.gameUuid,
-      userUuid: req.user.userUuid,
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
     res.status(400).json({ error: error.message });
   }
