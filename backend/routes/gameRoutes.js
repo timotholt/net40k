@@ -99,6 +99,38 @@ router.post('/:gameUuid/leave', asyncMiddleware(async (req, res) => {
   }
 }));
 
+// Get game settings
+router.get('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
+  try {
+    const { gameUuid } = req.params;
+    const userUuid = req.user.userUuid;
+
+    const gameSettings = await GameService.getGameSettings(gameUuid, userUuid);
+    res.json(gameSettings);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}));
+
+// Update game settings
+router.put('/:gameUuid/settings', asyncMiddleware(async (req, res) => {
+  try {
+    const { gameUuid } = req.params;
+    const { name, description, maxPlayers, turnLength, password } = req.body;
+    const userUuid = req.user.userUuid;
+
+    const updatedGame = await GameService.updateGameSettings(
+      gameUuid, 
+      userUuid, 
+      { name, description, maxPlayers, turnLength, password }
+    );
+    
+    res.json(updatedGame);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}));
+
 // Delete game
 // Two routes: one for regular users, one for admins
 router.delete('/:gameUuid', authenticateUser, asyncMiddleware(async (req, res) => {

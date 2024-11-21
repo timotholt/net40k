@@ -208,6 +208,67 @@ class GameService {
       throw error;
     }
   }
+
+  async getGameSettings(gameUuid, userUuid) {
+    try {
+      const game = await GameDB.findOne({ gameUuid });
+      
+      if (!game) {
+        throw new ValidationError(`Game with UUID ${gameUuid} not found`);
+      }
+
+      // Check if user is the creator or an admin
+      if (game.creatorUuid !== userUuid) {
+        throw new AuthorizationError('You are not authorized to view this game\'s settings');
+      }
+
+      return {
+        name: game.name,
+        description: game.description || '',
+        maxPlayers: game.maxPlayers,
+        turnLength: game.turnLength || 500,
+        hasPassword: game.hasPassword
+      };
+    } catch (error) {
+      logger.error(`Get game settings failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateGameSettings(gameUuid, userUuid, settingsData) {
+    try {
+      const game = await GameDB.findOne({ gameUuid });
+      
+      if (!game) {
+        throw new ValidationError(`Game with UUID ${gameUuid} not found`);
+      }
+
+      // Check if user is the creator or an admin
+      if (game.creatorUuid !== userUuid) {
+        throw new AuthorizationError('You are not authorized to update this game\'s settings');
+      }
+
+      // Validate and update settings
+      if (settingsData.name) game.name = settingsData.name.trim();
+      if (settingsData.description !== undefined) game.description = settingsData.description.trim();
+      if (settingsData.maxPlayers) game.maxPlayers = settingsData.maxPlayers;
+      if (settingsData.turnLength) game.turnLength = settingsData.turnLength;
+      
+      // Handle password update
+      if (settingsData.password !== undefined) {
+        game.password = settingsData.password.trim();
+        game.hasPassword = !!settingsData.password.trim();
+      }
+
+      await game.save();
+
+      logger.info(`Game settings updated: ${gameUuid}`);
+      return game.toPublicGame();
+    } catch (error) {
+      logger.error(`Update game settings failed: ${error.message}`);
+      throw error;
+    }
+  }
 }
 
 export default new GameService();

@@ -74,6 +74,37 @@ const gameService = {
       console.error('Failed to delete game:', error);
       throw error;
     }
+  },
+
+  /**
+   * Fetch specific game settings
+   * @param {string} gameUuid - UUID of the game to fetch settings for
+   * @returns {Promise<Object>}
+   */
+  getGameSettings: async (gameUuid) => {
+    try {
+      const response = await axiosInstance.get(`/games/${gameUuid}/settings`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch game settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update game settings
+   * @param {string} gameUuid - UUID of the game to update
+   * @param {Object} settingsData - Game settings to update
+   * @returns {Promise<Object>}
+   */
+  updateGameSettings: async (gameUuid, settingsData) => {
+    try {
+      const response = await axiosInstance.put(`/games/${gameUuid}/settings`, settingsData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update game settings:', error);
+      throw error;
+    }
   }
 };
 

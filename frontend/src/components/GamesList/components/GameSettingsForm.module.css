@@ -1,45 +1,86 @@
 .gameSettingsForm {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  max-width: 400px;
+  /* display: flex; */
+  /* flex-direction: column; */
+  gap: 1.5rem;
+  padding: 1.5rem;
+  /* width: 100%; */
+  /* max-width: 500px; */
   margin: 0 auto;
-  background-color: var(--color-darker);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--glow-container);
+  /* background: var(--gradient-screen); */
+  /* border: var(--border-width) solid var(--color-green); */
+  /* border-radius: var(--border-radius-lg); */
+  /* box-shadow: var(--glow-container); */
 }
 
 .formGroup {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.formGroup label,
+.formGroupLabel {
+  text-align: right;
+  color: var(--color-soft-white);
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+.formGroup:has(input[type="checkbox"]) {
+  grid-template-columns: 1fr;
+}
+
+.formGroup:has(input[type="checkbox"]) label {
+  text-align: left;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.formGroup label {
-  font-weight: 600;
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, var(--opacity-input-bg));
+  border: 3px solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.inputWrapper:hover {
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-white);
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-intense);
+}
+
+.inputWrapper svg {
+  color: var(--color-green);
+  margin-right: 0.75rem;
+  transition: color var(--transition-speed) ease;
+}
+
+.inputWrapper:hover svg,
+.inputWrapper:focus-within svg {
   color: var(--color-soft-white);
-  margin-bottom: var(--rem-between-label-and-input);
 }
 
 .formGroup input,
 .formGroup select,
 .formGroup textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-green);
-  border-radius: var(--border-radius-sm);
-  background-color: rgba(0, 0, 0, 0.5);
+  flex: 1;
+  background: none;
+  border: none;
   color: var(--color-soft-white);
-  transition: all 0.3s ease;
-}
-
-.formGroup input:focus,
-.formGroup select:focus,
-.formGroup textarea:focus {
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  width: 100%;
   outline: none;
-  border-color: var(--color-green-hover);
-  box-shadow: var(--glow-focus);
 }
 
 .formGroup textarea {
@@ -52,16 +93,101 @@
   margin-right: 0.5rem;
 }
 
-.formGroup label[for="hasPassword"] {
+.selectWrapper {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  background: rgba(0, 0, 0, var(--opacity-input-bg));
+  border: 3px solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.selectWrapper:hover {
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-white);
+}
+
+.selectWrapper:focus-within {
+  border-color: var(--color-soft-white);
+  box-shadow: var(--glow-intense);
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  color: var(--color-green);
+  margin-right: 0.75rem;
+  transition: color var(--transition-speed) ease;
+}
+
+.selectWrapper:hover .iconWrapper {
+  color: var(--color-soft-white);
+}
+
+.select {
+  flex: 1;
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--color-soft-white);
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300ff00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+}
+
+.select:focus {
+  outline: none;
+}
+
+.select option {
+  background: var(--color-darker);
+  color: var(--color-soft-white);
 }
 
 .formActions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.cancelButton,
+.createButton {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.cancelButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-soft-white);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.createButton {
+  background: var(--color-green);
+  color: black;
+}
+
+.createButton:hover {
+  background: var(--color-soft-white);
+  box-shadow: var(--glow-white);
 }
 
 /* Placeholder styles */
