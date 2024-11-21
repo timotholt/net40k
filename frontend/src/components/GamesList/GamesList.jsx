@@ -40,7 +40,7 @@ export default function GamesList({
       if (hideFullGames) filters.status = 'WAITING';
 
       const result = await GameService.getGames(filters);
-      setGames(result.Games || []);
+      setGames(result.games || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch games');
       console.error('Games fetch error:', err);

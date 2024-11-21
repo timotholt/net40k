@@ -75,7 +75,15 @@ class Database {
         await this.ensureConnection();
         
         try {
-            logger.debug(`Database: Finding in ${collection}:`, { query, options });
+            // Only log if it's a game collection or explicitly requested
+            if (collection === 'game' || options.logQuery) {
+                logger.debug(`Database: Finding in ${collection}:`, { 
+                    query, 
+                    options,
+                    type: 'database-query' 
+                });
+            }
+            
             let result = await this.#dbEngine.find(collection, query);
             
             // Handle sorting
@@ -93,7 +101,10 @@ class Database {
             
             return result;
         } catch (error) {
-            logger.error(`Database: Find operation failed in ${collection}:`, error);
+            logger.error(`Database: Find operation failed in ${collection}:`, {
+                error,
+                type: 'database-error'
+            });
             throw error;
         }
     }
@@ -102,10 +113,20 @@ class Database {
         await this.ensureConnection();
         
         try {
-            logger.debug(`Database: Finding one in ${collection}:`, query);
+            // Only log if it's a game collection or explicitly requested
+            if (collection === 'game' || query.logQuery) {
+                logger.debug(`Database: Finding one in ${collection}:`, { 
+                    query, 
+                    type: 'database-query' 
+                });
+            }
+            
             return await this.#dbEngine.findOne(collection, query);
         } catch (error) {
-            logger.error(`Database: FindOne operation failed in ${collection}:`, error);
+            logger.error(`Database: FindOne operation failed in ${collection}:`, {
+                error,
+                type: 'database-error'
+            });
             throw error;
         }
     }

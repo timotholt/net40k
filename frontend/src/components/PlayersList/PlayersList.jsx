@@ -22,7 +22,7 @@ export default function PlayersList() {
   const [error, setError] = useState(null);
 
   // Polling configuration
-  const POLLING_INTERVAL = 5000; // 5 seconds
+  const POLLING_INTERVAL = 50000; // 5 seconds
   const pollingTimeoutRef = useRef(null);
 
   const fetchUsers = useCallback(async () => {

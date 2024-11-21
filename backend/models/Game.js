@@ -180,6 +180,15 @@ export const GameDB = {
 
   async find(query = {}, options = {}) {
     const results = await db.find(this.collection, query, options);
+    
+    console.log('GameDB.find - Query:', query);
+    console.log('GameDB.find - Options:', options);
+    console.log('GameDB.find - Results count:', results.length);
+    
+    if (results.length === 0) {
+      console.log('GameDB.find - No games found in collection');
+    }
+    
     return results.map(result => this._toGameInstance(result));
   },
 
