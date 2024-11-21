@@ -20,6 +20,60 @@ const LockIcon = () => (
   </svg>
 );
 
+const JoinIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="var(--color-green)" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+    <polyline points="10 17 15 12 10 7"/>
+    <line x1="15" y1="12" x2="3" y2="12"/>
+  </svg>
+);
+
+const ViewIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="var(--color-green)" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const DeleteIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="var(--color-green)" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    <line x1="10" y1="11" x2="10" y2="17"/>
+    <line x1="14" y1="11" x2="14" y2="17"/>
+  </svg>
+);
+
 const JoinButtonTooltip = ({ game }) => {
   if (game.players.length >= game.maxPlayers) {
     return (
@@ -99,28 +153,31 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
       <div className={styles.actions}>
         <div className={styles.buttonWrapper}>
           <button 
-            className={styles.actionButton}
+            className={styles.iconButton}
             onClick={() => onJoin(game.gameUuid)}
             disabled={game.players.length >= game.maxPlayers}
+            title="Join Game"
           >
-            Join
+            <JoinIcon />
           </button>
           <JoinButtonTooltip game={game} />
-        </div>
-        <button 
-          className={styles.actionButton}
-          onClick={() => onView(game.gameUuid)}
-        >
-          View
-        </button>
-        {game.isYours && (
           <button 
-            className={`${styles.actionButton} ${styles.deleteButton}`}
-            onClick={() => onDelete(game.gameUuid)}
+            className={styles.iconButton}
+            onClick={() => onView(game.gameUuid)}
+            title="View Game"
           >
-            Delete
+            <ViewIcon />
           </button>
-        )}
+          {game.isYours && (
+            <button 
+              className={styles.iconButton}
+              onClick={() => onDelete(game.gameUuid)}
+              title="Delete Game"
+            >
+              <DeleteIcon />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

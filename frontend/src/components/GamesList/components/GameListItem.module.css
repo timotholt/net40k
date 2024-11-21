@@ -93,11 +93,38 @@
 
 .actions {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
 }
 
 .buttonWrapper {
-  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.iconButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.iconButton:hover {
+  transform: scale(1.1);
+}
+
+.iconButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.iconButton svg {
+  width: 24px;
+  height: 24px;
 }
 
 .actionButton {
