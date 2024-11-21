@@ -59,11 +59,12 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
       <div className={styles.gameContent}>
         <div className={styles.gameHeader}>
           <div className={styles.titleRow}>
-            <IconButton 
-              icon={() => game.name}
-              onClick={() => onSelect(game)}
-              className={styles.gameNameButton}
-            />
+            <div className={styles.gameName}>
+              {game.name}
+            </div>
+            {game.description && (
+              <div className={styles.description}>{game.description}</div>
+            )}
             {game.isPasswordProtected && <LockIcon />}
           </div>
         </div>

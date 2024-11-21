@@ -7,7 +7,7 @@
   position: relative;
   z-index: 1;
   border-top: 1px solid var(--selection-bg);
-  box-shadow: var(--glow-intense: 0 0 50px rgba(0, 136, 0, 0.9));
+  box-shadow: var(--glow-intense) 0 0 50px rgba(0, 136, 0, 0.9);
 }
 
 .gameItem:nth-child(even) {
@@ -38,16 +38,17 @@
 }
 
 .titleRow {
-  display: grid;
+  display: flex;
   grid-template-columns: minmax(120px, 180px) 1fr;
   gap: 0.75rem;
   overflow: hidden;
+  align-items: baseline;
 }
 
 .gameName {
   color: var(--color-soft-white);
   font-size: 1.0rem;
-  font-weight: 500;
+  font-weight: 00;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -59,7 +60,8 @@
 .description {
   color: var(--color-soft-white);
   opacity: 0.7;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
