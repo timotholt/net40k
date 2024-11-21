@@ -27,7 +27,7 @@ const gameService = {
         createdBy: game.createdBy,
         turns: 0, // Add appropriate mapping if available
         turnLength: 500, // Default value, map appropriately
-        isYours: false, // Add logic to determine if current user created the game
+        isYours: game.isYours, // Use backend's isYours flag
         isFriendGame: false // Add logic for friend games if applicable
       }));
 

@@ -50,12 +50,25 @@ class GameService {
     }
   }
 
-  async listGames(filters = {}) {
+  async listGames(filters = {}, userUuid = null) {
     try {
+      // Find games based on initial filters
       const games = await GameDB.find(filters);
       
+      // If a user UUID is provided, find additional games created by this user
+      let userGames = [];
+      if (userUuid) {
+        userGames = await GameDB.find({ creatorUuid: userUuid });
+      }
+
+      // Combine games, removing duplicates
+      const combinedGames = [...games, ...userGames].filter(
+        (game, index, self) => 
+          index === self.findIndex((t) => t.gameUuid === game.gameUuid)
+      );
+      
       // Get all unique creator UUIDs
-      const creatorUuids = [...new Set(games.map(game => game.creatorUuid))];
+      const creatorUuids = [...new Set(combinedGames.map(game => game.creatorUuid))];
       
       // Fetch all creators in one query
       const creators = await Promise.all(
@@ -68,12 +81,16 @@ class GameService {
       );
 
       // Map games and populate creator info
-      return games.map(game => {
+      return combinedGames.map(game => {
         const publicGame = game.toPublicGame();
         publicGame.createdBy = {
           uuid: game.creatorUuid,
           nickname: creatorMap.get(game.creatorUuid) || 'Unknown'
         };
+        
+        // Mark games created by the user
+        publicGame.isYours = userUuid ? game.creatorUuid === userUuid : false;
+        
         return publicGame;
       });
     } catch (error) {

@@ -40,7 +40,10 @@ router.get('/', asyncMiddleware(async (req, res) => {
     if (req.query.status) filters.status = req.query.status;
     if (req.query.maxPlayers) filters.maxPlayers = parseInt(req.query.maxPlayers);
 
-    const games = await GameService.listGames(filters);
+    const games = await GameService.listGames(
+      filters, 
+      req.user?.userUuid
+    );
     res.json(games);
   } catch (error) {
     res.status(500).json({ error: error.message });
