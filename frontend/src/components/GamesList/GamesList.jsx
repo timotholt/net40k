@@ -379,19 +379,7 @@ export default function GamesList({
           isOpen={!!settingsModalGame}
           onClose={() => setSettingsModalGame(null)}
           title="Game Settings"
-          actions={[
-            {
-              label: 'Save Changes',
-              onClick: () => {
-                // This will be replaced by form's onSubmit
-              },
-              className: 'btn-primary'
-            },
-            {
-              label: 'Cancel',
-              onClick: () => setSettingsModalGame(null)
-            }
-          ]}
+          actions={[]}
         >
           <GameSettingsForm
             initialGame={{

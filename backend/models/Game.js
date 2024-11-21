@@ -123,6 +123,7 @@ export const GameDB = {
       await db.createIndex(this.collection, { gameUuid: 1 }, { unique: true });
       await db.createIndex(this.collection, { creatorUuid: 1 });
       await db.createIndex(this.collection, { status: 1 });
+      await db.createIndex(this.collection, { name: 1 }, { unique: true });
     } else {
       logger.info('Database engine does not support explicit indexes');
     }
@@ -137,14 +138,13 @@ export const GameDB = {
       const game = new Game(gameData);
       game.validate();
 
-      // Check for existing game with same name (optional)
-      const existinggame = await this.findOne({ 
-        name: game.name, 
-        creatorUuid: game.creatorUuid 
+      // Check for existing game with same name across all users
+      const existingGame = await this.findOne({ 
+        name: game.name
       });
 
-      if (existinggame) {
-        throw new ValidationError('game with this name already exists');
+      if (existingGame) {
+        throw new ValidationError('A game with this name already exists');
       }
 
       console.log('GameDB.create - Attempting to create game:', game.toJSON());
