@@ -279,83 +279,87 @@ export default function GamesList({
       </div>
 
       <div 
-        className={styles.gamesList}
+        className={styles.gamesListContainer}
         role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
       >
-        {activeTab === 'create' ? (
-          <CreateGameTab />
-        ) : tabFilteredGames.length > 0 ? (
-          tabFilteredGames.map(game => (
-            <GameListItem 
-              key={game.gameUuid} 
-              game={game}
-              isSelected={selectedGameId === game.gameUuid}
-              onSelect={() => setSelectedGameId(game.gameUuid)}
-              onJoin={handleJoinGame}
-              onView={handleViewGame}
-              onDelete={() => handleDeleteGame(game.gameUuid)}
-              onSettings={() => handleGameSettings(game.gameUuid)}
-            />
-          ))
-        ) : (
-          <EmptyState message={getEmptyStateMessage()} />
-        )}
-      </div>
-
-      {activeTab !== 'create' && (
-        <div className={styles.filters}>
-          <div className={styles.filterControls}>
-            <div className={styles.searchWrapper}>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className={styles.searchIcon}
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input
-                type="text"
-                value={filter}
-                onChange={(e) => onFilterChange(e.target.value)}
-                placeholder="Search games..."
-                className={styles.searchInput}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+        <div 
+          className={styles.gamesList}
+        >
+          {activeTab === 'create' ? (
+            <CreateGameTab />
+          ) : tabFilteredGames.length > 0 ? (
+            tabFilteredGames.map(game => (
+              <GameListItem 
+                key={game.gameUuid} 
+                game={game}
+                isSelected={selectedGameId === game.gameUuid}
+                onSelect={() => setSelectedGameId(game.gameUuid)}
+                onJoin={handleJoinGame}
+                onView={handleViewGame}
+                onDelete={() => handleDeleteGame(game.gameUuid)}
+                onSettings={() => handleGameSettings(game.gameUuid)}
               />
-            </div>
-            
-            <div className={styles.checkboxes}>
-              <label className={styles.checkbox}>
+            ))
+          ) : (
+            <EmptyState message={getEmptyStateMessage()} />
+          )}
+        </div>
+
+        {activeTab !== 'create' && (
+          <div className={styles.filterSection}>
+            <div className={styles.filterControls}>
+              <div className={styles.searchWrapper}>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className={styles.searchIcon}
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
                 <input
-                  type="checkbox"
-                  checked={hideFullGames}
-                  onChange={(e) => onHideFullGames(e.target.checked)}
+                  type="text"
+                  value={filter}
+                  onChange={(e) => onFilterChange(e.target.value)}
+                  placeholder="Search games..."
+                  className={styles.searchInput}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
                 />
-                Hide full games
-              </label>
+              </div>
               
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={hidePasswordGames}
-                  onChange={(e) => onHidePasswordGames(e.target.checked)}
-                />
-                Hide locked games
-              </label>
+              <div className={styles.checkboxes}>
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={hideFullGames}
+                    onChange={(e) => onHideFullGames(e.target.checked)}
+                  />
+                  Hide full games
+                </label>
+                
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={hidePasswordGames}
+                    onChange={(e) => onHidePasswordGames(e.target.checked)}
+                  />
+                  Hide password games
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
