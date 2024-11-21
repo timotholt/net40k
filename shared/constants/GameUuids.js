@@ -262,6 +262,7 @@ export function isSystemUser(uuid) {
     return uuid === SYSTEM_USERS.SYSTEM || uuid === SYSTEM_USERS.NEWS || uuid === SYSTEM_USERS.GM;
 }
 
+// TODO: System games are not marked with a game type.  it's with special game Uuid
 export function isSystemGame(uuid) {
     return getGameType(uuid) === GAME_TYPE.SYSTEM;
 }
@@ -317,7 +318,7 @@ export function createChatGameUuid(countryCode, gameType, datacenterId) {
 }
 
 /**
- * Creates a new UUID for a game game
+ * Creates a new UUID for a game
  * @param {string} countryCode - Country code from COUNTRY enum
  * @param {string} gameType - Game game type from GAME_TYPE enum
  * @param {string} datacenterId - Datacenter ID from DATACENTER enum
