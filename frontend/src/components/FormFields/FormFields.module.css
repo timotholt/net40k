@@ -174,3 +174,23 @@
   background-color: var(--selection-bg);
   color: var(--selection-text);
 }
+
+.dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: rgba(0, 0, 0, var(--opacity-input-bg));
+  border: var(--border-width) solid var(--color-green);
+  color: var(--color-soft-white);
+  padding-right: 2rem;
+}
+
+.dropdownIcon {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-gray-light);
+  font-size: 0.75rem;
+}

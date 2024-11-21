@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useModal } from '../../context/ModalContext';
-import { MODAL_TYPES } from '../../context/ModalContext';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
 import EmptyState from './components/EmptyState';
+import Modal from '../Modal/Modal';
+import GameSettingsForm from './components/GameSettingsForm';
+import { InputField } from '../FormFields';
 import gameService from '../../services/gameService';
-import GameSettingsForm from './components/GameSettingsForm'; // Import GameSettingsForm component
 import styles from './GamesList.module.css';
 
 export default function GamesList({
@@ -22,13 +22,17 @@ export default function GamesList({
   user
 }) {
   const navigate = useNavigate();
-  const { openModal, closeModal } = useModal(); // Extract closeModal function
   const [games, setGames] = useState(initialGames);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const pollingRef = useRef(null);
+  const [deleteModalGame, setDeleteModalGame] = useState(null);
+  const [settingsModalGame, setSettingsModalGame] = useState(null);
+  const [passwordGameToJoin, setPasswordGameToJoin] = useState(null);
+  const [passwordAttempt, setPasswordAttempt] = useState('');
+  const [passwordError, setPasswordError] = useState(null);
 
   // Safely fetch games with minimal error handling
   const fetchGames = useCallback(async () => {
@@ -142,145 +146,116 @@ export default function GamesList({
     }
   }, [currentTabIndex, tabs, onTabChange, filter, onFilterChange, searchFocused]);
 
-  const handleJoinGame = (gameUuid) => {
+  const handleJoinGame = useCallback((gameUuid) => {
     const game = games.find(g => g.gameUuid === gameUuid);
+    
     if (game.hasPassword) {
-      openModal(MODAL_TYPES.PASSWORD_PROMPT, {
-        onSubmit: (password) => {
-          navigate(`/game/${gameUuid}`);
-        }
-      });
+      // Open password prompt modal
+      setPasswordGameToJoin(game);
+      setPasswordAttempt('');
+      setPasswordError(null);
     } else {
+      // Directly navigate to game if no password
       navigate(`/game/${gameUuid}`);
     }
-  };
+  }, [games, navigate]);
+
+  const handlePasswordSubmit = useCallback(async () => {
+    if (!passwordGameToJoin) return;
+
+    try {
+      // Attempt to join the game with the provided password
+      const response = await fetch(`/api/games/${passwordGameToJoin.gameUuid}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: passwordAttempt })
+      });
+
+      if (response.ok) {
+        // Successful join - navigate to game
+        navigate(`/game/${passwordGameToJoin.gameUuid}`);
+      } else {
+        // Handle different error scenarios
+        const errorData = await response.json();
+        setPasswordError(errorData.message || 'Invalid password');
+      }
+    } catch (error) {
+      console.error('Join game error:', error);
+      setPasswordError('An error occurred. Please try again.');
+    }
+  }, [passwordGameToJoin, passwordAttempt, navigate]);
 
   const handleViewGame = (gameUuid) => {
     navigate(`/game/${gameUuid}`);
   };
 
-  const handleDeleteGame = useCallback(async (gameUuid) => {
-    // Find the game to get its details
-    const game = games.find(g => g.gameUuid === gameUuid);
-    
-    // Only allow deletion of own games
-    if (!game || !game.isYours) {
-      openModal(MODAL_TYPES.ALERT, {
-        title: 'Cannot Delete Game',
-        message: 'You can only delete your own games.'
+  const handleDeleteGame = useCallback((gameUuid) => {
+    // Open delete confirmation modal
+    const gameToDelete = games.find(g => g.gameUuid === gameUuid);
+    setDeleteModalGame(gameToDelete);
+  }, [games]);
+
+  const confirmDeleteGame = useCallback(async () => {
+    if (!deleteModalGame) return;
+
+    try {
+      const response = await fetch(`/api/games/${deleteModalGame.gameUuid}`, {
+        method: 'DELETE'
       });
-      return;
-    }
 
-    // Use the new confirmation modal with custom buttons
-    openModal(MODAL_TYPES.CONFIRM, {
-      title: 'Confirm Game Deletion',
-      message: `Do you wish to delete this game?`,
-      primaryButtonText: 'Delete',
-      secondaryButtonText: 'Cancel',
-      onPrimaryButtonClick: async () => {
-        try {
-          setLoading(true);
-          await gameService.deleteGame(gameUuid);
-          
-          // Remove the game from the list
-          setGames(prevGames => prevGames.filter(g => g.gameUuid !== gameUuid));
-        } catch (error) {
-          openModal(MODAL_TYPES.ALERT, {
-            title: 'Delete Failed',
-            message: error.response?.data?.error || 'Failed to delete game. Please try again.'
-          });
-        } finally {
-          setLoading(false);
-        }
+      if (!response.ok) {
+        throw new Error('Failed to delete game');
       }
-    });
-  }, [openModal, setGames, games]);
 
-  const handleGameSettings = useCallback(async (gameUuid) => {
+      // Remove the game from the list
+      setGames(prev => prev.filter(g => g.gameUuid !== deleteModalGame.gameUuid));
+      
+      // Close the modal
+      setDeleteModalGame(null);
+    } catch (error) {
+      console.error('Delete game error:', error);
+      // Optionally set an error state to show in the modal
+    }
+  }, [deleteModalGame]);
+
+  const handleGameSettings = useCallback((gameUuid) => {
     console.log('GAMESLIST: handleGameSettings CALLED', { 
       gameUuid, 
       gameFound: !!gameUuid 
     });
+    // Open settings modal for the specific game
+    const gameToEdit = games.find(g => g.gameUuid === gameUuid);
+    setSettingsModalGame(gameToEdit);
+  }, [games]);
+
+  const handleUpdateGameSettings = useCallback(async (updatedGameData) => {
+    if (!settingsModalGame) return;
 
     try {
-      // Find the specific game
-      const foundGame = games.find(game => game.gameUuid === gameUuid);
+      // Call game service to update game settings
+      const response = await gameService.updateGameSettings(
+        settingsModalGame.gameUuid, 
+        updatedGameData
+      );
 
-      console.log('GAMESLIST: Found game', { 
-        game: foundGame, 
-        isYours: foundGame?.isYours 
-      });
-
-      if (!foundGame) {
-        console.error('Game not found');
-        return;
-      }
-
-      // Prepare game settings modal props
-      const modalProps = {
-        title: 'Game Settings',
-        initialGame: {
-          name: foundGame.name,
-          description: foundGame.description || '',
-          maxPlayers: foundGame.maxPlayers,
-          turnLength: foundGame.turnLength,
-          hasPassword: !!foundGame.hasPassword
-        },
-        onSubmit: async (updatedGameData) => {
-          try {
-            console.log('GAMESLIST: Submitting game settings', { updatedGameData });
-            
-            // Update game settings using the correct method
-            const response = await gameService.updateGameSettings(gameUuid, updatedGameData);
-            
-            // Update local state
-            const updatedGames = games.map(game => 
-              game.gameUuid === gameUuid 
-                ? { ...game, ...updatedGameData } 
-                : game
-            );
-            setGames(updatedGames);
-
-            // Close the modal
-            closeModal();
-
-            // Show success notification
-            // showNotification('Game settings updated successfully', 'success');
-          } catch (error) {
-            console.error('Failed to update game settings', error);
-            // showNotification('Failed to update game settings', 'error');
-          }
-        },
-        onCancel: () => {
-          console.log('GAMESLIST: onCancel CALLED');
-          closeModal();
-        }
-      };
-
-      console.log('GAMESLIST: Opening game settings modal', { game: foundGame });
-      console.log('GAMESLIST: Modal Props', {
-        title: modalProps.title,
-        childrenType: typeof modalProps.children,
-        onCloseType: typeof modalProps.onClose
-      });
-
-      // Open the modal with prepared props
-      openModal(MODAL_TYPES.CUSTOM, {
-        title: modalProps.title,
-        children: (
-          <GameSettingsForm
-            initialGame={modalProps.initialGame}
-            onSubmit={modalProps.onSubmit}
-            onCancel={modalProps.onCancel}
-          />
+      // Update local games state
+      setGames(prevGames => 
+        prevGames.map(game => 
+          game.gameUuid === settingsModalGame.gameUuid 
+            ? { ...game, ...updatedGameData } 
+            : game
         )
-      });
+      );
+
+      // Close the settings modal
+      setSettingsModalGame(null);
     } catch (error) {
-      console.error('Error in handleGameSettings', error);
-      // showNotification('Failed to open game settings', 'error');
+      console.error('Failed to update game settings', error);
+      // Optionally show an error modal or notification
     }
-  }, [games, openModal, closeModal, setGames]);
+  }, [settingsModalGame]);
 
   const getEmptyStateMessage = () => {
     if (filter) {
@@ -399,6 +374,112 @@ export default function GamesList({
           </div>
         )}
       </div>
+
+      {/* Game Settings Modal */}
+      {settingsModalGame && (
+        <Modal
+          isOpen={!!settingsModalGame}
+          onClose={() => setSettingsModalGame(null)}
+          title="Game Settings"
+          actions={[
+            {
+              label: 'Save Changes',
+              onClick: () => {
+                // This will be replaced by form's onSubmit
+              },
+              className: 'btn-primary'
+            },
+            {
+              label: 'Cancel',
+              onClick: () => setSettingsModalGame(null)
+            }
+          ]}
+        >
+          <GameSettingsForm
+            initialGame={{
+              name: settingsModalGame.name,
+              description: settingsModalGame.description || '',
+              maxPlayers: settingsModalGame.maxPlayers,
+              turnLength: settingsModalGame.turnLength,
+              hasPassword: !!settingsModalGame.hasPassword
+            }}
+            onSubmit={handleUpdateGameSettings}
+            onCancel={() => setSettingsModalGame(null)}
+          />
+        </Modal>
+      )}
+
+      {/* Password-Protected Game Join Modal */}
+      {passwordGameToJoin && (
+        <Modal
+          isOpen={!!passwordGameToJoin}
+          onClose={() => {
+            setPasswordGameToJoin(null);
+            setPasswordAttempt('');
+            setPasswordError(null);
+          }}
+          title={`Join Game: ${passwordGameToJoin.name}`}
+          actions={[
+            {
+              label: 'Join Game',
+              onClick: handlePasswordSubmit,
+              className: 'btn-primary'
+            },
+            {
+              label: 'Cancel',
+              onClick: () => {
+                setPasswordGameToJoin(null);
+                setPasswordAttempt('');
+                setPasswordError(null);
+              }
+            }
+          ]}
+        >
+          <div>
+            <p>This game is password protected. Please enter the game password.</p>
+            <InputField 
+              type="password"
+              label="Game Password"
+              name="gamePassword"
+              value={passwordAttempt}
+              onChange={(e) => {
+                setPasswordAttempt(e.target.value);
+                setPasswordError(null);
+              }}
+              placeholder="Enter game password"
+              required
+            />
+            {passwordError && (
+              <div style={{ color: 'red', marginTop: '10px' }}>
+                {passwordError}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalGame && (
+        <Modal
+          isOpen={!!deleteModalGame}
+          onClose={() => setDeleteModalGame(null)}
+          title="Delete Game"
+          actions={[
+            {
+              label: 'Delete',
+              onClick: confirmDeleteGame,
+              className: 'btn-danger'
+            },
+            {
+              label: 'Cancel',
+              onClick: () => setDeleteModalGame(null)
+            }
+          ]}
+        >
+          <p>Are you sure you want to delete the game "{deleteModalGame.name}"?</p>
+          <p>This action cannot be undone.</p>
+        </Modal>
+      )}
     </div>
   );
 }

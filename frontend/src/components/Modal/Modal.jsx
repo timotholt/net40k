@@ -1,5 +1,4 @@
-import React, { useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styles from './Modal.module.css';
 
@@ -8,85 +7,123 @@ export default function Modal({
   onClose, 
   title, 
   children, 
-  className = '' 
+  actions = [], 
+  className = '',
+  endpoints = [],
+  onSubmit
 }) {
-  const firstRenderRef = useRef(true);
-  const modalRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Log only on first render
-  if (firstRenderRef.current) {
-    console.log('MODAL: First Render', { 
-      isOpen, 
-      title, 
-      childrenType: typeof children, 
-      onCloseType: typeof onClose 
-    });
-    firstRenderRef.current = false;
-  }
-
-  // Handle escape key and outside click
+  // Handle escape key
   useEffect(() => {
-    const handleEscapeKey = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        console.log('MODAL: Escape key pressed');
-        onClose();
-      }
-    };
-
-    const handleOutsideClick = (e) => {
-      if (
-        isOpen && 
-        modalRef.current && 
-        !modalRef.current.contains(e.target)
-      ) {
-        console.log('MODAL: Outside click detected');
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isOpen) {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
-      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
     }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
   }, [isOpen, onClose]);
+
+  // Handle endpoint calls
+  const handleEndpointCall = useCallback(async (endpoint, method = 'POST', body = null) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : null
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      
+      // If onSubmit is provided, call it with the response
+      if (onSubmit) {
+        onSubmit(data);
+      }
+
+      return data;
+    } catch (err) {
+      setError(err.message);
+      console.error('Modal endpoint error:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onSubmit]);
 
   // Prevent rendering if not open
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <div className={styles.modalOverlay}>
-        <motion.div
-          ref={modalRef}
-          className={`${styles.modal} ${className}`}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className={styles.modalHeader}>
-            <h2>{title}</h2>
-            <button 
-              className={styles.closeButton} 
-              onClick={() => {
-                console.log('MODAL: Close button clicked');
-                onClose();
+    <div className={styles.modalOverlay}>
+      <div className={`${styles.modal} ${className}`}>
+        <div className={styles.modalHeader}>
+          <h2>{title}</h2>
+          <button 
+            className={styles.closeButton} 
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className={styles.modalContent}>
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+            </div>
+          )}
+          
+          {children}
+        </div>
+
+        <div className={styles.modalFooter}>
+          {actions.map((action, index) => (
+            <button
+              key={index}
+              onClick={async () => {
+                // If the action has an endpoint, call it
+                if (action.endpoint) {
+                  try {
+                    await handleEndpointCall(
+                      action.endpoint, 
+                      action.method, 
+                      action.body
+                    );
+                  } catch (err) {
+                    // Error is already handled in handleEndpointCall
+                    return;
+                  }
+                }
+
+                // Call the action's onClick if provided
+                if (action.onClick) {
+                  action.onClick();
+                }
               }}
+              disabled={isLoading}
+              className={action.className}
             >
-              ✕
+              {isLoading ? 'Processing...' : action.label}
             </button>
-          </div>
-          <div className={styles.modalContent}>
-            {children}
-          </div>
-        </motion.div>
+          ))}
+        </div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 }
 
@@ -94,6 +131,20 @@ Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  className: PropTypes.string
+  children: PropTypes.node,
+  actions: PropTypes.arrayOf(PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    onClick: PropTypes.func,
+    endpoint: PropTypes.string,
+    method: PropTypes.string,
+    body: PropTypes.object,
+    className: PropTypes.string
+  })),
+  className: PropTypes.string,
+  endpoints: PropTypes.arrayOf(PropTypes.shape({
+    url: PropTypes.string.isRequired,
+    method: PropTypes.string,
+    body: PropTypes.object
+  })),
+  onSubmit: PropTypes.func
 };
