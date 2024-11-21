@@ -5,7 +5,7 @@ import { MODAL_TYPES } from '../../context/ModalContext';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
 import EmptyState from './components/EmptyState';
-import GameService from '../../services/GameService';
+import gameService from '../../services/gameService';
 import GameSettingsForm from './components/GameSettingsForm'; // Import GameSettingsForm component
 import styles from './GamesList.module.css';
 
@@ -40,7 +40,7 @@ export default function GamesList({
       if (activeTab === 'yours') filters.creatorUuid = user?.userUuid;
       if (hideFullGames) filters.status = 'WAITING';
 
-      const result = await GameService.getGames(filters, { 
+      const result = await gameService.getGames(filters, { 
         page: 1, 
         limit: 50,
         currentUserUuid: user?.userUuid  // Pass current user UUID for ownership check
@@ -181,7 +181,7 @@ export default function GamesList({
       onPrimaryButtonClick: async () => {
         try {
           setLoading(true);
-          await GameService.deleteGame(gameUuid);
+          await gameService.deleteGame(gameUuid);
           
           // Remove the game from the list
           setGames(prevGames => prevGames.filter(g => g.gameUuid !== gameUuid));
@@ -197,55 +197,90 @@ export default function GamesList({
     });
   }, [openModal, setGames, games]);
 
-  const handleGameSettings = useCallback((gameUuid) => {
-    const game = games.find(g => g.gameUuid === gameUuid);
-    
-    // Only allow settings for own games
-    if (!game || !game.isYours) {
-      openModal(MODAL_TYPES.ALERT, {
-        title: 'Cannot Edit Game',
-        message: 'You can only edit your own games.'
-      });
-      return;
-    }
-
-    console.log('Opening Game Settings Modal', { game, gameUuid });
-
-    // Open game settings modal
-    openModal(MODAL_TYPES.CUSTOM, {
-      title: 'Game Settings',
-      children: (
-        <GameSettingsForm 
-          initialGame={game}
-          onSubmit={async (updatedGame) => {
-            try {
-              console.log('Game Settings Submit', { updatedGame, gameUuid });
-              // Call game update service
-              await GameService.updateGame(gameUuid, updatedGame);
-              
-              // Update local game state
-              setGames(prevGames => 
-                prevGames.map(g => 
-                  g.gameUuid === gameUuid 
-                    ? { ...g, ...updatedGame } 
-                    : g
-                )
-              );
-              
-              // Close modal
-              closeModal();
-            } catch (error) {
-              console.error('Game Settings Update Error', error);
-              openModal(MODAL_TYPES.ALERT, {
-                title: 'Update Failed',
-                message: error.response?.data?.error || 'Failed to update game settings.'
-              });
-            }
-          }}
-        />
-      )
+  const handleGameSettings = useCallback(async (gameUuid) => {
+    console.log('GAMESLIST: handleGameSettings CALLED', { 
+      gameUuid, 
+      gameFound: !!gameUuid 
     });
-  }, [openModal, games, setGames, closeModal]);
+
+    try {
+      // Find the specific game
+      const foundGame = games.find(game => game.gameUuid === gameUuid);
+
+      console.log('GAMESLIST: Found game', { 
+        game: foundGame, 
+        isYours: foundGame?.isYours 
+      });
+
+      if (!foundGame) {
+        console.error('Game not found');
+        return;
+      }
+
+      // Prepare game settings modal props
+      const modalProps = {
+        title: 'Game Settings',
+        initialGame: {
+          name: foundGame.name,
+          description: foundGame.description || '',
+          maxPlayers: foundGame.maxPlayers,
+          turnLength: foundGame.turnLength,
+          hasPassword: !!foundGame.hasPassword
+        },
+        onSubmit: async (updatedGameData) => {
+          try {
+            console.log('GAMESLIST: Submitting game settings', { updatedGameData });
+            
+            // Update game settings using the correct method
+            const response = await gameService.updateGameSettings(gameUuid, updatedGameData);
+            
+            // Update local state
+            const updatedGames = games.map(game => 
+              game.gameUuid === gameUuid 
+                ? { ...game, ...updatedGameData } 
+                : game
+            );
+            setGames(updatedGames);
+
+            // Close the modal
+            closeModal();
+
+            // Show success notification
+            // showNotification('Game settings updated successfully', 'success');
+          } catch (error) {
+            console.error('Failed to update game settings', error);
+            // showNotification('Failed to update game settings', 'error');
+          }
+        },
+        onCancel: () => {
+          console.log('GAMESLIST: onCancel CALLED');
+          closeModal();
+        }
+      };
+
+      console.log('GAMESLIST: Opening game settings modal', { game: foundGame });
+      console.log('GAMESLIST: Modal Props', {
+        title: modalProps.title,
+        childrenType: typeof modalProps.children,
+        onCloseType: typeof modalProps.onClose
+      });
+
+      // Open the modal with prepared props
+      openModal(MODAL_TYPES.CUSTOM, {
+        title: modalProps.title,
+        children: (
+          <GameSettingsForm
+            initialGame={modalProps.initialGame}
+            onSubmit={modalProps.onSubmit}
+            onCancel={modalProps.onCancel}
+          />
+        )
+      });
+    } catch (error) {
+      console.error('Error in handleGameSettings', error);
+      // showNotification('Failed to open game settings', 'error');
+    }
+  }, [games, openModal, closeModal, setGames]);
 
   const getEmptyStateMessage = () => {
     if (filter) {

@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { PrimaryButton, SecondaryButton } from '../../Buttons';
 import { InputField, SharedPasswordField } from '../../FormFields';
+import { useModal } from '../../../context/ModalContext';
 import styles from './GameSettingsForm.module.css';
 
-export default function GameSettingsForm({ initialGame, onSubmit }) {
+export default function GameSettingsForm({ 
+  initialGame, 
+  onSubmit,
+  onCancel
+}) {
+  const firstRenderRef = useRef(true);
+
+  if (firstRenderRef.current) {
+    console.log('GAMESETTINGSFORM: First Render', { 
+      initialGame, 
+      onSubmitType: typeof onSubmit,
+      onCancelType: typeof onCancel
+    });
+    firstRenderRef.current = false;
+  }
+
   const [formData, setFormData] = useState({
     name: initialGame.name,
     description: initialGame.description || '',
@@ -14,17 +30,61 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
     password: '' // Only used when setting/changing password
   });
 
+  const [formErrors, setFormErrors] = useState({});
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear the specific error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // Comprehensive validation
+    const errors = {};
+
+    // Name validation
+    if (!formData.name || formData.name.trim().length < 3) {
+      errors.name = 'Game name must be at least 3 characters long';
+    }
+
+    // Max Players validation
+    const maxPlayersNum = parseInt(formData.maxPlayers, 10);
+    if (isNaN(maxPlayersNum) || maxPlayersNum < 2 || maxPlayersNum > 6) {
+      errors.maxPlayers = 'Max players must be between 2 and 6';
+    }
+
+    // Turn Length validation
+    const turnLengthNum = parseInt(formData.turnLength, 10);
+    const validTurnLengths = [500, 1000, 2000, 5000, 10000];
+    if (!validTurnLengths.includes(turnLengthNum)) {
+      errors.turnLength = 'Invalid turn length selected';
+    }
+
+    // Password validation (optional)
+    if (formData.hasPassword && (!formData.password || formData.password.length < 4)) {
+      errors.password = 'Password must be at least 4 characters long';
+    }
+
+    // If there are validation errors, log and stop submission
+    if (Object.keys(errors).length > 0) {
+      console.error('GAMESETTINGSFORM: Validation Errors', { errors });
+      setFormErrors(errors);
+      return;
+    }
+
     // Validate form data
     const updatedGame = {
       name: formData.name.trim(),
@@ -35,8 +95,32 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
       ...(formData.password && { password: formData.password })
     };
 
+    console.log('GAMESETTINGSFORM: handleSubmit', { 
+      updatedGame,
+      validationPassed: true 
+    });
+
+    // Call onSubmit with validated data
     onSubmit(updatedGame);
   };
+
+  const handleCancel = useCallback((e) => {
+    // Prevent default form submission behavior
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    console.log('GAMESETTINGSFORM: handleCancel CALLED', { 
+      onCancelType: typeof onCancel 
+    });
+    
+    // Call onCancel if it exists
+    if (onCancel) {
+      onCancel();
+    } else {
+      console.warn('GAMESETTINGSFORM: onCancel prop is not provided');
+    }
+  }, [onCancel]);
 
   const gameNameIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,8 +168,11 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
           required
           maxLength={50}
           leftIcon={gameNameIcon}
-          className={styles.input}
+          className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`}
         />
+        {formErrors.name && (
+          <div className={styles.errorMessage}>{formErrors.name}</div>
+        )}
       </div>
 
       <div className={styles.formGroup}>
@@ -113,13 +200,16 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
             name="maxPlayers"
             value={formData.maxPlayers}
             onChange={handleChange}
-            className={`${styles.input} ${styles.select}`}
+            className={`${styles.input} ${styles.select} ${formErrors.maxPlayers ? styles.inputError : ''}`}
           >
             {[2, 3, 4, 5, 6].map(num => (
               <option key={num} value={num}>{num}</option>
             ))}
           </select>
         </div>
+        {formErrors.maxPlayers && (
+          <div className={styles.errorMessage}>{formErrors.maxPlayers}</div>
+        )}
       </div>
 
       <div className={styles.formGroup}>
@@ -133,7 +223,7 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
             name="turnLength"
             value={formData.turnLength}
             onChange={handleChange}
-            className={`${styles.input} ${styles.select}`}
+            className={`${styles.input} ${styles.select} ${formErrors.turnLength ? styles.inputError : ''}`}
           >
             <option value={500}>500ms (Ultra Fast)</option>
             <option value={1000}>1s (Fast)</option>
@@ -142,6 +232,9 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
             <option value={10000}>10s (Very Slow)</option>
           </select>
         </div>
+        {formErrors.turnLength && (
+          <div className={styles.errorMessage}>{formErrors.turnLength}</div>
+        )}
       </div>
 
       <div className={styles.formGroup}>
@@ -151,13 +244,17 @@ export default function GameSettingsForm({ initialGame, onSubmit }) {
           value={formData.password}
           onChange={handleChange}
           mode="copy"
+          className={formErrors.password ? styles.inputError : ''}
         />
+        {formErrors.password && (
+          <div className={styles.errorMessage}>{formErrors.password}</div>
+        )}
       </div>
 
       <div className={styles.formActions}>
         <SecondaryButton 
           type="button" 
-          onClick={() => window.closeModal()} 
+          onClick={handleCancel}  
           className={styles.cancelButton}
         >
           Cancel
@@ -181,5 +278,6 @@ GameSettingsForm.propTypes = {
     turnLength: PropTypes.number.isRequired,
     hasPassword: PropTypes.bool.isRequired
   }).isRequired,
-  onSubmit: PropTypes.func.isRequired
+  onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired
 };

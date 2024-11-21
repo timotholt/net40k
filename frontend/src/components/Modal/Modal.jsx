@@ -1,79 +1,91 @@
-import { useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { PrimaryButton, SecondaryButton } from '../Buttons';
 import styles from './Modal.module.css';
 
 export default function Modal({ 
   isOpen, 
   onClose, 
   title, 
-  children,
-  primaryButtonText,
-  secondaryButtonText,
-  onPrimaryButtonClick,
-  onSecondaryButtonClick,
-  primaryButtonVariant = 'confirm',
-  secondaryButtonVariant = 'cancel'
+  children, 
+  className = '' 
 }) {
+  const firstRenderRef = useRef(true);
+  const modalRef = useRef(null);
+
+  // Log only on first render
+  if (firstRenderRef.current) {
+    console.log('MODAL: First Render', { 
+      isOpen, 
+      title, 
+      childrenType: typeof children, 
+      onCloseType: typeof onClose 
+    });
+    firstRenderRef.current = false;
+  }
+
+  // Handle escape key and outside click
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscapeKey = (e) => {
       if (e.key === 'Escape' && isOpen) {
+        console.log('MODAL: Escape key pressed');
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    const handleOutsideClick = (e) => {
+      if (
+        isOpen && 
+        modalRef.current && 
+        !modalRef.current.contains(e.target)
+      ) {
+        console.log('MODAL: Outside click detected');
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
   }, [isOpen, onClose]);
+
+  // Prevent rendering if not open
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            className={styles.overlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className={styles.modalContainer}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", duration: 0.5 }}
-          >
-            <div className={styles.modal}>
-              <div className={styles.header}>
-                <h2 className={styles.title}>{title}</h2>
-              </div>
-              <div className={styles.content}>
-                {children}
-              </div>
-              {(primaryButtonText || secondaryButtonText) && (
-                <div className={styles.modalActionButtons}>
-                  {secondaryButtonText && (
-                    <SecondaryButton 
-                      onClick={onSecondaryButtonClick || onClose}
-                    >
-                      {secondaryButtonText}
-                    </SecondaryButton>
-                  )}
-                  {primaryButtonText && (
-                    <PrimaryButton 
-                      onClick={onPrimaryButtonClick}
-                    >
-                      {primaryButtonText}
-                    </PrimaryButton>
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
+      <div className={styles.modalOverlay}>
+        <motion.div
+          ref={modalRef}
+          className={`${styles.modal} ${className}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className={styles.modalHeader}>
+            <h2>{title}</h2>
+            <button 
+              className={styles.closeButton} 
+              onClick={() => {
+                console.log('MODAL: Close button clicked');
+                onClose();
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          <div className={styles.modalContent}>
+            {children}
+          </div>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
@@ -83,10 +95,5 @@ Modal.propTypes = {
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
-  primaryButtonText: PropTypes.string,
-  secondaryButtonText: PropTypes.string,
-  onPrimaryButtonClick: PropTypes.func,
-  onSecondaryButtonClick: PropTypes.func,
-  primaryButtonVariant: PropTypes.oneOf(['confirm', 'destructive']),
-  secondaryButtonVariant: PropTypes.oneOf(['cancel', 'destructive'])
+  className: PropTypes.string
 };

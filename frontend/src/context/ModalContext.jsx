@@ -1,14 +1,13 @@
-import { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
+import PropTypes from 'prop-types';
 
-// Define modal types
+// Define modal actions
 export const MODAL_TYPES = {
+  CUSTOM: 'CUSTOM',
   ALERT: 'ALERT',
-  CONFIRM: 'CONFIRM',
-  INPUT: 'INPUT',
-  CUSTOM: 'CUSTOM'
+  CONFIRM: 'CONFIRM'
 };
 
-// Define action types
 const ACTIONS = {
   OPEN: 'OPEN',
   CLOSE: 'CLOSE',
@@ -20,73 +19,138 @@ const initialState = {
   modals: []
 };
 
-// Reducer
+// Modal reducer with more robust state management
 function modalReducer(state, action) {
+  console.log('MODALCONTEXT: State Change', {
+    action: action.type,
+    payload: action.payload
+  });
+
   switch (action.type) {
     case ACTIONS.OPEN:
+      // Prevent duplicate modals by checking type and props
+      const isDuplicate = state.modals.some(
+        modal => modal.type === action.payload.type && 
+                 JSON.stringify(modal.props) === JSON.stringify(action.payload.props)
+      );
+
+      if (isDuplicate) {
+        console.warn('MODALCONTEXT: Prevented duplicate modal');
+        return state;
+      }
+
       return {
         ...state,
-        modals: [...state.modals, { 
-          id: action.payload.id, 
-          type: action.payload.type, 
-          props: action.payload.props 
+        modals: [...state.modals, {
+          id: action.payload.id || `${Date.now()}`,
+          type: action.payload.type,
+          props: action.payload.props || {}
         }]
       };
+
     case ACTIONS.CLOSE:
+      // If no specific modal ID is provided, close the last modal
+      const modalIdToClose = action.payload || 
+        (state.modals.length > 0 ? state.modals[state.modals.length - 1].id : null);
+
+      console.log('MODALCONTEXT: Closing modal', { 
+        modalId: modalIdToClose,
+        currentModals: state.modals.map(m => m.id)
+      });
+
       return {
         ...state,
-        modals: state.modals.filter(modal => modal.id !== action.payload)
+        modals: modalIdToClose 
+          ? state.modals.filter(modal => modal.id !== modalIdToClose)
+          : state.modals
       };
+
     case ACTIONS.CLOSE_ALL:
       return {
         ...state,
         modals: []
       };
+
     default:
       return state;
   }
 }
 
-const ModalContext = createContext(null);
+// Create context
+const ModalContext = createContext();
 
-function ModalProvider({ children }) {
+// Modal Provider Component
+export function ModalProvider({ children }) {
   const [state, dispatch] = useReducer(modalReducer, initialState);
 
-  const openModal = useCallback((modalType, props = {}) => {
-    const id = Date.now().toString();
+  // Open modal with unique ID and type checking
+  const openModal = useCallback((modalType, modalProps = {}) => {
+    const modalId = `${Date.now()}`;
+    
+    console.log('MODALCONTEXT: openModal CALLED', { 
+      modalType, 
+      modalId,
+      propsKeys: Object.keys(modalProps),
+      currentModalCount: state.modals.length
+    });
+
     dispatch({
       type: ACTIONS.OPEN,
-      payload: { id, type: modalType, props }
+      payload: {
+        id: modalId,
+        type: modalType,
+        props: modalProps
+      }
     });
-    return id;
-  }, []);
 
+    return modalId;
+  }, [state.modals.length]);
+
+  // Close modal with more detailed logging
   const closeModal = useCallback((modalId) => {
-    dispatch({ type: ACTIONS.CLOSE, payload: modalId });
-  }, []);
+    console.log('MODALCONTEXT: closeModal CALLED', { 
+      modalId, 
+      currentModals: state.modals.map(m => m.id),
+      currentModalsCount: state.modals.length
+    });
 
+    dispatch({ 
+      type: ACTIONS.CLOSE, 
+      payload: modalId 
+    });
+  }, [state.modals]);
+
+  // Close all modals
   const closeAllModals = useCallback(() => {
+    console.log('MODALCONTEXT: Closing all modals');
     dispatch({ type: ACTIONS.CLOSE_ALL });
   }, []);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    modals: state.modals,
+    openModal,
+    closeModal,
+    closeAllModals
+  }), [state.modals, openModal, closeModal, closeAllModals]);
+
   return (
-    <ModalContext.Provider value={{ 
-      modals: state.modals,
-      openModal,
-      closeModal,
-      closeAllModals
-    }}>
+    <ModalContext.Provider value={contextValue}>
       {children}
     </ModalContext.Provider>
   );
 }
 
-function useModal() {
+// Custom hook to use modal context
+export function useModal() {
   const context = useContext(ModalContext);
   if (!context) {
-    throw new Error('useModal must be used within ModalProvider');
+    throw new Error('useModal must be used within a ModalProvider');
   }
   return context;
 }
 
-export { ModalProvider, useModal };
+// PropTypes for type checking
+ModalProvider.propTypes = {
+  children: PropTypes.node.isRequired
+};

@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSound } from './context/SoundContext';
 import { ZoomProvider } from './context/ZoomContext';
 import { ModalProvider, useModal, MODAL_TYPES } from './context/ModalContext';
@@ -21,72 +21,61 @@ import styles from './styles/App.module.css';
 function ModalRenderer() {
   const { modals, closeModal } = useModal();
 
-  console.log('Current Modals:', modals);
+  // Render modals with proper component conversion
+  const renderedModals = useMemo(() => {
+    console.log('MODALRENDERER: Rendering Modals', { 
+      modalCount: modals.length 
+    });
 
-  return modals.map(modal => {
-    console.log('Rendering Modal:', modal);
+    return modals.map(modal => {
+      console.log('MODALRENDERER: Rendering Individual Modal', { 
+        modalId: modal.id, 
+        modalType: modal.type 
+      });
 
-    switch (modal.type) {
-      case MODAL_TYPES.ALERT:
-        return (
-          <Modal 
-            key={modal.id}
-            isOpen={true}
-            onClose={() => closeModal(modal.id)}
-            title={modal.props.title || 'Alert'}
-          >
-            <p>{modal.props.message}</p>
-            <div className={styles.modalActionButtons}>
-              <button 
-                className={`${styles.modalButton} ${styles.modalButtonConfirm}`}
-                onClick={() => {
-                  modal.props.onConfirm?.();
-                  closeModal(modal.id);
-                }}
-              >
-                OK
-              </button>
-            </div>
-          </Modal>
-        );
-      case MODAL_TYPES.CONFIRM:
-        return (
-          <Modal 
-            key={modal.id}
-            isOpen={true}
-            onClose={() => closeModal(modal.id)}
-            title={modal.props.title || 'Confirm Action'}
-            primaryButtonText={modal.props.secondaryButtonText || 'Cancel'}
-            secondaryButtonText={modal.props.primaryButtonText || 'Confirm'}
-            onPrimaryButtonClick={() => {
-              modal.props.onSecondaryButtonClick?.() || modal.props.onCancel?.();
-              closeModal(modal.id);
-            }}
-            onSecondaryButtonClick={() => {
-              modal.props.onPrimaryButtonClick?.() || modal.props.onConfirm?.();
-              closeModal(modal.id);
-            }}
-          >
-            <p>{modal.props.message}</p>
-          </Modal>
-        );
-      case MODAL_TYPES.CUSTOM:
-        console.log('CUSTOM Modal Props:', modal.props);
-        return (
-          <Modal 
-            key={modal.id}
-            isOpen={true}
-            onClose={() => closeModal(modal.id)}
-            title={modal.props.title || 'Custom Modal'}
-          >
-            {modal.props.children}
-          </Modal>
-        );
-      default:
-        console.log('Unhandled Modal Type:', modal.type);
-        return null;
-    }
-  });
+      switch (modal.type) {
+        case MODAL_TYPES.CUSTOM:
+          console.log('CUSTOM Modal Props', {
+            title: modal.props.title,
+            childrenType: typeof modal.props.children,
+            onCloseType: typeof modal.props.onClose
+          });
+          return (
+            <Modal 
+              key={modal.id}
+              isOpen={true}
+              onClose={() => {
+                console.log('MODAL: Closing with ID', modal.id);
+                closeModal(modal.id);
+              }}
+              title={modal.props.title || 'Custom Modal'}
+              {...modal.props}
+            >
+              {modal.props.children}
+            </Modal>
+          );
+        case MODAL_TYPES.ALERT:
+          return (
+            <Modal 
+              key={modal.id}
+              isOpen={true}
+              onClose={() => {
+                console.log('MODAL: Closing Alert with ID', modal.id);
+                closeModal(modal.id);
+              }}
+              title={modal.props.title || 'Alert'}
+            >
+              <p>{modal.props.message}</p>
+            </Modal>
+          );
+        default:
+          console.log('Unhandled Modal Type:', modal.type);
+          return null;
+      }
+    }).filter(Boolean); // Remove any null values
+  }, [modals, closeModal]);
+
+  return renderedModals.length > 0 ? renderedModals : null;
 }
 
 const SettingsIcon = () => (
