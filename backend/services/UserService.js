@@ -464,23 +464,85 @@ class UserService {
         }
     }
 
-    async banUser(userUuid, reason, duration) {
+    async banUser(userUuid, reason, duration = null) {
+        const lock = new Lock(`user_ban:${userUuid}`);
+        
         try {
-            await UserDB.ban(userUuid, reason, duration);
-            return { success: true, message: 'User banned' };
+            await lock.acquire();
+    
+            const user = await UserDB.findOne({ userUuid });
+            if (!user) throw new NotFoundError('User not found');
+            if (user.isBanned) throw new ValidationError('User already banned');
+            if (!reason) throw new ValidationError('Ban reason required');
+    
+            const banExpiresAt = duration ? new Date(Date.now() + duration) : null;
+    
+            await UserDB.update({ userUuid }, {
+                isBanned: true,
+                banReason: reason,
+                banExpiresAt,
+                bannedAt: new Date()
+            });
+    
+            logger.info(`User ${userUuid} banned`, { reason, duration });
+            await SessionManager.endUserSessions(userUuid);
+    
+            return { 
+                success: true, 
+                message: 'User banned', 
+                banDetails: { reason, expiresAt: banExpiresAt }
+            };
         } catch (error) {
-            logger.error(`Failed to ban user ${userUuid}:`, error.message);
+            logger.error(`Ban failed for user ${userUuid}:`, error.message);
             throw error;
+        } finally {
+            await lock.release();
         }
     }
-
+    
     async unbanUser(userUuid) {
+        const lock = new Lock(`user_unban:${userUuid}`);
+        
         try {
-            await UserDB.unban(userUuid);
+            await lock.acquire();
+    
+            const user = await UserDB.findOne({ userUuid });
+            if (!user) throw new NotFoundError('User not found');
+            if (!user.isBanned) throw new ValidationError('User not banned');
+    
+            await UserDB.update({ userUuid }, {
+                isBanned: false,
+                banReason: null,
+                banExpiresAt: null,
+                bannedAt: null
+            });
+    
+            logger.info(`User ${userUuid} unbanned`);
+    
             return { success: true, message: 'User unbanned' };
         } catch (error) {
-            logger.error(`Failed to unban user ${userUuid}:`, error.message);
+            logger.error(`Unban failed for user ${userUuid}:`, error.message);
             throw error;
+        } finally {
+            await lock.release();
+        }
+    }
+    
+    // This is bascially a background type of task
+    async checkAndRemoveExpiredBans() {
+        try {
+            const expiredUsers = await UserDB.find({
+                isBanned: true,
+                banExpiresAt: { $lt: new Date() }
+            });
+    
+            for (const user of expiredUsers) {
+                await this.unbanUser(user.userUuid);
+            }
+    
+            logger.info(`Automatically unbanned ${expiredUsers.length} users`);
+        } catch (error) {
+            logger.error('Failed to remove expired bans:', error.message);
         }
     }
 

@@ -439,34 +439,6 @@ export const UserDB = {
         }
     },
 
-    async ban(userUuid, reason, duration = null) {
-        try {
-            const banData = {
-                isBanned: true,
-                banReason: reason,
-                banExpiresAt: duration ? new Date(Date.now() + duration) : null
-            };
-            return await this.update({ userUuid }, banData);
-        } catch (error) {
-            logger.error(`Failed to ban user: ${error.message}`);
-            throw new DatabaseError('Failed to ban user');
-        }
-    },
-
-    async unban(userUuid) {
-        try {
-            const unbanData = {
-                isBanned: false,
-                banReason: null,
-                banExpiresAt: null
-            };
-            return await this.update({ userUuid }, unbanData);
-        } catch (error) {
-            logger.error(`Failed to unban user: ${error.message}`);
-            throw new DatabaseError('Failed to unban user');
-        }
-    },
-
     // Replace email verification methods with no-op when feature is disabled
     verify: isFeatureEnabled('EMAIL_VERIFICATION') 
         ? async function(token) {
