@@ -56,20 +56,29 @@ axiosInstance.interceptors.response.use(
 
     console.log('API Error Response:', error.response?.data);
     
-    // Check for invalid session conditions
-    if (error.response?.status === 401 || 
-        error.response?.data?.message?.toLowerCase().includes('invalid session')) {
-      // Set global flag to invalid
-      isTokenValid = false;
+    // Detailed 401 error handling
+    if (error.response?.status === 401) {
+      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
       
-      // Remove invalid session token
-      localStorage.removeItem(`sessionToken_${window.name}`);
-      localStorage.removeItem(`user_${window.name}`);
+      // Check for specific types of 401 errors
+      if (errorMessage.includes('session')) {
+        // Invalidate session and remove tokens
+        isTokenValid = false;
+        localStorage.removeItem(`sessionToken_${window.name}`);
+        localStorage.removeItem(`user_${window.name}`);
+        
+        return Promise.reject({
+          message: 'Session terminated. Please login again.',
+          type: 'SessionError',
+          status: 401
+        });
+      } 
       
+      // For all other 401 errors, pass through the original message
       return Promise.reject({
-        message: 'Session terminated. Please login again.',
-        type: 'SessionError',
-        status: error.response?.status || 401
+        message: error.response?.data?.message || 'Unauthorized',
+        type: 'AuthenticationError',
+        status: 401
       });
     } else if (error.request) {
       // The request was made but no response was received
@@ -83,8 +92,8 @@ axiosInstance.interceptors.response.use(
       // Something happened in setting up the request
       console.error('API Setup Error:', error.message);
       return Promise.reject({
-        message: 'Session terminated. Please login again.',
-        type: 'SessionError',
+        message: error.message || 'An unexpected error occurred',
+        type: 'UnknownError',
         status: null
       });
     }
