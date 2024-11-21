@@ -28,7 +28,10 @@ export default function GameSettingsForm({
     maxPlayers: initialGame?.maxPlayers || 2,
     turnLength: initialGame?.turnLength || 500,
     hasPassword: initialGame?.hasPassword || false,
-    password: ''  // Only used when setting a new password
+    // IMPORTANT: Pre-fill existing game password. 
+    // DO NOT change this to an empty string or remove existing password.
+    // This is a game-specific password, not a system password.
+    password: initialGame?.password || ''
   });
 
   const [formErrors, setFormErrors] = useState({});
