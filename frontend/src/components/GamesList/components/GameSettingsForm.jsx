@@ -61,9 +61,13 @@ export default function GameSettingsForm({
     if (formData.turnLength < 100 || formData.turnLength > 2000) 
       errors.turnLength = 'Turn length must be between 100 and 2000';
 
-    // If password is being changed, validate it
-    if (formData.hasPassword && !formData.password.trim()) {
-      errors.password = 'Password is required when hasPassword is true';
+    // Specific password validation
+    if (formData.hasPassword) {
+      if (!formData.password.trim()) {
+        errors.password = 'Password is required when game is password protected';
+      } else if (formData.password.length < 4) {
+        errors.password = 'Password must be at least 4 characters long';
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -81,10 +85,12 @@ export default function GameSettingsForm({
         hasPassword: formData.hasPassword
       };
 
-      // Only include password if it's being set
-      if (formData.hasPassword && formData.password.trim()) {
+      // Only include password if hasPassword is true
+      if (formData.hasPassword) {
         updateData.password = formData.password;
       }
+
+      console.log('Game Settings Update:', updateData);
 
       // Call update method
       const result = await gameService.updateGameSettings(

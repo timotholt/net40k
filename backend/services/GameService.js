@@ -7,7 +7,7 @@ import {
 import { GameDB } from '../models/Game.js';
 import { UserDB } from '../models/User.js';
 import logger from '../utils/logger.js';
-import { ValidationError, AuthorizationError } from '../utils/errors.js';
+import { ValidationError, AuthorizationError, NotFoundError } from '../utils/errors.js';
 
 class GameService {
   constructor() {
@@ -104,24 +104,23 @@ class GameService {
     });
 
     try {
-      // Check user privileges first
-      const userPrivileges = await this.userService.hasSpecialPrivileges(userUuid);
+      // Check admin privileges first
+      const adminPrivileges = await this.userService.hasSpecialPrivileges(userUuid);
       
       // Find the game first
       const game = await GameDB.findOne({ gameUuid });
       
       if (!game) {
-        throw new ValidationError(`Game with UUID ${gameUuid} not found`);
+        throw new NotFoundError('Game not found');
       }
 
-      // Authorization checks
+      // Check creator or special access
       const isCreator = game.creatorUuid === userUuid;
-      const hasSpecialAccess = userPrivileges.hasSpecialAccess;
 
-      // Only allow update if:
-      // 1. User is the game creator, OR
+      // Authorization check
+      // 1. User is creator
       // 2. User has special access (admin, active)
-      if (!(isCreator || hasSpecialAccess)) {
+      if (!(isCreator || adminPrivileges)) {
         throw new AuthorizationError('You are not authorized to update this game\'s settings');
       }
 
@@ -143,15 +142,19 @@ class GameService {
           return obj;
         }, {});
 
-      console.log('Safe updates:', safeUpdates);
+      console.log('Safe updates before password check:', safeUpdates);
       
-      // Specific password logic
+      // Specific password logic with more detailed validation
       if (safeUpdates.hasPassword !== undefined) {
-        if (safeUpdates.hasPassword && !safeUpdates.password) {
-          throw new ValidationError('Password is required when hasPassword is true');
+        // If hasPassword is true, password must be provided and non-empty
+        if (safeUpdates.hasPassword === true) {
+          if (!safeUpdates.password || safeUpdates.password.trim() === '') {
+            throw new ValidationError('A non-empty password is required when hasPassword is true');
+          }
         }
-        if (!safeUpdates.hasPassword) {
-          // Clear password if hasPassword is false
+        
+        // If hasPassword is false, clear the password
+        if (safeUpdates.hasPassword === false) {
           safeUpdates.password = null;
         }
       }
@@ -169,13 +172,10 @@ class GameService {
       // Perform the update
       await GameDB.update({ gameUuid }, safeUpdates);
 
-      // Retrieve and return the updated game
-      const updatedGame = await GameDB.findOne({ gameUuid });
-      
-      logger.info(`Game updated: ${gameUuid}`);
-      return updatedGame.toFullGame();
+      // Return the updated game
+      return await this.getGameSettings(gameUuid);
     } catch (error) {
-      logger.error(`Update game failed: ${error.message}`);
+      console.error('Game update error:', error);
       throw error;
     }
   }
