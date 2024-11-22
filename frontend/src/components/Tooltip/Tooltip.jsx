@@ -64,6 +64,7 @@ import styles from './Tooltip.module.css';
 const Tooltip = ({ 
   children, 
   text, 
+  icon,
   position = 'top', 
   variant = 'default',
   disabled = false
@@ -90,7 +91,8 @@ const Tooltip = ({
           role="tooltip"
           aria-hidden={!isVisible}
         >
-          {text}
+          {icon}
+          {typeof text === 'string' ? <span>{text}</span> : text}
         </div>
       )}
     </div>
@@ -103,6 +105,7 @@ Tooltip.propTypes = {
     PropTypes.string, 
     PropTypes.node
   ]).isRequired,
+  icon: PropTypes.node,
   position: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
   variant: PropTypes.oneOf(['default', 'warning', 'error', 'success']),
   disabled: PropTypes.bool

@@ -7,35 +7,8 @@ import {
 } from '../../Icons/GameIcons';
 import { GearIcon } from '../../Icons/GearIcon';
 import PropTypes from 'prop-types';
+import Tooltip from '../../Tooltip/Tooltip';
 import styles from './GameListItem.module.css';
-
-const JoinButtonTooltip = ({ game }) => {
-  if (game.players.length >= game.maxPlayers) {
-    return (
-      <div className={styles.tooltip}>
-        <svg viewBox="0 0 24 24" width="14" height="14">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" />
-          <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" />
-        </svg>
-        <span>Game is full</span>
-      </div>
-    );
-  }
-  
-  if (game.hasPassword) {
-    return (
-      <div className={styles.tooltip}>
-        <svg viewBox="0 0 24 24" width="14" height="14">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" fill="none" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" fill="none" />
-        </svg>
-        <span>Password required</span>
-      </div>
-    );
-  }
-
-  return null;
-};
 
 export default function GameListItem({ game, isSelected, onSelect, onJoin, onView, onDelete, onGameSettings }) {
   const formatTurnLength = (ms) => {
@@ -48,6 +21,18 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
 
   const handleContextMenu = (e) => {
     onSelect(); // Select on right click too
+  };
+
+  const getJoinTooltipText = () => {
+    if (game.players.length >= game.maxPlayers) {
+      return "Game is full";
+    }
+    
+    if (game.hasPassword) {
+      return "Password required";
+    }
+
+    return null;
   };
 
   return (
@@ -87,18 +72,25 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
 
       <div className={styles.actions}>
         <div className={styles.buttonWrapper}>
-          <IconButton 
-            icon={JoinIcon}
-            onClick={() => onJoin(game.gameUuid)}
-            disabled={game.players.length >= game.maxPlayers}
-            title="Join Game"
-          />
-          <JoinButtonTooltip game={game} />
+          <Tooltip 
+            text={getJoinTooltipText()}
+            icon={game.hasPassword ? <LockIcon /> : null}
+            position="top"
+          >
+            <IconButton 
+              icon={JoinIcon}
+              onClick={() => onJoin(game.gameUuid)}
+              disabled={game.players.length >= game.maxPlayers}
+              title="Join Game"
+            />
+          </Tooltip>
+
           <IconButton 
             icon={ViewIcon}
             onClick={() => onView(game.gameUuid)}
             title="View Game"
           />
+
           {game.isYours && (
             <>
               <IconButton 

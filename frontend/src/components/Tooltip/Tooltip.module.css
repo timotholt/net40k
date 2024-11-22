@@ -15,17 +15,35 @@
 
 .tooltip {
   position: absolute;
-  background-color: var(--tooltip-bg-default);
-  color: var(--tooltip-text-color);
-  padding: 0.5rem;
-  border-radius: var(--tooltip-border-radius);
-  z-index: 100;
-  font-size: 0.875rem;
+  top: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gradient-screen);
+  backdrop-filter: blur(10px);
+  color: var(--color-soft-white);
+  padding: 0.0rem;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
+  z-index: 10;
+  border: var(--border-width) solid var(--color-green);
+  box-shadow: var(--glow-container);
+}
+
+.tooltip > * {
+  padding: 0.1rem 0.25rem;
+}
+
+.tooltip svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
 }
 
 .tooltipWrapper:hover .tooltip {
