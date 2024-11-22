@@ -230,7 +230,7 @@ Project Link: [https://github.com/timotholt/net40k](https://github.com/timotholt
 | Project contains an appropriate level of comments. | 2% | ✅ |
 | Project is pushed to GitHub, and contains a README file that documents the project, including an overall description of the project. | 5% | ✅ |
 | Ensure that the program runs without errors | 4% | ✅ |
-| Level of effort displayed in creativity, presentation, and user experience. 5% | ✅ |
+| Level of effort displayed in creativity, presentation, and user experience. | 5% | ✅ |
 | Demonstrate proper usage of ES6 syntax and tools. | 2% | ✅ |
 | Use functions and classes to adhere to the DRY principle. | 2% | ✅ |
 | Use Promises and async/await, where appropriate. | 2% | ✅ |
