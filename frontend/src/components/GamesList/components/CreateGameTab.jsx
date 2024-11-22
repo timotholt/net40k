@@ -3,7 +3,7 @@ import { InputField } from '../../FormFields';
 import SharedPasswordField from '../../FormFields/SharedPasswordField';
 import { GameIcon, PlayersIcon } from '../../Icons/MenuIcons';
 import styles from './CreateGameTab.module.css';
-import gameService from '../../../services/GameService';
+import { gameService } from '../../../services/gameService';
 
 export default function CreateGameTab() {
   const [formData, setFormData] = useState({
