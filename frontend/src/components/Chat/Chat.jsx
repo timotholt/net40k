@@ -10,17 +10,19 @@ import styles from './Chat.module.css';
 export default function Chat({ 
   endpoint, 
   placeholder, 
-  messages: initialMessages, 
+  messages: initialMessages = [], 
   type = 'default',
   onInputFocus,
   onInputBlur,
   onInputKeyDown,
-  filter,
+  filter: initialFilter = '',
   onFilterChange
 }) {
-  const [messages, setMessages] = useState(initialMessages || []);
+  const [messages, setMessages] = useState(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [isFilterMode, setIsFilterMode] = useState(false);
+  const [filter, setFilter] = useState(initialFilter);
+  const [filteredMessages, setFilteredMessages] = useState(initialMessages);
   const messagesEndRef = useRef(null);
   const user = useSelector(selectUser);
   // const socket = useSocket(); // Socket.io removed
@@ -30,59 +32,89 @@ export default function Chat({
   const isSpecialChat = endpoint.includes('news') || endpoint.includes('system') || endpoint.includes('games');
   const chatGame = endpoint.split('/').pop(); // Get the chat game from endpoint
 
+  // Debugging function to selectively log messages
+  const debugLog = (...args) => {
+    if (!isLobbyChat) {
+      console.log(...args);
+    }
+  };
+
   useEffect(() => {
-    if (initialMessages) {
-      setMessages(initialMessages);
-      return;
+    if (!isLobbyChat) {
+      debugLog('Chat Endpoint:', endpoint);
+      debugLog('Initial Messages Count:', initialMessages?.length);
+    }
+    setMessages(initialMessages || []);
+  }, [endpoint, initialMessages]);
+
+  useEffect(() => {
+    if (!isLobbyChat) {
+      debugLog('Filtering Messages - Endpoint:', endpoint);
+      debugLog('Total Messages:', messages.length);
+      debugLog('Filtered Messages:', filteredMessages.length);
+    }
+  }, [messages, filteredMessages, endpoint]);
+
+  // Modify filtering logic to handle whisper and special chats
+  useEffect(() => {
+    let processedMessages = messages;
+
+    // Special handling for whisper chat
+    if (isWhisperChat) {
+      processedMessages = messages.filter(msg => {
+        // If user is not defined, fall back to a safe filtering mechanism
+        if (!user) {
+          debugLog('No user context - using fallback whisper filtering');
+          
+          // For mock messages, check if they have specific properties indicating a whisper
+          const isMockWhisper = 
+            msg.isWhisper === true || 
+            msg.type === 'whisper' ||
+            (msg.userUuid && msg.userUuid.startsWith('mock_whisper_'));
+
+          debugLog('Mock Whisper Check:', {
+            userUuid: msg.userUuid,
+            isWhisper: msg.isWhisper,
+            type: msg.type,
+            isMockWhisper
+          });
+
+          return isMockWhisper;
+        }
+
+        // Check if the message is a whisper or involves the current user
+        const isUserInvolved = 
+          msg.userUuid === user.userUuid || 
+          msg.recipientUuid === user.userUuid ||
+          msg.isWhisper === true;
+
+        debugLog('Whisper Message Check:', {
+          userUuid: msg.userUuid,
+          currentUserUuid: user?.userUuid,
+          recipientUuid: msg.recipientUuid,
+          isWhisper: msg.isWhisper,
+          isUserInvolved
+        });
+
+        return isUserInvolved;
+      });
     }
 
-    // Initial fetch of messages
-    const fetchMessages = async () => {
-      try {
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error('Failed to fetch messages');
-        const data = await response.json();
-        setMessages(data);
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      }
-    };
-
-    fetchMessages();
-
-    /* Socket.io removed
-    // Socket.io event handlers
-    if (socket) {
-      // Join the chat game
-      socket.emit('join_chat', chatGame);
-
-      // Listen for new messages
-      socket.on(`chat_message_${chatGame}`, (message) => {
-        setMessages(prev => [...prev, message]);
-      });
-
-      // Listen for message updates (edits, deletions)
-      socket.on(`message_update_${chatGame}`, ({ messageId, update }) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId ? { ...msg, ...update } : msg
-        ));
-      });
-
-      // Listen for message deletions
-      socket.on(`message_delete_${chatGame}`, (messageId) => {
-        setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      });
-
-      // Cleanup
-      return () => {
-        socket.emit('leave_chat', chatGame);
-        socket.off(`chat_message_${chatGame}`);
-        socket.off(`message_update_${chatGame}`);
-        socket.off(`message_delete_${chatGame}`);
-      };
+    // Apply text filter if exists
+    if (filter) {
+      const lowercaseFilter = filter.toLowerCase();
+      processedMessages = processedMessages.filter(msg => 
+        msg.message.toLowerCase().includes(lowercaseFilter) ||
+        msg.nickname?.toLowerCase().includes(lowercaseFilter)
+      );
     }
-    */
-  }, [endpoint, initialMessages, chatGame]);
+
+    if (!isLobbyChat) {
+      debugLog('Processed Whisper Messages:', processedMessages.length);
+    }
+
+    setFilteredMessages(processedMessages);
+  }, [messages, filter, isWhisperChat, user]);
 
   useEffect(() => {
     scrollToBottom();
@@ -108,21 +140,17 @@ export default function Chat({
         timestamp: new Date().toISOString(),
         isWhisper: isWhisperChat
       };
+      console.log('Mock Message:', {
+        id: mockMessage.id,
+        userId: mockMessage.userUuid,
+        message: mockMessage.message,
+        timestamp: mockMessage.timestamp
+      });
       setMessages(prev => [...prev, mockMessage]);
       return;
     }
 
     try {
-      /* Socket.io removed
-      if (socket) {
-        // Emit message through socket
-        socket.emit('chat_message', {
-          game: chatGame,
-          message: messageContent,
-          userId: user.userUuid
-        });
-      } else {
-      */
       // HTTP-only implementation
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -135,10 +163,13 @@ export default function Chat({
 
       if (!response.ok) throw new Error('Failed to send message');
       const data = await response.json();
+      console.log('Sent Message:', {
+        id: data.id,
+        userId: data.userId || data.userUuid,
+        message: data.message,
+        timestamp: data.timestamp
+      });
       setMessages(prev => [...prev, data]);
-      /* Socket.io removed
-      }
-      */
     } catch (err) {
       console.error('Failed to send message:', err);
     }
@@ -148,7 +179,7 @@ export default function Chat({
     if (e.key === 'Escape') {
       if (filter) {
         e.preventDefault();
-        onFilterChange('');
+        setFilter('');
       }
     }
     if (onInputKeyDown) {
@@ -160,22 +191,10 @@ export default function Chat({
     if (!isSpecialChat) {
       setIsFilterMode(!isFilterMode);
       if (isFilterMode) {
-        onFilterChange('');
+        setFilter('');
       }
     }
   };
-
-  // Memoize filtered messages to prevent unnecessary re-renders
-  const filteredMessages = useMemo(() => {
-    if (!filter) return messages;
-    const searchTerm = filter.toLowerCase();
-    return messages.filter(msg => {
-      if (!msg) return false;
-      const messageText = msg.message?.toLowerCase() || '';
-      const nickname = msg.nickname?.toLowerCase() || '';
-      return messageText.includes(searchTerm) || nickname.includes(searchTerm);
-    });
-  }, [messages, filter]);
 
   const canFilter = isSpecialChat || isFilterMode;
   const showSendButton = !isSpecialChat && !isFilterMode;
@@ -183,19 +202,45 @@ export default function Chat({
   return (
     <div className={`${styles.chatContainer} ${styles[type]}`}>
       <div className={styles.messages}>
-        {filteredMessages.length > 0 ? (
-          filteredMessages
-            .filter(msg => msg && msg.userUuid)  // Ensure message and userUuid exist
-            .map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                message={msg}
-                isOwnMessage={user && msg.userUuid === user.userUuid}
-              />
-            ))
-        ) : filter ? (
-          <EmptyState message="No messages match your search. Press <ESC> to clear." />
-        ) : null}
+        {(() => {
+          debugLog('Rendering Messages:', {
+            totalMessages: messages.length,
+            filteredMessagesLength: filteredMessages.length,
+            messages: messages.map(msg => ({
+              id: msg.id,
+              userUuid: msg.userUuid,
+              isWhisper: msg.isWhisper,
+              type: msg.type,
+              message: msg.message
+            })),
+            filteredMessages: filteredMessages.map(msg => ({
+              id: msg.id,
+              userUuid: msg.userUuid,
+              isWhisper: msg.isWhisper,
+              type: msg.type,
+              message: msg.message
+            }))
+          });
+
+          if (filteredMessages.length > 0) {
+            return filteredMessages
+              .filter(msg => {
+                const hasValidMessage = msg && msg.userUuid;
+                return hasValidMessage;
+              })
+              .map((msg, index) => (
+                <ChatMessage
+                  key={`${msg.id}-${index}`}
+                  message={msg}
+                  isOwnMessage={user && msg.userUuid === user.userUuid}
+                />
+              ));
+          } else if (filter) {
+            return <EmptyState message="No messages match your search. Press <ESC> to clear." />;
+          } else {
+            return null;
+          }
+        })()}
         <div ref={messagesEndRef} />
       </div>
 
@@ -245,7 +290,7 @@ export default function Chat({
               <input
                 type="text"
                 value={filter}
-                onChange={(e) => onFilterChange(e.target.value)}
+                onChange={(e) => setFilter(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={onInputFocus}
                 onBlur={onInputBlur}
@@ -259,7 +304,7 @@ export default function Chat({
             <input
               type="text"
               value={canFilter ? filter : newMessage}
-              onChange={(e) => canFilter ? onFilterChange(e.target.value) : setNewMessage(e.target.value)}
+              onChange={(e) => canFilter ? setFilter(e.target.value) : setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={onInputFocus}
               onBlur={onInputBlur}

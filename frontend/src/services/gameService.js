@@ -16,7 +16,7 @@ const gameService = {
         }
       });
       
-      console.log('Raw games from backend:', response.data);
+      // console.log('Raw games from backend:', response.data);
 
       const transformedGames = response.data.map(game => {
         const transformed = {
@@ -35,15 +35,15 @@ const gameService = {
           isFriendGame: false
         };
 
-        console.log(`Transformed game ${game.gameUuid}:`, {
-          hasPassword: transformed.hasPassword,
-          originalHasPassword: game.hasPassword
-        });
+        // console.log(`Transformed game ${game.gameUuid}:`, {
+        //   hasPassword: transformed.hasPassword,
+        //   originalHasPassword: game.hasPassword
+        // });
 
         return transformed;
       });
 
-      console.log('Transformed games:', transformedGames);
+      // console.log('Transformed games:', transformedGames);
 
       return {
         games: transformedGames,
@@ -97,11 +97,11 @@ const gameService = {
     try {
       const response = await axiosInstance.get(`/games/${gameUuid}/settings`);
       
-      console.log('GAME SERVICE: Get Game Settings Response', {
-        gameUuid,
-        responseData: response.data,
-        fullResponse: response
-      });
+      // console.log('GAME SERVICE: Get Game Settings Response', {
+      //   gameUuid,
+      //   responseData: response.data,
+      //   fullResponse: response
+      // });
 
       return response.data;
     } catch (error) {
@@ -122,10 +122,10 @@ const gameService = {
    */
   updateGameSettings: async (gameUuid, settingsData) => {
     try {
-      console.log('Updating game settings:', { 
-        gameUuid, 
-        settingsData 
-      });
+      // console.log('Updating game settings:', { 
+      //   gameUuid, 
+      //   settingsData 
+      // });
 
       // Ensure only specific fields are sent
       const allowedFields = ['name', 'description', 'maxPlayers', 'turnLength', 'hasPassword', 'password'];
@@ -136,11 +136,11 @@ const gameService = {
           return obj;
         }, {});
 
-      console.log('Safe settings data:', safeSettingsData);
+      // console.log('Safe settings data:', safeSettingsData);
 
       const response = await axiosInstance.patch(`/games/${gameUuid}/settings`, safeSettingsData);
       
-      console.log('Update game settings response:', response.data);
+      // console.log('Update game settings response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Failed to update game settings:', error.response?.data || error.message);
