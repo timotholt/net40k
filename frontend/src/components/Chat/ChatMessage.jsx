@@ -37,48 +37,50 @@ export default function ChatMessage({ message, isOwnMessage }) {
   };
 
   // Context menu items for game actions
-  const gameActionContextMenuItems = message.hasAction ? [
-    ...(message.type === 'game_invite' ? [
-      {
-        label: 'Join game',
-        icon: '✅',
-        onClick: () => {
-          console.log(`/join ${message.data.gameId}`);
+  const gameActionContextMenuItems = message.metaData && (
+    message.metaData.gameId ? [
+      ...(message.metaData.inviterId ? [
+        {
+          label: 'Join game',
+          icon: '✅',
+          onClick: () => {
+            console.log(`/join ${message.metaData.gameId}`);
+          }
+        },
+        {
+          label: 'Decline',
+          icon: '❌',
+          onClick: () => {
+            console.log(`/decline ${message.metaData.gameId}`);
+          }
         }
-      },
-      {
-        label: 'Decline',
-        icon: '❌',
-        onClick: () => {
-          console.log(`/decline ${message.data.gameId}`);
+      ] : []),
+      ...(message.metaData.gameId ? [
+        {
+          label: 'View game',
+          icon: '👁️',
+          onClick: () => {
+            console.log(`/view ${message.metaData.gameId}`);
+          }
+        },
+        {
+          label: 'Take turn',
+          icon: '▶️',
+          onClick: () => {
+            console.log(`/play ${message.metaData.gameId}`);
+          }
         }
-      }
-    ] : []),
-    ...(message.type === 'game_turn' ? [
-      {
-        label: 'View game',
-        icon: '👁️',
-        onClick: () => {
-          console.log(`/view ${message.data.gameId}`);
-        }
-      },
-      {
-        label: 'Take turn',
-        icon: '▶️',
-        onClick: () => {
-          console.log(`/play ${message.data.gameId}`);
-        }
-      }
-    ] : [])
-  ] : [];
+      ] : [])
+    ] : []
+  );
 
   // Context menu items for news links
-  const newsLinkContextMenuItems = message.type === 'news_link' ? [
+  const newsLinkContextMenuItems = message.metaData?.url ? [
     {
       label: 'Open link',
       icon: '🔗',
       onClick: () => {
-        window.open(message.data.url, '_blank', 'noopener,noreferrer');
+        window.open(message.metaData.url, '_blank', 'noopener,noreferrer');
       }
     }
   ] : [];
@@ -117,17 +119,17 @@ export default function ChatMessage({ message, isOwnMessage }) {
     <motion.div
       className={`${styles.message} ${isOwnMessage ? styles.ownMessage : ''} ${
         isGameMasterMessage ? styles.gmMessage : ''} ${
-        isNewsMessage && message.hasAction ? styles.newsMessage : ''} ${
-        message.hasAction ? styles.actionable : ''}`}
+        isNewsMessage && message.metaData?.url ? styles.newsMessage : ''} ${
+        message.metaData?.gameId || message.metaData?.url ? styles.actionable : ''}`}
       data-system={isSystemMessage}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {(message.hasAction && (gameActionContextMenuItems.length > 0 || newsLinkContextMenuItems.length > 0)) ? (
+      {(message.metaData?.gameId || message.metaData?.url) && (gameActionContextMenuItems.length > 0 || newsLinkContextMenuItems.length > 0) ? (
         <ContainerWithContextMenu 
-          contextMenuItems={message.type === 'news_link' ? newsLinkContextMenuItems : gameActionContextMenuItems}
+          contextMenuItems={message.metaData?.url ? newsLinkContextMenuItems : gameActionContextMenuItems}
         >
           <MessageContent />
         </ContainerWithContextMenu>

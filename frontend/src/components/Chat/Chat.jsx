@@ -6,6 +6,7 @@ import { SYSTEM_IDS } from '../../config/systemIds';
 import ChatMessage from './ChatMessage';
 import EmptyState from './components/EmptyState';
 import styles from './Chat.module.css';
+import { createMessageUuid } from 'shared/constants/GameUuids';
 
 export default function Chat({ 
   endpoint, 
@@ -68,14 +69,12 @@ export default function Chat({
           
           // For mock messages, check if they have specific properties indicating a whisper
           const isMockWhisper = 
-            msg.isWhisper === true || 
-            msg.type === 'whisper' ||
+            msg.metaData?.isWhisper === true || 
             (msg.userUuid && msg.userUuid.startsWith('mock_whisper_'));
 
           debugLog('Mock Whisper Check:', {
             userUuid: msg.userUuid,
-            isWhisper: msg.isWhisper,
-            type: msg.type,
+            metaData: msg.metaData,
             isMockWhisper
           });
 
@@ -86,13 +85,13 @@ export default function Chat({
         const isUserInvolved = 
           msg.userUuid === user.userUuid || 
           msg.recipientUuid === user.userUuid ||
-          msg.isWhisper === true;
+          msg.metaData?.isWhisper === true;
 
         debugLog('Whisper Message Check:', {
           userUuid: msg.userUuid,
           currentUserUuid: user?.userUuid,
           recipientUuid: msg.recipientUuid,
-          isWhisper: msg.isWhisper,
+          metaData: msg.metaData,
           isUserInvolved
         });
 
@@ -133,15 +132,17 @@ export default function Chat({
 
     if (initialMessages) {
       const mockMessage = {
-        id: Date.now(),
+        messageUuid: createMessageUuid(),
         userUuid: user.userUuid,
         nickname: user.nickname || "You",
         message: messageContent,
         timestamp: new Date().toISOString(),
-        isWhisper: isWhisperChat
+        metaData: {
+          isWhisper: isWhisperChat
+        }
       };
       console.log('Mock Message:', {
-        id: mockMessage.id,
+        messageUuid: mockMessage.messageUuid,
         userId: mockMessage.userUuid,
         message: mockMessage.message,
         timestamp: mockMessage.timestamp
@@ -157,7 +158,10 @@ export default function Chat({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userUuid: user.userUuid,
-          message: messageContent
+          message: messageContent,
+          metaData: {
+            isWhisper: isWhisperChat
+          }
         })
       });
 
