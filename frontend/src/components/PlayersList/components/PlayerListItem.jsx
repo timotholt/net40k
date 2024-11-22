@@ -141,7 +141,7 @@ PlayerListItem.propTypes = {
     userUuid: PropTypes.string.isRequired,
     nickname: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
-    isOnline: PropTypes.bool,
+    connectionStatus: PropTypes.string.isRequired,
     isFriend: PropTypes.bool,
     isMuted: PropTypes.bool,
     isCurrentUser: PropTypes.bool

@@ -52,10 +52,11 @@ class KeepAliveService {
    * Check if a user's session is still active
    * 
    * @param {string} userUuid - User's unique identifier
-   * @returns {boolean} - Indicates if user's session is still active
+   * @returns {boolean} - Indicates if user's session is considered active (online or uncertain)
    */
   static isSessionActive(userUuid) {
-    return SessionManager.isUserOnline(userUuid);
+    const status = this.getConnectionStatus(userUuid);
+    return status === 'online' || status === 'uncertain';
   }
 
   /**

@@ -4,7 +4,8 @@ class SessionManager {
     static sessions = new Map();
     static cleanupInterval = 60 * 60 * 1000; // 1 hour
     static sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
-    static ONLINE_THRESHOLD = 1 * 60 * 1000; // 5 minutes - time before user is considered offline
+    static ONLINE_THRESHOLD = 5 * 1000; // 5 seconds
+    static UNCERTAIN_THRESHOLD = 10 * 1000; // 10 seconds
 
     static {
         // Display startup message
@@ -64,6 +65,40 @@ class SessionManager {
             }
         }
         return false;
+    }
+
+    static getConnectionStatus(userUuid) {
+        const now = Date.now();
+        let latestSessionActivity = 0;
+
+        for (const session of this.sessions.values()) {
+            if (session.userUuid === userUuid) {
+                latestSessionActivity = Math.max(latestSessionActivity, session.lastActive);
+            }
+        }
+
+        if (latestSessionActivity === 0) {
+            return 'offline';
+        }
+
+        const timeSinceLastActivity = now - latestSessionActivity;
+        
+        if (timeSinceLastActivity < this.ONLINE_THRESHOLD) {
+            return 'online';
+        } else if (timeSinceLastActivity < this.UNCERTAIN_THRESHOLD) {
+            return 'uncertain';
+        }
+
+        return 'offline';
+    }
+
+    static updateUserActivity(userUuid) {
+        for (const session of this.sessions.values()) {
+            if (session.userUuid === userUuid) {
+                session.lastActive = Date.now();
+                this.sessions.set(session.token, session);
+            }
+        }
     }
 
     static cleanup() {
