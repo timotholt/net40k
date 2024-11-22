@@ -95,6 +95,15 @@ export default function PlayerListItem({ player, isSelected, onSelect }) {
     }
   };
 
+  const getConnectionStatusClass = () => {
+    switch (player.connectionStatus) {
+      case 'online': return `${styles.onlineStatus} ${styles.online}`;
+      case 'offline': return `${styles.onlineStatus} ${styles.offline}`;
+      case 'uncertain': return `${styles.onlineStatus} ${styles.unknown}`;
+      default: return `${styles.onlineStatus} ${styles.unknown}`;
+    }
+  };
+
   return (
     <div 
       className={`${styles.playerItem} ${isSelected ? styles.selected : ''}`}
@@ -107,8 +116,11 @@ export default function PlayerListItem({ player, isSelected, onSelect }) {
       >
         <div className={styles.playerContent}>
           <div className={styles.playerName}>
-            <span className={`${styles.onlineStatus} ${player.isOnline ? styles.online : styles.offline}`} />
-            <span className={styles.playerName}>
+            <span 
+              className={getConnectionStatusClass()} 
+              title={player.connectionStatus}
+            />
+            <span className={styles.playerNameText}>
               {player.nickname}
               {player.isCurrentUser && <span className={styles.currentUser}> (You)</span>}
             </span>

@@ -433,7 +433,7 @@ class UserService {
         // Add real-time online status from SessionManager
         const usersWithOnlineStatus = users.map(user => ({
             ...user,
-            isOnline: SessionManager.isUserOnline(user.userUuid)
+            connectionStatus: SessionManager.getConnectionStatus(user.userUuid)
         }));
 
         return {

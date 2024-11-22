@@ -50,13 +50,13 @@ export const userService = {
 // Transform user data to match frontend expectations
 function transformUserData(user) {
 
-  // This is temporary
-  user.status = (user.isOnline) ? 'Lobby' : 'Offline';
+  // Determine status based on connectionStatus
+  user.status = (['online', 'uncertain'].includes(user.connectionStatus)) ? 'Lobby' : 'Offline';
 
   return {
     userUuid: user.userUuid,
     nickname: user.nickname,
-    isOnline: user.isOnline || false,
+    connectionStatus: user.connectionStatus,
     lastActive: user.lastActive,
     isAdmin: user.isAdmin || false,
     isCurrentUser: user.isCurrentUser || false,

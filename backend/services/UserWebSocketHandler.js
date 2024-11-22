@@ -1,6 +1,7 @@
 import { userService } from './UserService.js';
 import logger from '../utils/logger.js';
 import { AuthError, ValidationError } from '../utils/errors.js';
+import KeepAliveService from './KeepAliveService.js';
 
 class UserWebSocketHandler {
     static wsConnections = new Map(); // userUuid -> WebSocket
@@ -52,7 +53,7 @@ class UserWebSocketHandler {
                     await this.handleDeleteAccount(ws, data);
                     break;
                 case 'client:heartbeat':
-                    this.handleHeartbeat(ws, data);
+                    await this.handleHeartbeat(ws, data);
                     break;
                 default:
                     throw new ValidationError(`Unknown message type: ${type}`);
@@ -187,8 +188,18 @@ class UserWebSocketHandler {
         }
     }
 
-    static handleHeartbeat(ws, { timestamp }) {
-        this.sendSuccess(ws, 'heartbeat', { timestamp });
+    static async handleHeartbeat(ws, { timestamp, userUuid, sessionToken }) {
+        const isSessionActive = await KeepAliveService.updateSessionActivity(userUuid, sessionToken);
+        
+        if (isSessionActive) {
+            this.sendSuccess(ws, 'heartbeat', { 
+                timestamp, 
+                status: 'active' 
+            });
+        } else {
+            this.sendError(ws, 'Session invalid or expired');
+            ws.close();
+        }
     }
 
     // Helper methods

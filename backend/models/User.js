@@ -131,7 +131,7 @@ class User {
             isAdmin: this.isAdmin || false,
             profilePicture: this.profilePicture,
             bio: this.bio,
-            isOnline: SessionManager.isUserOnline(this.userUuid)
+            connectionStatus: SessionManager.getConnectionStatus(this.userUuid)
         };
     }
 

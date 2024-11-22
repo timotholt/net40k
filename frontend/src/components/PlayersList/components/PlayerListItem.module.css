@@ -72,6 +72,11 @@
   box-shadow: 0 0 5px #ff4444;
 }
 
+.onlineStatus.unknown {
+  background: orange;
+  box-shadow: 0 0 5px orange;
+}
+
 .friendBadge {
   width: 1rem;
   height: 1rem;

@@ -19,6 +19,7 @@ async function main() {
         const { router: chatRoutes } = await import('./routes/chat.js');
         const { router: cacheRoutes } = await import('./routes/cache.js');
         const { router: gameRoutes } = await import('./routes/gameRoutes.js');
+        const { router: keepAliveRoutes } = await import('./routes/keepAliveRoutes.js');
         const { db } = await import('./database/database.js');
         const { requestLogger } = await import('./middleware/requestLogger.js');
         const { notFoundHandler, errorHandler } = await import('./middleware/errorHandling.js');
@@ -88,6 +89,14 @@ async function main() {
                 baseUrl: req.baseUrl,
                 originalUrl: req.originalUrl
             });
+
+            // Track user activity for all requests that have a userUuid
+            const userUuid = req.query?.userUuid || req.body?.userUuid;
+            if (userUuid) {
+                console.log(`[Server Middleware] Updating user activity for ${userUuid}`);
+                SessionManager.updateUserActivity(userUuid);
+            }
+
             next();
         });
 
@@ -99,6 +108,7 @@ async function main() {
         //app.use('/chat', chatRoutes);
         //app.use('/cache', cacheRoutes);
         app.use('/games', gameRoutes);
+        app.use('/api/keep-alive', keepAliveRoutes);
 
         // Root route
         app.get('/about', (req, res) => {
