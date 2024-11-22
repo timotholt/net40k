@@ -23,7 +23,6 @@
  */
 
 import { v7 as uuidv7 } from 'uuid';
-import crypto from 'crypto';
 
 // Sequence counter for UUID generation (4 bits = 0-15)
 const MAX_SEQUENCE = 0xF;  // 15 in decimal
@@ -195,9 +194,9 @@ export const LOBBY = {
 // Example game game UUIDs
 export const EXAMPLE_GAMES = {
     // Examples of game from different regions, all using US_WEST datacenter
-    US_GAME: createGameUuid(COUNTRY.US, GAME_TYPE.GAME, DATACENTER.US_WEST),
-    EU_GAME: createGameUuid(COUNTRY.GB, GAME_TYPE.GAME, DATACENTER.US_WEST),
-    ASIA_GAME: createGameUuid(COUNTRY.JP, GAME_TYPE.GAME, DATACENTER.US_WEST)
+    US_GAME: createGameUuid(COUNTRY.US, DATACENTER.US_WEST),
+    EU_GAME: createGameUuid(COUNTRY.GB, DATACENTER.US_WEST),
+    ASIA_GAME: createGameUuid(COUNTRY.JP, DATACENTER.US_WEST)
 };
 
 /**
@@ -310,8 +309,7 @@ export function createChatGameUuid(countryCode, gameType, datacenterId) {
     sequence = (sequence + 1) & MAX_SEQUENCE;
     
     // Generate random bits
-    const random = crypto.getRandomValues(new Uint8Array(6))
-        .reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+    const random = uuidv7().substring(14);
     
     // Build UUID with country code and game type
     return `${timestamp}-7${RESOURCE_TYPE.GAME}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${gameType}-${random}`;
@@ -324,15 +322,26 @@ export function createChatGameUuid(countryCode, gameType, datacenterId) {
  * @param {string} datacenterId - Datacenter ID from DATACENTER enum
  * @returns {string} - Generated UUID
  */
-export function createGameGameUuid(countryCode, gameType, datacenterId) {
-    const timestamp = uuidv7().split('-')[0]; // Get timestamp portion
-    sequence = (sequence + 1) % MAX_SEQUENCE;
-    const random = Math.random().toString(16).slice(2, 14).padEnd(12, '0');
+export function createGameUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
+    // Increment and wrap sequence
+    sequence = (sequence + 1) % (MAX_SEQUENCE + 1);
     
-    // For game games, we use the full format to support thousands of concurrent games:
-    // timestamp-7TCC-LSRR-NNNNNNNNNNNN
-    // where T=GAME_GAME resource type, CC=country, L=datacenter, S=sequence, RR=game type
-    return `${timestamp}-7${RESOURCE_TYPE.GAME}${countryCode}-${datacenterId}${sequence.toString(16).padStart(2, '0')}${gameType}-${random}`;
+    // Generate base UUID
+    const baseUuid = uuidv7();
+    
+    // Prepare components
+    const resourceType = RESOURCE_TYPE.GAMES;
+    
+    // Add defensive checks
+    const safeCountryCode = COUNTRY[countryCode] !== undefined ? countryCode : COUNTRY.US;
+    const safeDatacenterId = DATACENTER[datacenterId] !== undefined ? datacenterId : DATACENTER.US_WEST;
+    
+    const countryCodeHex = COUNTRY[safeCountryCode].toString(16).padStart(2, '0');
+    const datacenterHex = DATACENTER[safeDatacenterId].toString(16);
+    const sequenceHex = sequence.toString(16);
+    
+    // Reconstruct UUID with specific components
+    return `${baseUuid.slice(0, 14)}${resourceType}${countryCodeHex}${datacenterHex}${sequenceHex}${baseUuid.slice(19)}`;
 }
 
 /**
@@ -343,14 +352,21 @@ export function createGameGameUuid(countryCode, gameType, datacenterId) {
  * @returns {string} - Generated UUID
  */
 export function createEntityUuid(entityType, countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
-    const baseUuid = uuidv7();
-    const resourceType = RESOURCE_TYPE.ENTITY;
+    // Increment and wrap sequence
+    sequence = (sequence + 1) % (MAX_SEQUENCE + 1);
     
-    return baseUuid.substring(0, 8) + '-' + 
-           baseUuid.substring(9, 13) + '-' +
-           '7' + resourceType + countryCode + '-' +
-           datacenterId + '0' + entityType + '-' +
-           baseUuid.substring(24);
+    // Generate base UUID
+    const baseUuid = uuidv7();
+    
+    // Prepare components
+    const resourceType = RESOURCE_TYPE.ENTITY;
+    const countryCodeHex = COUNTRY[countryCode].toString(16).padStart(2, '0');
+    const datacenterHex = DATACENTER[datacenterId].toString(16);
+    const sequenceHex = sequence.toString(16);
+    const entityTypeHex = ENTITY_TYPE[entityType].toString(16).padStart(2, '0');
+    
+    // Reconstruct UUID with specific components
+    return `${baseUuid.slice(0, 14)}${resourceType}${countryCodeHex}${datacenterHex}${sequenceHex}${entityTypeHex}${baseUuid.slice(21)}`;
 }
 
 /**
@@ -371,15 +387,20 @@ export function createGameEventUuid(entityType, countryCode = COUNTRY.US, datace
  * @returns {string} - Generated UUID
  */
 export function createUserUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
-    const baseUuid = uuidv7();
-    const resourceType = RESOURCE_TYPE.USER;
-    const sequence = Math.floor(Math.random() * 16).toString(16); // 4-bit sequence
+    // Increment and wrap sequence
+    sequence = (sequence + 1) % (MAX_SEQUENCE + 1);
     
-    return baseUuid.substring(0, 8) + '-' + 
-           baseUuid.substring(9, 13) + '-' +
-           '7' + resourceType + countryCode + '-' +
-           datacenterId + sequence + '00' + '-' + // '00' for user type (could be used for roles later)
-           baseUuid.substring(24);
+    // Generate base UUID
+    const baseUuid = uuidv7();
+    
+    // Prepare components
+    const resourceType = RESOURCE_TYPE.USER;
+    const countryCodeHex = COUNTRY[countryCode].toString(16).padStart(2, '0');
+    const datacenterHex = DATACENTER[datacenterId].toString(16);
+    const sequenceHex = sequence.toString(16);
+    
+    // Reconstruct UUID with specific components
+    return `${baseUuid.slice(0, 14)}${resourceType}${countryCodeHex}${datacenterHex}${sequenceHex}${baseUuid.slice(19)}`;
 }
 
 /**
@@ -389,35 +410,20 @@ export function createUserUuid(countryCode = COUNTRY.US, datacenterId = DATACENT
  * @returns {string} - Generated UUID
  */
 export function createMessageUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
+    // Increment and wrap sequence
+    sequence = (sequence + 1) % (MAX_SEQUENCE + 1);
+    
+    // Generate base UUID
     const baseUuid = uuidv7();
+    
+    // Prepare components
     const resourceType = RESOURCE_TYPE.MESSAGE;
-    const sequence = Math.floor(Math.random() * 16).toString(16); // 4-bit sequence
+    const countryCodeHex = COUNTRY[countryCode].toString(16).padStart(2, '0');
+    const datacenterHex = DATACENTER[datacenterId].toString(16);
+    const sequenceHex = sequence.toString(16);
     
-    return baseUuid.substring(0, 8) + '-' + 
-           baseUuid.substring(9, 13) + '-' +
-           '7' + resourceType + countryCode + '-' +
-           datacenterId + sequence + '00' + '-' + // '00' for message type (could be used for message types later)
-           baseUuid.substring(24);
-}
-
-/**
- * Creates a new UUID for a game
- * @param {string} countryCode - Country code from COUNTRY enum
- * @param {string} datacenterId - Datacenter ID from DATACENTER enum
- * @returns {string} - Generated UUID
- */
-export function createGameUuid(countryCode = COUNTRY.US, datacenterId = DATACENTER.US_WEST) {
-    const baseUuid = uuidv7();
-    const resourceType = RESOURCE_TYPE.GAMES; // Ensure plural
-    const sequence = Math.floor(Math.random() * 16).toString(16).padStart(1, '0');
-    
-    // Ensure all parts are defined and padded
-    const timePart = baseUuid.substring(0, 8) + '-' + baseUuid.substring(9, 13);
-    const resourcePart = '7' + resourceType + countryCode.padStart(2, '0');
-    const locationPart = datacenterId + sequence + '00';
-    const randomPart = baseUuid.substring(24);
-
-    return `${timePart}-${resourcePart}-${locationPart}-${randomPart}`;
+    // Reconstruct UUID with specific components
+    return `${baseUuid.slice(0, 14)}${resourceType}${countryCodeHex}${datacenterHex}${sequenceHex}${baseUuid.slice(19)}`;
 }
 
 // Helper functions for extracting information from UUIDs
