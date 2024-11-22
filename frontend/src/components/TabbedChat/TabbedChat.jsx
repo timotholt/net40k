@@ -92,12 +92,12 @@ export default function TabbedChat() {
     };
 
     // Debug: Log the current active tab and MOCK_MODE
-    console.log('Current Active Tab:', activeTab);
-    console.log('MOCK_MODE:', MOCK_MODE);
+    // console.log('Current Active Tab:', activeTab);
+    // console.log('MOCK_MODE:', MOCK_MODE);
 
     switch (activeTab) {
       case 'lobby':
-        console.log('Lobby Mock Messages:', mockLobbyMessages);
+        // console.log('Lobby Mock Messages:', mockLobbyMessages);
         return (
           <Chat
             endpoint="/api/chat/lobby"
@@ -109,7 +109,7 @@ export default function TabbedChat() {
           />
         );
       case 'whisper':
-        console.log('Whisper Mock Messages:', mockWhisperMessages);
+        // console.log('Whisper Mock Messages:', mockWhisperMessages);
         return (
           <Chat
             endpoint="/api/chat/whisper"
@@ -121,8 +121,8 @@ export default function TabbedChat() {
           />
         );
       case 'news':
-        console.log('News Mock Messages:', mockNewsMessages);
-        console.log('News Mock Messages Length:', mockNewsMessages.length);
+        // console.log('News Mock Messages:', mockNewsMessages);
+        // console.log('News Mock Messages Length:', mockNewsMessages.length);
         return (
           <Chat
             endpoint="/api/chat/news"
@@ -133,8 +133,8 @@ export default function TabbedChat() {
           />
         );
       case 'games':
-        console.log('Game Master Mock Messages:', mockGameMasterMessages);
-        console.log('Game Master Mock Messages Length:', mockGameMasterMessages.length);
+        // console.log('Game Master Mock Messages:', mockGameMasterMessages);
+        // console.log('Game Master Mock Messages Length:', mockGameMasterMessages.length);
         return (
           <Chat
             endpoint="/api/chat/games"
@@ -145,8 +145,8 @@ export default function TabbedChat() {
           />
         );
       case 'system':
-        console.log('System Mock Messages:', mockSystemMessages);
-        console.log('System Mock Messages Length:', mockSystemMessages.length);
+        // console.log('System Mock Messages:', mockSystemMessages);
+        // console.log('System Mock Messages Length:', mockSystemMessages.length);
         return (
           <Chat
             endpoint="/api/chat/system"

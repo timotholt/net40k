@@ -36,23 +36,23 @@ export default function Chat({
   // Debugging function to selectively log messages
   const debugLog = (...args) => {
     if (!isLobbyChat) {
-      console.log(...args);
+      // console.log(...args);  // Commented out
     }
   };
 
   useEffect(() => {
     if (!isLobbyChat) {
-      debugLog('Chat Endpoint:', endpoint);
-      debugLog('Initial Messages Count:', initialMessages?.length);
+      // debugLog('Chat Endpoint:', endpoint);
+      // debugLog('Initial Messages Count:', initialMessages?.length);
     }
     setMessages(initialMessages || []);
   }, [endpoint, initialMessages]);
 
   useEffect(() => {
     if (!isLobbyChat) {
-      debugLog('Filtering Messages - Endpoint:', endpoint);
-      debugLog('Total Messages:', messages.length);
-      debugLog('Filtered Messages:', filteredMessages.length);
+      // debugLog('Filtering Messages - Endpoint:', endpoint);
+      // debugLog('Total Messages:', messages.length);
+      // debugLog('Filtered Messages:', filteredMessages.length);
     }
   }, [messages, filteredMessages, endpoint]);
 
@@ -65,18 +65,18 @@ export default function Chat({
       processedMessages = messages.filter(msg => {
         // If user is not defined, fall back to a safe filtering mechanism
         if (!user) {
-          debugLog('No user context - using fallback whisper filtering');
+          // debugLog('No user context - using fallback whisper filtering');
           
           // For mock messages, check if they have specific properties indicating a whisper
           const isMockWhisper = 
             msg.metaData?.isWhisper === true || 
             (msg.userUuid && msg.userUuid.startsWith('mock_whisper_'));
 
-          debugLog('Mock Whisper Check:', {
-            userUuid: msg.userUuid,
-            metaData: msg.metaData,
-            isMockWhisper
-          });
+          // debugLog('Mock Whisper Check:', {
+          //   userUuid: msg.userUuid,
+          //   metaData: msg.metaData,
+          //   isMockWhisper
+          // });
 
           return isMockWhisper;
         }
@@ -87,13 +87,13 @@ export default function Chat({
           msg.recipientUuid === user.userUuid ||
           msg.metaData?.isWhisper === true;
 
-        debugLog('Whisper Message Check:', {
-          userUuid: msg.userUuid,
-          currentUserUuid: user?.userUuid,
-          recipientUuid: msg.recipientUuid,
-          metaData: msg.metaData,
-          isUserInvolved
-        });
+        // debugLog('Whisper Message Check:', {
+        //   userUuid: msg.userUuid,
+        //   currentUserUuid: user?.userUuid,
+        //   recipientUuid: msg.recipientUuid,
+        //   metaData: msg.metaData,
+        //   isUserInvolved
+        // });
 
         return isUserInvolved;
       });
@@ -109,7 +109,7 @@ export default function Chat({
     }
 
     if (!isLobbyChat) {
-      debugLog('Processed Whisper Messages:', processedMessages.length);
+      // debugLog('Processed Whisper Messages:', processedMessages.length);
     }
 
     setFilteredMessages(processedMessages);
@@ -141,12 +141,12 @@ export default function Chat({
           isWhisper: isWhisperChat
         }
       };
-      console.log('Mock Message:', {
-        messageUuid: mockMessage.messageUuid,
-        userId: mockMessage.userUuid,
-        message: mockMessage.message,
-        timestamp: mockMessage.timestamp
-      });
+      // console.log('Mock Message:', {
+      //   messageUuid: mockMessage.messageUuid,
+      //   userId: mockMessage.userUuid,
+      //   message: mockMessage.message,
+      //   timestamp: mockMessage.timestamp
+      // });
       setMessages(prev => [...prev, mockMessage]);
       return;
     }
@@ -167,12 +167,12 @@ export default function Chat({
 
       if (!response.ok) throw new Error('Failed to send message');
       const data = await response.json();
-      console.log('Sent Message:', {
-        id: data.id,
-        userId: data.userId || data.userUuid,
-        message: data.message,
-        timestamp: data.timestamp
-      });
+      // console.log('Sent Message:', {
+      //   id: data.id,
+      //   userId: data.userId || data.userUuid,
+      //   message: data.message,
+      //   timestamp: data.timestamp
+      // });
       setMessages(prev => [...prev, data]);
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -207,24 +207,24 @@ export default function Chat({
     <div className={`${styles.chatContainer} ${styles[type]}`}>
       <div className={styles.messages}>
         {(() => {
-          debugLog('Rendering Messages:', {
-            totalMessages: messages.length,
-            filteredMessagesLength: filteredMessages.length,
-            messages: messages.map(msg => ({
-              id: msg.id,
-              userUuid: msg.userUuid,
-              isWhisper: msg.isWhisper,
-              type: msg.type,
-              message: msg.message
-            })),
-            filteredMessages: filteredMessages.map(msg => ({
-              id: msg.id,
-              userUuid: msg.userUuid,
-              isWhisper: msg.isWhisper,
-              type: msg.type,
-              message: msg.message
-            }))
-          });
+          // debugLog('Rendering Messages:', {
+          //   totalMessages: messages.length,
+          //   filteredMessagesLength: filteredMessages.length,
+          //   messages: messages.map(msg => ({
+          //     id: msg.id,
+          //     userUuid: msg.userUuid,
+          //     isWhisper: msg.isWhisper,
+          //     type: msg.type,
+          //     message: msg.message
+          //   })),
+          //   filteredMessages: filteredMessages.map(msg => ({
+          //     id: msg.id,
+          //     userUuid: msg.userUuid,
+          //     isWhisper: msg.isWhisper,
+          //     type: msg.type,
+          //     message: msg.message
+          //   }))
+          // });
 
           if (filteredMessages.length > 0) {
             return filteredMessages
