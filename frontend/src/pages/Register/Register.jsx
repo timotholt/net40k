@@ -87,13 +87,11 @@ export default function Register() {
       
       // Attempt to extract error message from different possible locations
       const errorMessage = 
+        err || 
         err.message || 
-        err.response?.data?.message || 
-        err.response?.data?.error || 
-        String(err) || 
         'Registration failed. Please try again.';
       
-      setError(errorMessage);
+      setError(String(errorMessage));
     }
   };
 

@@ -42,71 +42,25 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Commented out detailed error logging to reduce scary stack traces
-    // console.log('Axios Interceptor Raw Error:', {
-    //   type: typeof error,
-    //   keys: Object.keys(error),
-    //   response: error.response,
-    //   request: error.request,
-    //   message: error.message,
-    //   name: error.name,
-    //   stack: error.stack,
-    //   toString: error.toString()
-    // });
-
+    // Log the actual error response
     console.log('API Error Response:', error.response?.data);
     
-    // Detailed 401 error handling
-    if (error.response?.status === 401) {
-      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
-      
-      // Check for specific types of 401 errors
-      if (errorMessage.includes('session')) {
-        // Invalidate session and remove tokens
-        isTokenValid = false;
-        localStorage.removeItem(`sessionToken_${window.name}`);
-        localStorage.removeItem(`user_${window.name}`);
-        
-        return Promise.reject({
-          message: 'Session terminated. Please login again.',
-          type: 'SessionError',
-          status: 401
-        });
-      } 
-      
-      // For all other 401 errors, pass through the original message
-      return Promise.reject({
-        message: error.response?.data?.message || 'Unauthorized',
-        type: 'AuthenticationError',
-        status: 401
-      });
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('API Request Error:', error.request);
-      
-      // Check if there's a response with an error message
-      if (error.response?.data?.error) {
-        return Promise.reject({
-          message: error.response.data.error,
-          type: 'RequestError',
-          status: error.response.status
-        });
-      }
-      
-      return Promise.reject({
-        message: "Can't connect to game server",
-        type: 'NetworkError',
-        status: null
-      });
-    } else {
-      // Something happened in setting up the request
-      console.error('API Setup Error:', error.message);
-      return Promise.reject({
-        message: error.message || 'An unexpected error occurred',
-        type: 'UnknownError',
-        status: null
-      });
+    // For 4xx and 5xx errors, return the server's error message
+    if (error.response) {
+      return Promise.reject(
+        error.response.data.message || 
+        error.response.data.error || 
+        'An error occurred'
+      );
     }
+    
+    // Only for true network errors
+    if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+      return Promise.reject("Can't connect to game server");
+    }
+    
+    // Fallback for any other unexpected errors
+    return Promise.reject('An unexpected error occurred');
   }
 );
 

@@ -27,16 +27,8 @@ export const registerUser = createAsyncThunk(
     } catch (error) {
       console.error('Auth: Registration error:', error);
       
-      // Log full error details
-      console.log('Full Error Details:', {
-        error: error,
-        name: error.name,
-        message: error.message,
-        response: error.response
-      });
-
-     // Simplify error handling by directly returning error message
-     return rejectWithValue(error.message || 'Registration failed');
+      // Directly return the error message
+      return rejectWithValue(error);
     }
   }
 );
@@ -68,9 +60,8 @@ export const loginUser = createAsyncThunk(
     } catch (error) {
       console.error('Auth: Login error:', error);
       
-      // Handle errors
-      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
-      return rejectWithValue(errorMessage);
+      // Directly return the error message
+      return rejectWithValue(error);
     }
   }
 );
