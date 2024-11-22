@@ -186,4 +186,38 @@
 
 .checkbox input {
   cursor: pointer;
+  appearance: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid var(--color-green);
+  border-radius: 0.25rem;
+  background-color: transparent;
+  outline: none;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.checkbox input:hover {
+  border-color: white;
+}
+
+.checkbox input:checked {
+  border-color: var(--color-green);
+}
+
+.checkbox input:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 0.6rem;
+  height: 0.3rem;
+  border-right: 2px solid var(--color-green);
+  border-bottom: 2px solid var(--color-green);
+  opacity: 1;
+}
+
+.checkbox input:hover::after {
+  border-color: white;
 }
