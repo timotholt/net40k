@@ -65,8 +65,3 @@ IconButton.propTypes = {
   title: PropTypes.string,
   disabled: PropTypes.bool
 };
-
-// Set default props
-IconButton.defaultProps = {
-  icon: DefaultIcon
-};
