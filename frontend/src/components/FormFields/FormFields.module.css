@@ -48,10 +48,17 @@
   color: var(--color-green);
   transition: all var(--transition-speed) ease;
   cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.inputWrapper:hover .icon {
+.icon:hover {
   color: var(--color-soft-white);
+  transform: scale(1.1);
+}
+
+.icon:active {
+  transform: scale(0.95);
+  opacity: 0.7;
 }
 
 .leftIcon {
@@ -193,4 +200,9 @@
   pointer-events: none;
   color: var(--color-gray-light);
   font-size: 0.75rem;
+}
+
+.nicknameFieldContainer {
+  position: relative;
+  width: 100%;
 }

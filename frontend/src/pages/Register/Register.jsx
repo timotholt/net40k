@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { registerUser, selectAuthError, selectAuthStatus, resetAuthState } from '../../store/authSlice';
 import InputField from '../../components/FormFields/InputField';
 import PasswordField from '../../components/FormFields/PasswordField';
+import { NicknameField } from '../../components/FormFields/NicknameField';
 import styles from './Register.module.css';
 
 const validateUsername = (value) => {
@@ -138,7 +139,7 @@ export default function Register() {
           disabled={isLoading}
         />
 
-        <InputField
+        <NicknameField
           label="Nickname"
           name="nickname"
           value={formData.nickname}
