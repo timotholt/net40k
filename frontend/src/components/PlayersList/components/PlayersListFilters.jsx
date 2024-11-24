@@ -36,6 +36,7 @@ export default function PlayersListFilters({
             onBlur={onBlur}
             placeholder="Search players..."
             className={styles.searchInput}
+            autoComplete='off'
           />
         </div>
       </div>

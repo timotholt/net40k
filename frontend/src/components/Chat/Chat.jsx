@@ -301,6 +301,7 @@ export default function Chat({
                 placeholder="Search messages..."
                 className={styles.searchInput}
                 tabIndex={-1}
+                autoComplete='off'
               />
             </div>
           )}
@@ -315,6 +316,7 @@ export default function Chat({
               placeholder={canFilter ? "Search messages..." : placeholder}
               className={styles.input}
               tabIndex={-1}
+              autoComplete='off'
             />
           )}
           {showSendButton && (

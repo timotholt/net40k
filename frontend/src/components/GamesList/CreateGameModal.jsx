@@ -112,6 +112,7 @@ export default function CreateGameModal({ mode = 'create', gameData = null, onCl
               onChange={handleChange}
               leftIcon={gameIcon}
               required
+              
             />
 
             <InputField

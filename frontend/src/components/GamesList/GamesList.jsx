@@ -354,6 +354,7 @@ export default function GamesList({
                   onKeyDown={handleKeyDown}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
+                  autoComplete='off'
                 />
               </div>
               
