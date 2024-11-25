@@ -1,85 +1,54 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/authSlice';
 import Chat from '../../components/Chat/Chat';
-import PlayerList from '../../components/PlayersList/PlayersList';
 import GameBoard from '../../components/GameBoard/GameBoard';
 import styles from './Game.module.css';
 
 export default function Game() {
-  const { gameUuid } = useParams();
+  const { gameId } = useParams();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
-  const [game, setGame] = useState(null);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchGame();
-    const interval = setInterval(fetchGame, 3000);
-    return () => clearInterval(interval);
-  }, [gameUuid]);
-
-  const fetchGame = async () => {
-    try {
-      const response = await fetch(`/api/games/${gameUuid}`);
-      if (!response.ok) throw new Error('Failed to fetch game');
-      const data = await response.json();
-      setGame(data);
-    } catch (err) {
-      setError('Failed to load game');
-    }
+  // Mock game data
+  const mockGame = {
+    id: gameId,
+    status: 'WAITING',
+    players: [
+      { userUuid: user?.userUuid || 'mock-user', username: 'You' },
+      { userUuid: 'mock-player-2', username: 'Player 2' }
+    ],
+    creatorUuid: user?.userUuid || 'mock-user',
+    state: {}
   };
 
-  const handleLeaveGame = async () => {
-    try {
-      await fetch(`/api/games/${gameUuid}/leave`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userUuid: user.userUuid })
-      });
-      navigate('/lobby');
-    } catch (err) {
-      setError('Failed to leave game');
-    }
+  const handleLeaveGame = () => {
+    navigate('/lobby');
   };
 
-  const handleStartGame = async () => {
-    try {
-      await fetch(`/api/games/${gameUuid}/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userUuid: user.userUuid })
-      });
-      fetchGame();
-    } catch (err) {
-      setError('Failed to start game');
-    }
-  };
-
-  if (!game) return null;
-
-  const isCreator = game.creatorUuid === user.userUuid;
-  const canStartGame = isCreator && game.status === 'WAITING' && game.players.length >= 2;
+  const isCreator = mockGame.creatorUuid === user?.userUuid;
 
   return (
     <motion.div
-      className={styles.gameContainer}
+      className={styles.container}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
       <div className={styles.header}>
-        <h2>Game #{gameUuid}</h2>
+        <div className={styles.headerLeft}>
+          <button onClick={handleLeaveGame} className={styles.backButton}>
+            ← Back to Lobby
+          </button>
+          <h2>Game #{gameId}</h2>
+        </div>
         <div className={styles.headerButtons}>
-          {game.status === 'WAITING' && (
+          {mockGame.status === 'WAITING' && (
             isCreator ? (
               <button
-                onClick={handleStartGame}
                 className={styles.startButton}
-                disabled={!canStartGame}
               >
                 Start Game
               </button>
@@ -95,26 +64,22 @@ export default function Game() {
         </div>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
-
       <div className={styles.content}>
         <div className={styles.gameArea}>
-          <PlayerList
-            players={game.players}
-            currentUserId={user.userUuid}
-            creatorId={game.creatorUuid}
-          />
-          {game.status === 'IN_PROGRESS' && (
+          {mockGame.status === 'IN_PROGRESS' ? (
             <GameBoard
-              gameState={game.state}
-              playerId={user.userUuid}
-              onMove={fetchGame}
+              gameState={mockGame.state}
+              playerId={user?.userUuid || 'mock-user'}
             />
+          ) : (
+            <div className={styles.gamePlaceholder}>
+              Game will go here
+            </div>
           )}
         </div>
 
         <Chat
-          endpoint={`/api/chat/game/${gameUuid}`}
+          endpoint={`/api/chat/game/${gameId}`}
           placeholder="Game chat..."
           className={styles.chat}
         />
