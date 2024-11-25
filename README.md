@@ -278,6 +278,11 @@ databases.
 
 ![Registration Screen](screenshots/Register.png)
 
+Clicking on the dice icon will generate a random nickname from a 3rd party API
+known as the Fantasy Name Generator.
+
+![NicknameField Screen](screenshots/NicknameField.png)
+
 2. Login
 
 ![Login Screen](screenshots/Login.png)
