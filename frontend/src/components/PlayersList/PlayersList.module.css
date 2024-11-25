@@ -5,7 +5,7 @@
   min-width: 20rem;
   max-width: 20rem;
   border-radius: var(--border-radius-lg);
-  overflow: hidden;
+  /* Remove overflow: hidden and add padding to accommodate the glow */
   transition: all var(--transition-speed) ease;
   pointer-events: auto;
   position: relative;
@@ -14,8 +14,13 @@
 
 /* Add focus styles for the container */
 .playersContainer:focus {
-  outline: none;
+  /* outline: none; */
 }
+
+.playersContainer:focus-within {
+  /* box-shadow: var(--glow-container-hover); */
+}
+
 
 .playersList {
   flex: 1;
@@ -27,15 +32,12 @@
   border-bottom: none;
   background: var(--gradient-screen);
   backdrop-filter: blur(10px);
-  /* box-shadow: var(--glow-container); */
+  box-shadow: var(--glow-container);
   margin-top: -0.2rem;
   position: relative;
   z-index: 1;
   padding-top: 0.5rem;
-}
-
-.playersContainer:focus-within {
-    box-shadow: var(--glow-container-hover);
+  transition: box-shadow var(--transition-speed) ease;
 }
 
 
@@ -71,8 +73,7 @@
   background: rgba(0, 255, 0, 0.9);
 }
 
-.playersList:hover,
-.playersList:focus-within {
+.playersList:hover {
   box-shadow: var(--glow-intense);
 }
 
