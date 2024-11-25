@@ -133,7 +133,7 @@ not obvious how the requirements are met.
 and you can't join. Regular games work.
 3. There is a game screen, but no game.
 4. Back button on game screen doesn't work right now.
-5. 
+5. Many more which you can have fun discovering!
 
 ## Other Requirements
 
