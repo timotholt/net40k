@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { selectUser } from '../../store/authSlice';
+import { selectUser, selectIsAuthenticated } from '../../store/authSlice';
 import Chat from '../../components/Chat/Chat';
 import GameBoard from '../../components/GameBoard/GameBoard';
 import styles from './Game.module.css';
@@ -10,6 +10,7 @@ export default function Game() {
   const { gameId } = useParams();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   // Mock game data
   const mockGame = {
@@ -24,7 +25,10 @@ export default function Game() {
   };
 
   const handleLeaveGame = () => {
+    console.log('Leave game clicked');
+    console.log('Is authenticated:', isAuthenticated);
     navigate('/lobby');
+    console.log('Navigation called');
   };
 
   const isCreator = mockGame.creatorUuid === user?.userUuid;

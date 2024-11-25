@@ -34,7 +34,7 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
       return "Password required";
     }
 
-    return null;
+    return "Join Game";
   };
 
   return (
@@ -84,18 +84,18 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
 
       <div className={styles.actions}>
         <div className={styles.buttonWrapper}>
-          <Tooltip 
+          {/* <Tooltip 
             text={getJoinTooltipText()}
             icon={game.hasPassword ? <LockIcon /> : null}
             position="top"
-          >
+          > */}
             <IconButton 
               icon={JoinIcon}
               onClick={() => onJoin(game.gameUuid)}
               disabled={game.players.length >= game.maxPlayers}
-              title="Join Game"
+              title={getJoinTooltipText()}
             />
-          </Tooltip>
+          {/* </Tooltip> */}
 
           <IconButton 
             icon={ViewIcon}

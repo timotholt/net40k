@@ -113,7 +113,7 @@ export default function Chat({
     }
 
     setFilteredMessages(processedMessages);
-  }, [messages, filter, isWhisperChat, user]);
+  }, [messages, filter, isWhisperChat, user?.userUuid]);
 
   useEffect(() => {
     scrollToBottom();
