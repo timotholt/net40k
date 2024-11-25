@@ -86,10 +86,6 @@ This is a game server / lobby / chat framework for a future game.  Includes simp
 authentication, chat, and game room management.
 
 
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
