@@ -3,7 +3,9 @@ import {
   JoinIcon, 
   ViewIcon, 
   DeleteIcon, 
-  LockIcon 
+  LockIcon,
+  CrownIcon,
+  UserIcon
 } from '../../Icons/GameIcons';
 import { GearIcon } from '../../Icons/GearIcon';
 import PropTypes from 'prop-types';
@@ -46,11 +48,21 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
           <div className={styles.titleRow}>
             <div className={styles.gameName}>
               {game.name}
+              {game.isYours && (
+                <Tooltip text="You created this game">
+                  <CrownIcon className={styles.roleIcon} />
+                </Tooltip>
+              )}
+              {!game.isYours && game.isJoined && (
+                <Tooltip text="You're playing in this game">
+                  <UserIcon className={styles.roleIcon} />
+                </Tooltip>
+              )}
+              {game.hasPassword && <LockIcon className={styles.roleIcon} />}
             </div>
             {game.description && (
               <div className={styles.description}>{game.description}</div>
             )}
-            {game.hasPassword && <LockIcon />}
           </div>
         </div>
         

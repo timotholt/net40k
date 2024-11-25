@@ -114,6 +114,9 @@ class GameService {
         // Mark games created by the user
         publicGame.isYours = userUuid ? game.creatorUuid === userUuid : false;
         
+        // Check if user is a player in the game
+        publicGame.isJoined = userUuid ? game.playerUuids.includes(userUuid) : false;
+        
         return publicGame;
       });
 
@@ -121,7 +124,8 @@ class GameService {
         gameUuid: g.gameUuid,
         name: g.name,
         creatorNickname: g.creatorNickname,
-        isYours: g.isYours
+        isYours: g.isYours,
+        isJoined: g.isJoined
       })));
       
       return result;

@@ -233,3 +233,12 @@
   border-top-color: var(--color-green);
   filter: drop-shadow(0 0 2px rgba(0, 255, 0, 0.5));
 }
+
+.roleIcon {
+  margin-left: 2px;
+  margin-right: 2px;
+  /* margin-right: -2px; */
+  color: #4CAF50;
+  display: inline-flex;
+  align-items: center;
+}
