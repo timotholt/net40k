@@ -69,7 +69,7 @@ export default function Game() {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.gameArea}>
+        {/* <div className={styles.gameArea}>
           {mockGame.status === 'IN_PROGRESS' ? (
             <GameBoard
               gameState={mockGame.state}
@@ -80,7 +80,7 @@ export default function Game() {
               Game will go here
             </div>
           )}
-        </div>
+        </div> */}
 
         <Chat
           endpoint={`/api/chat/game/${gameId}`}
