@@ -302,12 +302,17 @@ to the All tab.
 
 ![All Tab](screenshots/AllTab.png)
 
-5. Join a game by clicking on the game you want to join.
+5. The game list...
 
 ![GamesList](screenshots/GamesList.png)
 
-It refreshes every 5 seconds so you can open multiple windows with
-different accounts and see games from different accounts here.
+List of all games on the MongoDb database. It refreshes every 5
+seconds so you can open multiple windows with different accounts
+and see games from different accounts here.
+
+Games are persistents so logged off players still have games
+running on the server.  The final product may take hours or days
+to finish a game.
 
 6.  Each game as a row of icons which depends upon if you created
 the game or not. JOIN / WATCH / SETTINGS / DELETE
