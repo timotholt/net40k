@@ -38,6 +38,10 @@
   padding-top: 0.5rem;
 }
 
+.playersList:focus-within {
+    box-shadow: var(--glow-container-intense);
+  }
+
 .playersList .playerItem:nth-child(even) {
   border: 1px solid red;
   background: rgba(0, 0, 0, 0.6);

@@ -12,7 +12,7 @@
 }
 
 .tabbedChatContainer:focus-within {
-  box-shadow: var(--glow-container-hover);
+  /* box-shadow: var(--glow-container-hover); */
 }
 
 .tabs {
@@ -64,6 +64,12 @@
   margin-top: -3px;
   padding-bottom: var(--space-sm);
 }
+
+.chatWrapper:focus-within {
+    box-shadow: var(--glow-container-hover);
+  }
+  
+
 
 .tab[data-tab="system"] {
   margin-left: auto;
