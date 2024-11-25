@@ -77,7 +77,7 @@ export default function GamesList({
   // Filter games based on criteria
   const filteredGames = games.filter(game => {
     if (hideFullGames && game.players.length >= game.maxPlayers) return false;
-    if (hidePasswordGames && game.isPasswordProtected) return false;
+    if (hidePasswordGames && game.hasPassword) return false;
     
     const searchTerm = filter.toLowerCase();
     if (!searchTerm) return true;
