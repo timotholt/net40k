@@ -82,9 +82,13 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+This is a game server / lobby / chat framework for a future game.  Includes simple
+authentication, chat, and game room management.
+
+
+
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `timotholt`, `net40k`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `net40k`, `A Real-Time Chat Lobby For A Future Game With A Working Title Known As Net40k`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -105,36 +109,77 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 
 
-<!-- GETTING STARTED -->
-## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+# How Requirements Are Met
 
-### Prerequisites
+1. All requirements are met, but the UI is has bugs.
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+2. CRUD is implemented on the front and backend for game creation,
+settings, and delete games.
+
+3. Third party API is used in the registration screen.  When you
+click the dice icon in the "nickname" input field, it calls a 
+3rd party API to get a random name.
+
+4. MongoDB writing works property.
+
+Those are the critical details of the implemnentation that are
+not obvious how the requirements are met.
+
+# Bugs
+
+1. Right mouse click context window shows up on Player list, but isn't doing anything.
+2. Password protected games suffer from autocomplete bug,
+and you can't join. Regular games work.
+3. There is a game screen, but no game.
+4. Back button on game screen doesn't work right now.
+5. 
+
+## Other Requirements
+
+| Requirement | Weight | Finished |
+| :-- | :--: | :--: |
+| Project is organized into appropriate files and directories, following best practices. | 2% | ✅ |
+| Project contains an appropriate level of comments. | 2% | ✅ |
+| Project is pushed to GitHub, and contains a README file that documents the project, including an overall description of the project. | 5% | ✅ |
+| Ensure that the program runs without errors | 4% | ✅ |
+| Level of effort displayed in creativity, presentation, and user experience. | 5% | ✅ |
+| Demonstrate proper usage of ES6 syntax and tools. | 2% | ✅ |
+| Use functions and classes to adhere to the DRY principle. | 2% | ✅ |
+| Use Promises and async/await, where appropriate. | 2% | ✅ |
+| Use Axios or fetch to retrieve data from an API. | 2% | ✅ |
+| Use sound programming logic throughout the application. | 2% | ✅ |
+| Use MongoDB to create a database for your application. | 5% | ✅ |
+| Apply appropriate indexes to your database collections. | 2% | ✅ |
+| Create reasonable schemas for your data by following data modeling best practices. | 2% | ✅ |
+| Create a RESTful API using Node and Express. | 7% | ✅ |
+| Include API routes for all four CRUD operations. | 5% | ✅ |
+| Utilize the native MongoDB driver or Mongoose to interface with your database. | 5% | ✅ |
+| Include at least one form of user authentication/authorization within the application. | 2% | ✅ |
+| Use React to create the application's front-end. | 10% | ✅ |
+| Use CSS to style the application. | 5% | ✅ |
+| Create at least four different views or pages for the application. | 5% | ✅ |
+| Create some form of navigation that is included across the application's pages, utilizing React Router for page rendering | 5% | ✅ |
+| Use React Hooks or Redux for application state management. | 5% | ✅ |
+| Interface directly with the server and API that you created. | 5% | ✅ |
+| Create a short overview of your application. | 1% | ✅ |
+| Highlight the use cases of your application. | 1% | ✅ |
+| Highlight the technical functionality of the application, from a high-level perspective. | 1% | ✅ |
+| Discuss what you have learned through the development of the application. | 1% | ✅ |
+| Discuss additional features that could be added to the application in the future. | 1% | ✅ |
+
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
    git clone https://github.com/timotholt/net40k.git
    ```
-3. Install NPM packages
+2. Install NPM packages
    ```sh
    npm install
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
+3. Change git remote url to avoid accidental pushes to base project
    ```sh
    git remote set-url origin timotholt/net40k
    git remote -v # confirm the changes
@@ -142,14 +187,172 @@ This is an example of how to list things you need to use the software and how to
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- GETTING STARTED -->
+
+## Getting Started
+
+1. You need a .env
+
+'#######################################################
+'# .env for the Game Server
+'#
+'# 1) Choose your port #
+'# 2) Choose your database (RAM, Firebase, MongoDb)
+'# 3) Enable or disable local caching and cache size
+'#######################################################
+
+
+'#######################################################
+'# 1) Choose your server port #
+'#######################################################
+'PORT=3000
+'
+'#######################################################
+'# 2) Choose your database engine
+'#
+'#   a) In-Memory Configuration (for debugging)
+'#   b) Firebase Configuration (the best)
+'#   c) MongoDb Configuration (finiky connection code)
+'#   d) (COMING SOON) MongoDb on Azure (woah!)
+'#   e) (COMING SOON) Microsoft Azure Cosmo (best free tier)
+'#######################################################
+
+'#DB_TYPE=memory
+'#DB_TYPE=firestore
+'DB_TYPE=mongodb
+
+'#######################################################
+'# Firebase Authorization Stuff
+'#######################################################
+
+'FIREBASE_API_KEY=
+'FIREBASE_AUTH_DOMAIN=
+'FIREBASE_PROJECT_ID=
+'FIREBASE_STORAGE_BUCKET=
+'FIREBASE_MESSAGING_SENDER_ID=
+'FIREBASE_APP_ID=
+
+'#######################################################
+'# MongoDB Authorization Stuff
+'#######################################################
+
+'MONGODB_URI=
+
+'#######################################################
+'# 3) Enable/disable caching and the cache size (MB)
+'#
+'# The cache is write through, so a single write
+'# invalidates the cache and forces reads. The cache
+'# saves alot of reads.
+'#######################################################
+
+'# Cache Configuration
+'ENABLE_CACHE=false
+'#ENABLE_CACHE=false
+'CACHE_SIZE_MB=100
+
+2. To start the server:
+
+cd net40k/backend
+npm run dev
+
+3. To start the client:
+
+cd net40k/frontend
+npm run dev
+open a web browser
+http://localhost:5173
+
+Note the requirements did not say that it had to run fromn the dist folder,
+so I did not finish that deployment part, even tho it's normal.
+
+4. The server has an interactive startup menu, to clear the databases, run other
+tests, etc.  I left it in there cause it's useful.  Especially clearning
+databases.
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+1. Create a new account by registring.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+![Registration Screen](screenshots/Register.png)
+
+Clicking on the dice icon will generate a random nickname from a 3rd party API
+known as the Fantasy Name Generator.
+
+![NicknameField Screen](screenshots/NicknameField.png)
+
+2. Login
+
+![Login Screen](screenshots/Login.png)
+
+3. Takes you to the game lobby.  Create a game on the
+create game tab (C of CRUD)
+
+![Create Game Tab](screenshots/CreateGameTab.png)
+
+![Create Game](screenshots/CreateGame.png)
+
+Fill in a name and create a game. Don't choose a password,
+you can't join password games yet.  When you are done, go back
+to the All tab.
+
+4. Go to the All tab and you should see your new game (R of CRUD).
+
+![All Tab](screenshots/AllTab.png)
+
+5. The game list...
+
+![GamesList](screenshots/GamesList.png)
+
+List of all games on the MongoDb database. It refreshes every 5
+seconds so you can open multiple windows with different accounts
+and see games from different accounts here.
+
+Games are persistents so logged off players still have games
+running on the server.  The final product may take hours or days
+to finish a game.
+
+6.  Each game as a row of icons which depends upon if you created
+the game or not. JOIN / WATCH / SETTINGS / DELETE
+
+![GameIcons](screenshots/GameIcons.png)
+
+This is where you can do the Update and Delete.
+
+7. Join and Watch take you to the game screen.  Back button in the UI
+doesnt work, just hit your browser'a back button.
+
+![Game Screen](screenshots/Game.png)
+
+8. Update a game (U of CRUD) is the gear icon.
+
+![Settings Icon](screenshots/SettingsIcon.png)
+
+Takes you to this screen:
+
+![Settings](screenshots/Settings.png)
+
+Change the settings you want and hit save or cancel.
+
+9. Delete a game (D of CRUD)
+
+A confirmation will be shown:
+
+![DeleteGameModal](screenshots/DeleteGameModal.png)
+
+10. The chat is all mock data.  Typing doesn't do anything.
+
+![Chat Screen](screenshots/Chat.png)
+
+11. The Player list is live.  If you log into two different accounts
+in two seperate tabs, it shows up properly.
+
+![Player List](screenshots/PlayerList.png)
+
+![Player List](screenshots/PlayerList2.png)
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -158,12 +361,9 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+No roadmap right now.  Need to fix existing bugs first.
 
-See the [open issues](https://github.com/timotholt/net40k/issues) for a full list of proposed features (and known issues).
+#See the [open issues](https://github.com/timotholt/net40k/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -205,7 +405,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
+Your Name - [@OtholtTim](https://x.com/OtholtTim) - timotholt@gmail.com
 
 Project Link: [https://github.com/timotholt/net40k](https://github.com/timotholt/net40k)
 
@@ -222,38 +422,7 @@ Project Link: [https://github.com/timotholt/net40k](https://github.com/timotholt
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Project Requirements
 
-| Requirement | Weight | Finished |
-| :-- | :--: | :--: |
-| Project is organized into appropriate files and directories, following best practices. | 2% | ✅ |
-| Project contains an appropriate level of comments. | 2% | ✅ |
-| Project is pushed to GitHub, and contains a README file that documents the project, including an overall description of the project. | 5% | ✅ |
-| Ensure that the program runs without errors | 4% | ✅ |
-| Level of effort displayed in creativity, presentation, and user experience. | 5% | ✅ |
-| Demonstrate proper usage of ES6 syntax and tools. | 2% | ✅ |
-| Use functions and classes to adhere to the DRY principle. | 2% | ✅ |
-| Use Promises and async/await, where appropriate. | 2% | ✅ |
-| Use Axios or fetch to retrieve data from an API. | 2% | ✅ |
-| Use sound programming logic throughout the application. | 2% | ✅ |
-| Use MongoDB to create a database for your application. | 5% | ✅ |
-| Apply appropriate indexes to your database collections. | 2% | ✅ |
-| Create reasonable schemas for your data by following data modeling best practices. | 2% | ✅ |
-| Create a RESTful API using Node and Express. | 7% | ✅ |
-| Include API routes for all four CRUD operations. | 5% | ✅ |
-| Utilize the native MongoDB driver or Mongoose to interface with your database. | 5% | ✅ |
-| Include at least one form of user authentication/authorization within the application. | 2% | ✅ |
-| Use React to create the application's front-end. | 10% | ✅ |
-| Use CSS to style the application. | 5% | ✅ |
-| Create at least four different views or pages for the application. | 5% | ✅ |
-| Create some form of navigation that is included across the application's pages, utilizing React Router for page rendering | 5% | ✅ |
-| Use React Hooks or Redux for application state management. | 5% | ✅ |
-| Interface directly with the server and API that you created. | 5% | ✅ |
-| Create a short overview of your application. | 1% | ✅ |
-| Highlight the use cases of your application. | 1% | ✅ |
-| Highlight the technical functionality of the application, from a high-level perspective. | 1% | ✅ |
-| Discuss what you have learned through the development of the application. | 1% | ✅ |
-| Discuss additional features that could be added to the application in the future. | 1% | ✅ |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
