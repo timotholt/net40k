@@ -16,6 +16,7 @@ import Register from './pages/Register/Register';
 import Lobby from './pages/Lobby/Lobby';
 import Game from './pages/Game/Game';
 import styles from './styles/App.module.css';
+import './styles/portal.css';
 
 // Modal Renderer Component
 function ModalRenderer() {
