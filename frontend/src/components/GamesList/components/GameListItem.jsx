@@ -58,7 +58,11 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
                   <UserIcon className={styles.roleIcon} />
                 </Tooltip>
               )}
-              {game.hasPassword && <LockIcon className={styles.roleIcon} />}
+              {game.hasPassword && (
+                <Tooltip text="Password Protected">
+                  <LockIcon className={styles.roleIcon} />
+                </Tooltip>
+              )}
             </div>
             {game.description && (
               <div className={styles.description}>{game.description}</div>
@@ -84,37 +88,35 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
 
       <div className={styles.actions}>
         <div className={styles.buttonWrapper}>
-          {/* <Tooltip 
-            text={getJoinTooltipText()}
-            icon={game.hasPassword ? <LockIcon /> : null}
-            position="top"
-          > */}
+          <Tooltip text={getJoinTooltipText()}>
             <IconButton 
               icon={JoinIcon}
               onClick={() => onJoin(game.gameUuid)}
               disabled={game.players.length >= game.maxPlayers}
-              title={getJoinTooltipText()}
             />
-          {/* </Tooltip> */}
+          </Tooltip>
 
-          <IconButton 
-            icon={ViewIcon}
-            onClick={() => onView(game.gameUuid)}
-            title="View Game"
-          />
+          <Tooltip text="View Game">
+            <IconButton 
+              icon={ViewIcon}
+              onClick={() => onView(game.gameUuid)}
+            />
+          </Tooltip>
 
           {game.isYours && (
             <>
-              <IconButton 
-                icon={GearIcon}
-                onClick={() => onGameSettings(game.gameUuid)}
-                title="Game Settings"
-              />
-              <IconButton 
-                icon={DeleteIcon}
-                onClick={() => onDelete(game.gameUuid)}
-                title="Delete Game"
-              />
+              <Tooltip text="Game Settings">
+                <IconButton 
+                  icon={GearIcon}
+                  onClick={() => onGameSettings(game.gameUuid)}
+                />
+              </Tooltip>
+              <Tooltip text="Delete Game">
+                <IconButton 
+                  icon={DeleteIcon}
+                  onClick={() => onDelete(game.gameUuid)}
+                />
+              </Tooltip>
             </>
           )}
         </div>

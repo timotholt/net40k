@@ -14,105 +14,57 @@
 }
 
 .tooltip {
-  position: fixed;
-  top: -2.5rem;
-  left: 50%;
-  transform: translateX(-50%);
   background: var(--gradient-screen);
   backdrop-filter: blur(10px);
   color: var(--color-soft-white);
-  padding: 0.0rem;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--border-radius-sm);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   font-size: 0.8rem;
-  line-height: 1;
   white-space: nowrap;
   z-index: var(--z-tooltip);
   border: var(--border-width) solid var(--color-green);
   box-shadow: var(--glow-container);
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.tooltip > * {
-  padding: 0.1rem 0.25rem;
-}
-
-.tooltip svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  stroke-width: 2;
-  fill: none;
-}
-
-.tooltipWrapper:hover .tooltip {
+.tooltip.visible {
   opacity: 1;
   visibility: visible;
 }
 
 /* Positioning */
-.tooltip.top {
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+.tooltip[data-position="top"] {
+  transform: translate(-50%, -100%);
 }
 
-.tooltip.bottom {
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+.tooltip[data-position="bottom"] {
+  transform: translate(-50%, 0);
 }
 
-.tooltip.left {
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
+.tooltip[data-position="left"] {
+  transform: translate(-100%, -50%);
 }
 
-.tooltip.right {
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
+.tooltip[data-position="right"] {
+  transform: translate(0, -50%);
 }
 
-/* Arrows */
-.tooltip.top::after,
-.tooltip.bottom::after,
-.tooltip.left::after,
-.tooltip.right::after {
-  content: '';
-  position: absolute;
-  border: var(--tooltip-arrow-size) solid transparent;
+/* Icon styling */
+.tooltipIcon {
+  margin-right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
 }
 
-.tooltip.top::after {
-  bottom: -var(--tooltip-arrow-size);
-  left: 50%;
-  transform: translateX(-50%);
-  border-top-color: var(--tooltip-bg-default);
-}
-
-.tooltip.bottom::after {
-  top: -var(--tooltip-arrow-size);
-  left: 50%;
-  transform: translateX(-50%);
-  border-bottom-color: var(--tooltip-bg-default);
-}
-
-.tooltip.left::after {
-  right: -var(--tooltip-arrow-size);
-  top: 50%;
-  transform: translateY(-50%);
-  border-left-color: var(--tooltip-bg-default);
-}
-
-.tooltip.right::after {
-  left: -var(--tooltip-arrow-size);
-  top: 50%;
-  transform: translateY(-50%);
-  border-right-color: var(--tooltip-bg-default);
+.tooltipIcon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
 }
 
 /* Variants */

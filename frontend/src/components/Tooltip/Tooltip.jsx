@@ -75,74 +75,89 @@ const Tooltip = ({
   const wrapperRef = useRef(null);
 
   useEffect(() => {
-    if (isVisible && wrapperRef.current) {
-      const rect = wrapperRef.current.getBoundingClientRect();
-      const gap = 8; // Gap between tooltip and target
+    if (!isVisible || !wrapperRef.current) return;
 
-      let top = 0;
-      let left = 0;
+    const updatePosition = () => {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+
+      // Position relative to viewport
+      let top = rect.top + scrollY;
+      let left = rect.left + scrollX;
 
       switch (position) {
         case 'top':
-          top = rect.top - gap;
-          left = rect.left + rect.width / 2;
+          top = top - 8;
+          left = left + (rect.width / 2);
           break;
         case 'bottom':
-          top = rect.bottom + gap;
-          left = rect.left + rect.width / 2;
+          top = top + rect.height + 8;
+          left = left + (rect.width / 2);
           break;
         case 'left':
-          top = rect.top + rect.height / 2;
-          left = rect.left - gap;
+          top = top + (rect.height / 2);
+          left = left - 8;
           break;
         case 'right':
-          top = rect.top + rect.height / 2;
-          left = rect.right + gap;
+          top = top + (rect.height / 2);
+          left = left + rect.width + 8;
+          break;
+        default:
           break;
       }
 
       setTooltipPosition({ top, left });
-    }
+    };
+
+    updatePosition();
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isVisible, position]);
 
-  if (disabled) return children;
+  if (disabled) {
+    return children;
+  }
 
   return (
-    <div 
-      ref={wrapperRef}
-      className={styles.tooltipWrapper}
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      role="tooltip-container"
-    >
-      {children}
+    <>
+      <div 
+        ref={wrapperRef}
+        className={styles.tooltipWrapper}
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+      >
+        {children}
+      </div>
+
       {isVisible && createPortal(
-        <div 
-          className={`
-            ${styles.tooltip} 
-            ${styles[position]} 
-            ${styles[variant]}
-          `}
+        <div
+          className={`${styles.tooltip} ${isVisible ? styles.visible : ''}`}
+          data-position={position}
           style={{
-            top: tooltipPosition.top,
-            left: tooltipPosition.left
+            position: 'absolute',
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`
           }}
-          role="tooltip"
-          aria-hidden={!isVisible}
         >
-          {icon}
-          {typeof text === 'string' ? <span>{text}</span> : text}
+          {icon && <span className={styles.tooltipIcon}>{icon}</span>}
+          <span>{text}</span>
         </div>,
-        document.getElementById('portal-root')
+        document.body
       )}
-    </div>
+    </>
   );
 };
 
 Tooltip.propTypes = {
   children: PropTypes.node.isRequired,
   text: PropTypes.oneOfType([
-    PropTypes.string, 
+    PropTypes.string,
     PropTypes.node
   ]).isRequired,
   icon: PropTypes.node,
