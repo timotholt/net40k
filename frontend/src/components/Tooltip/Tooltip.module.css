@@ -14,7 +14,7 @@
 }
 
 .tooltip {
-  position: absolute;
+  position: fixed;
   top: -2.5rem;
   left: 50%;
   transform: translateX(-50%);
@@ -29,9 +29,10 @@
   font-size: 0.8rem;
   line-height: 1;
   white-space: nowrap;
-  z-index: 10;
+  z-index: var(--z-tooltip);
   border: var(--border-width) solid var(--color-green);
   box-shadow: var(--glow-container);
+  pointer-events: none;
 }
 
 .tooltip > * {

@@ -8,7 +8,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, var(--opacity-overlay));
   backdrop-filter: blur(4px);
-  z-index: var(--z-controls);
+  z-index: var(--z-modal-overlay);
 }
 
 .modalContainer {
@@ -16,7 +16,6 @@
   top: calc(50% - 14rem);
   left: calc(50% - 14rem);
   transform: translate(-50%, -50%);
-  z-index: var(--z-controls);
   width: 90%;
   max-width: 32rem;
   opacity: 1;
@@ -32,7 +31,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: var(--z-controls);
+  z-index: var(--z-modal-overlay);
   backdrop-filter: blur(5px);
 }
 

@@ -47,6 +47,6 @@ export default function ModalContainer() {
         );
       })}
     </div>,
-    document.body
+    document.getElementById('portal-root')
   );
 }

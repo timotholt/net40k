@@ -7,7 +7,7 @@
   width: fit-content;
   box-shadow: var(--glow-container);
   backdrop-filter: blur(15px);
-  z-index: 100000;
+  z-index: var(--z-context-menu);
   pointer-events: auto;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 32, 0, 0.95) 100%);
 }
@@ -103,7 +103,7 @@
   width: fit-content;
   box-shadow: var(--glow-container);
   backdrop-filter: blur(15px);
-  z-index: 100001;
+  z-index: var(--z-context-menu);
   pointer-events: auto;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 32, 0, 0.98) 100%);
 }

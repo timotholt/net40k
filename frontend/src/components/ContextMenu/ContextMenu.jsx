@@ -76,14 +76,13 @@ export default function ContextMenu({
       style={{ 
         left: x, 
         top: y,
-        position: 'fixed',
-        zIndex: 100000
+        position: 'fixed'
       }}
       onClick={(e) => e.stopPropagation()}
     >
       {renderItems(items)}
     </div>,
-    document.body
+    document.getElementById('portal-root')
   );
 }
 

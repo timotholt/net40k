@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import styles from './Tooltip.module.css';
 
@@ -70,30 +71,69 @@ const Tooltip = ({
   disabled = false
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (isVisible && wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const gap = 8; // Gap between tooltip and target
+
+      let top = 0;
+      let left = 0;
+
+      switch (position) {
+        case 'top':
+          top = rect.top - gap;
+          left = rect.left + rect.width / 2;
+          break;
+        case 'bottom':
+          top = rect.bottom + gap;
+          left = rect.left + rect.width / 2;
+          break;
+        case 'left':
+          top = rect.top + rect.height / 2;
+          left = rect.left - gap;
+          break;
+        case 'right':
+          top = rect.top + rect.height / 2;
+          left = rect.right + gap;
+          break;
+      }
+
+      setTooltipPosition({ top, left });
+    }
+  }, [isVisible, position]);
 
   if (disabled) return children;
 
   return (
     <div 
+      ref={wrapperRef}
       className={styles.tooltipWrapper}
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
       role="tooltip-container"
     >
       {children}
-      {isVisible && (
+      {isVisible && createPortal(
         <div 
           className={`
             ${styles.tooltip} 
             ${styles[position]} 
             ${styles[variant]}
           `}
+          style={{
+            top: tooltipPosition.top,
+            left: tooltipPosition.left
+          }}
           role="tooltip"
           aria-hidden={!isVisible}
         >
           {icon}
           {typeof text === 'string' ? <span>{text}</span> : text}
-        </div>
+        </div>,
+        document.getElementById('portal-root')
       )}
     </div>
   );
