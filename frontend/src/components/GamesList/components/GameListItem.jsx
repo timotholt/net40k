@@ -1,3 +1,4 @@
+// Force module reload
 import { IconButton } from '../../Icons/IconButton';
 import { 
   JoinIcon, 
