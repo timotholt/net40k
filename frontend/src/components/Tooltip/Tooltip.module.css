@@ -67,6 +67,48 @@
   fill: none;
 }
 
+/* Tooltip Arrow Styles */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: transparent;
+  border: var(--border-width) solid var(--color-green);
+}
+
+.tooltip[data-position="top"]::after {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-top: none;
+  border-left: none;
+}
+
+.tooltip[data-position="bottom"]::after {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom: none;
+  border-right: none;
+}
+
+.tooltip[data-position="left"]::after {
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-top: none;
+}
+
+.tooltip[data-position="right"]::after {
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-bottom: none;
+}
+
 /* Variants */
 .tooltip.warning {
   background-color: var(--tooltip-bg-warning);
@@ -77,6 +119,7 @@
   border-bottom-color: var(--tooltip-bg-warning);
   border-left-color: var(--tooltip-bg-warning);
   border-right-color: var(--tooltip-bg-warning);
+  background-color: var(--tooltip-bg-warning);
 }
 
 .tooltip.error {
@@ -88,6 +131,7 @@
   border-bottom-color: var(--tooltip-bg-error);
   border-left-color: var(--tooltip-bg-error);
   border-right-color: var(--tooltip-bg-error);
+  background-color: var(--tooltip-bg-error);
 }
 
 .tooltip.success {
@@ -99,4 +143,5 @@
   border-bottom-color: var(--tooltip-bg-success);
   border-left-color: var(--tooltip-bg-success);
   border-right-color: var(--tooltip-bg-success);
+  background-color: var(--tooltip-bg-success);
 }
