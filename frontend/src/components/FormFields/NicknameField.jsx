@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import InputField from './InputField';
+import Tooltip from '../Tooltip/Tooltip';
 import styles from './FormFields.module.css';
 
 export function NicknameField({ 
@@ -106,17 +107,19 @@ export function NicknameField({
         leftIcon={nicknameIcon}
         // Render dice icon with click handler and loading state
         rightIcon={
-          <div 
-            onClick={generateNickname} 
-            className={`${styles.icon} ${styles.rightIcon}`}
-            style={{ 
-              opacity: isLoading ? 0.5 : 1, 
-              pointerEvents: isLoading ? 'none' : 'auto',
-              cursor: 'pointer'
-            }}
-          >
-            {diceIcon}
-          </div>
+          <Tooltip text="Generate random nickname">
+            <div 
+              onClick={generateNickname} 
+              className={`${styles.icon} ${styles.rightIcon}`}
+              style={{ 
+                opacity: isLoading ? 0.5 : 1, 
+                pointerEvents: isLoading ? 'none' : 'auto',
+                cursor: 'pointer'
+              }}
+            >
+              {diceIcon}
+            </div>
+          </Tooltip>
         }
         required={required}
         disabled={disabled || isLoading}
