@@ -83,6 +83,7 @@
   transform: translateX(-50%) rotate(45deg);
   border-top: none;
   border-left: none;
+  background: linear-gradient(135deg, transparent 50%, var(--color-green) 50%);
 }
 
 .tooltip[data-position="bottom"]::after {
