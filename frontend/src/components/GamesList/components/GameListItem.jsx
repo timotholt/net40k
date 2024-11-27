@@ -25,18 +25,6 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
     onSelect(); // Select on right click too
   };
 
-  const getJoinTooltipText = () => {
-    if (game.players.length >= game.maxPlayers) {
-      return "Game is full";
-    }
-    
-    if (game.hasPassword) {
-      return "Password required";
-    }
-
-    return "Join Game";
-  };
-
   return (
     <div 
       className={`${styles.gameItem} ${isSelected ? styles.selected : ''}`}
@@ -88,7 +76,10 @@ export default function GameListItem({ game, isSelected, onSelect, onJoin, onVie
 
       <div className={styles.actions}>
         <div className={styles.buttonWrapper}>
-          <Tooltip text={getJoinTooltipText()}>
+          <Tooltip 
+            text={game.hasPassword ? "Password required" : "Join Game"} 
+            icon={game.hasPassword ? <LockIcon style={{ stroke: 'var(--color-green)' }} /> : null}
+          >
             <IconButton 
               icon={JoinIcon}
               onClick={() => onJoin(game.gameUuid)}
