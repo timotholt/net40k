@@ -78,9 +78,9 @@
 }
 
 .tooltip[data-position="top"]::after {
-  bottom: -6px;
+  bottom: -5.9px;
   left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  transform: translateX(-50%) rotate(45deg) translateY(0.5px);
   border-top: none;
   border-left: none;
   background: linear-gradient(135deg, transparent 50%, var(--color-green) 50%);
