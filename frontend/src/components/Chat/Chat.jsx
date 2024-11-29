@@ -240,7 +240,7 @@ export default function Chat({
                 />
               ));
           } else if (filter) {
-            return <EmptyState message="No messages match your search. Press <ESC> to clear." />;
+            return <EmptyState message="No messages match your search. Press<ESC>to clear." />;
           } else {
             return null;
           }

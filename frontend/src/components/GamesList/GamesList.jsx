@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
-import EmptyState from './components/EmptyState';
+import EmptyState from '../shared/EmptyState/EmptyState';
 import Modal from '../Modal/Modal';
 import GameSettingsForm from './components/GameSettingsForm';
 import { InputField } from '../FormFields';
@@ -265,7 +265,7 @@ export default function GamesList({
 
   const getEmptyStateMessage = () => {
     if (filter) {
-      return "No games match your search. Press <ESC> to clear.";
+      return "No games match your search. Press<ESC>to clear.";
     }
     switch (activeTab) {
       case 'yours':

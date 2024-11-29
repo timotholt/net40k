@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import PlayersListHeader from './components/PlayersListHeader';
 import PlayersListFilters from './components/PlayersListFilters';
 import PlayerListItem from './components/PlayerListItem';
-import EmptyState from './components/EmptyState';
+import EmptyState from '../shared/EmptyState/EmptyState';
 import userService from '../../services/userService';
 import styles from './PlayersList.module.css';
 
@@ -123,7 +123,7 @@ export default function PlayersList() {
 
   const getEmptyStateMessage = () => {
     if (filter) {
-      return "No matches. Press <ESC> to clear.";
+      return "No matches. Press<ESC>to clear.";
     }
     return activeTab === 'friends' 
       ? "You haven't added any friends yet."

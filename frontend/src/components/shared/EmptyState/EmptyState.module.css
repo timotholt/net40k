@@ -1,22 +1,21 @@
 .emptyState {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  padding: 1rem;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
-  padding: 2rem;
-  text-align: center;
-  /* Remove height: 100% to prevent scrollbar */
 }
 
 .keyHint {
   display: inline-block;
   background: rgba(0, 255, 0, 0.1);
   border: 1px solid var(--color-green);
-  border-radius: 4px;
-  padding: 0.1rem 0.4rem;
-  margin: 0 0.3rem;
+  border-radius: 3px;
+  padding: 0 0.2rem;
+  margin: 0 0.2rem;
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--color-green);
+  line-height: 1.1;
 }
