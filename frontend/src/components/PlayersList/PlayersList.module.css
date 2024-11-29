@@ -22,29 +22,29 @@
 }
 
 
-.playersList {
+.playersListContainer {
   flex: 1;
-  overflow-y: auto;
-  /* overflow-x: hidden; */
+  display: flex;
+  flex-direction: column;
   border: var(--border-width) solid var(--color-green);
-  border-top-left-radius: var(--border-radius-lg);
-  border-top-right-radius: var(--border-radius-lg);
-  border-bottom: none;
+  border-radius: var(--border-radius-lg);
   background: var(--gradient-screen);
   backdrop-filter: blur(10px);
   box-shadow: var(--glow-container);
   margin-top: -0.2rem;
-  position: relative;
-  z-index: 1;
-  padding-top: 0.5rem;
+  overflow: hidden;
   transition: box-shadow var(--transition-speed) ease;
 }
 
-
-.playerList:hover, .playersList:focus-within {
+.playersListContainer:hover,
+.playersListContainer:focus-within {
   box-shadow: var(--glow-intense);
-  /* box-shadow: var(--glow-intense); */
-  /* box-shadow: var(--glow-container-hover); */
+}
+
+.playersList {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 0.5rem;
 }
 
 .playersList .playerItem:nth-child(even) {
@@ -127,21 +127,16 @@
 }
 
 .filters {
-  border: var(--border-width) solid var(--color-green);
+  border-top: var(--border-width) solid var(--color-green);
   border-bottom-left-radius: var(--border-radius-lg);
   border-bottom-right-radius: var(--border-radius-lg);
   background: var(--gradient-screen);
   backdrop-filter: blur(10px);
-  box-shadow: var(--glow-container);
-}
-
-.filters:hover,
-.filters:focus-within {
-  box-shadow: var(--glow-container-hover);
 }
 
 .filterControls {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem;
+  padding-right: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;

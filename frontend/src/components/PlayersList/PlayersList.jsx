@@ -143,39 +143,41 @@ export default function PlayersList() {
         onTabClick={setActiveTab}
       />
 
-      <div 
-        className={styles.playersList}
-        role="tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-        onContextMenu={handleContainerContextMenu}
-      >
-        {loading ? (
-          <EmptyState message="Loading..." />
-        ) : error ? (
-          <EmptyState message={error} />
-        ) : filteredPlayers.length > 0 ? (
-          filteredPlayers.map(player => (
-            <PlayerListItem
-              key={player.userUuid}
-              player={player}
-              isSelected={selectedUserUuid === player.userUuid}
-              onSelect={handleSelect}
-              onWhisper={handleWhisper}
-              onAddFriend={handleAddFriend}
-            />
-          ))
-        ) : (
-          <EmptyState message={getEmptyStateMessage()} />
-        )}
-      </div>
+      <div className={styles.playersListContainer}>
+        <div 
+          className={styles.playersList}
+          role="tabpanel"
+          aria-labelledby={`tab-${activeTab}`}
+          onContextMenu={handleContainerContextMenu}
+        >
+          {loading ? (
+            <EmptyState message="Loading..." />
+          ) : error ? (
+            <EmptyState message={error} />
+          ) : filteredPlayers.length > 0 ? (
+            filteredPlayers.map(player => (
+              <PlayerListItem
+                key={player.userUuid}
+                player={player}
+                isSelected={selectedUserUuid === player.userUuid}
+                onSelect={handleSelect}
+                onWhisper={handleWhisper}
+                onAddFriend={handleAddFriend}
+              />
+            ))
+          ) : (
+            <EmptyState message={getEmptyStateMessage()} />
+          )}
+        </div>
 
-      <PlayersListFilters
-        filter={filter}
-        onFilterChange={setFilter}
-        onKeyDown={handleKeyDown}
-        onFocus={() => setSearchFocused(true)}
-        onBlur={() => setSearchFocused(false)}
-      />
+        <PlayersListFilters
+          filter={filter}
+          onFilterChange={setFilter}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+        />
+      </div>
     </div>
   );
 }
