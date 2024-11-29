@@ -20,6 +20,7 @@ async function main() {
         const { router: cacheRoutes } = await import('./routes/cache.js');
         const { router: gameRoutes } = await import('./routes/gameRoutes.js');
         const { router: keepAliveRoutes } = await import('./routes/keepAliveRoutes.js');
+        const victoryRoutes = await import('./routes/victory.js');
         const { db } = await import('./database/database.js');
         const { requestLogger } = await import('./middleware/requestLogger.js');
         const { notFoundHandler, errorHandler } = await import('./middleware/errorHandling.js');
@@ -54,8 +55,10 @@ async function main() {
         logger.info('Initializing models...');
         const { UserDB } = await import('./models/User.js');
         const { GameDB } = await import('./models/Game.js');
+        const { VictoryDB } = await import('./models/Victory.js');
         await UserDB.init();
         await GameDB.init();
+        await VictoryDB.init();
         logger.info('✓ Models initialized');
         
         // Initialize UserService
@@ -108,7 +111,8 @@ async function main() {
         //app.use('/chat', chatRoutes);
         //app.use('/cache', cacheRoutes);
         app.use('/games', gameRoutes);
-        app.use('/api/keep-alive', keepAliveRoutes);
+        app.use('/keep-alive', keepAliveRoutes);
+        app.use('/victory', victoryRoutes.default);
 
         // Root route
         app.get('/about', (req, res) => {

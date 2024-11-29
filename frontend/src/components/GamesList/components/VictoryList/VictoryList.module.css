@@ -1,0 +1,64 @@
+.victoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.victoryItem {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 255, 0, 0.05);
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-speed) ease;
+}
+
+.victoryItem:hover {
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: var(--glow-container-hover);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.playerName {
+  color: var(--color-soft-white);
+  font-weight: 500;
+}
+
+.faction {
+  color: var(--color-green);
+  opacity: 0.8;
+}
+
+.victoryDetails {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.victoryType {
+  color: var(--color-green);
+}
+
+.description {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(0, 255, 0, 0.2);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}

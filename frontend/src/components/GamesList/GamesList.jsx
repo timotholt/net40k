@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameListItem from './components/GameListItem';
 import CreateGameTab from './components/CreateGameTab';
+import VictoryList from './components/VictoryList/VictoryList';
 import EmptyState from '../shared/EmptyState/EmptyState';
 import Modal from '../Modal/Modal';
 import GameSettingsForm from './components/GameSettingsForm';
@@ -23,6 +24,7 @@ export default function GamesList({
 }) {
   const navigate = useNavigate();
   const [games, setGames] = useState(initialGames);
+  const [victories, setVictories] = useState([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,13 +60,35 @@ export default function GamesList({
     }
   }, [activeTab, hideFullGames, user?.userUuid]);
 
+  // Fetch victories
+  const fetchVictories = useCallback(async () => {
+    if (activeTab !== 'victories') return;
+    
+    try {
+      const result = await gameService.getVictories({ 
+        limit: 50,
+      });
+      setVictories(result.victories || []);
+    } catch (err) {
+      console.error('Victories fetch error:', err);
+    }
+  }, [activeTab]);
+
   // Polling effect
   useEffect(() => {
     // Initial fetch
     fetchGames();
+    if (activeTab === 'victories') {
+      fetchVictories();
+    }
 
     // Setup polling interval
-    pollingRef.current = setInterval(fetchGames, 5000);
+    pollingRef.current = setInterval(() => {
+      fetchGames();
+      if (activeTab === 'victories') {
+        fetchVictories();
+      }
+    }, 5000);
 
     // Cleanup function
     return () => {
@@ -72,7 +96,7 @@ export default function GamesList({
         clearInterval(pollingRef.current);
       }
     };
-  }, [fetchGames]);
+  }, [fetchGames, fetchVictories, activeTab]);
 
   // Filter games based on criteria
   const filteredGames = games.filter(game => {
@@ -113,6 +137,7 @@ export default function GamesList({
     { id: 'all', label: `All (${filteredGames.length})` },
     { id: 'yours', label: `Yours (${filteredGames.filter(g => g.isYours).length})` },
     { id: 'friends', label: `Friends (${filteredGames.filter(g => g.isFriendGame).length})` },
+    { id: 'victories', label: 'Victories' },
     { id: 'create', label: 'Create Game' }
   ];
 
@@ -272,6 +297,8 @@ export default function GamesList({
         return "You don't have any created games or characters in any games created by other players.";
       case 'friends':
         return "Your friends haven't created any games.";
+      case 'victories':
+        return "No victories recorded yet. Be the first to achieve victory!";
       default:
         return "There are no games on the server. Create a game to play!";
     }
@@ -306,7 +333,13 @@ export default function GamesList({
         <div 
           className={styles.gamesList}
         >
-          {activeTab === 'create' ? (
+          {activeTab === 'victories' ? (
+            victories.length > 0 ? (
+              <VictoryList victories={victories} filter={filter} />
+            ) : (
+              <EmptyState message={getEmptyStateMessage()} />
+            )
+          ) : activeTab === 'create' ? (
             <CreateGameTab />
           ) : tabFilteredGames.length > 0 ? (
             tabFilteredGames.map(game => (

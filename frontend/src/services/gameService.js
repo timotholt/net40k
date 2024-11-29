@@ -146,6 +146,36 @@ const gameService = {
       console.error('Failed to update game settings:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  /**
+   * Fetch list of game victories
+   * @param {Object} options - Options for fetching victories
+   * @param {number} options.limit - Maximum number of victories to fetch
+   * @returns {Promise<{victories: Array}>}
+   */
+  getVictories: async ({ limit = 50 } = {}) => {
+    try {
+      const response = await axiosInstance.get('/games/victories', {
+        params: { limit }
+      });
+      
+      return {
+        victories: response.data.map(victory => ({
+          gameUuid: victory.gameUuid,
+          players: victory.players || [],  // Array of player UUIDs
+          nickname: victory.nickname,
+          faction: victory.faction,
+          type: victory.type,
+          description: victory.description,
+          turnCount: victory.turnCount,
+          timestamp: victory.timestamp
+        }))
+      };
+    } catch (error) {
+      console.error('Error fetching victories:', error);
+      return { victories: [] };
+    }
   }
 };
 
