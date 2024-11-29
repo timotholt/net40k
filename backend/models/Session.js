@@ -1,80 +1,87 @@
-import { Schema } from 'mongoose';
-import { database } from '../utils/database.js';
+import { db } from '../database/database.js';
+import { generateSchema } from '../utils/schemaGenerator.js';
+import logger from '../utils/logger.js';
+import DateService from '../services/DateService.js';
 
-const sessionSchema = new Schema({
-    token: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true
-    },
-    userUuid: {
-        type: String,
-        required: true,
-        index: true
-    },
-    deviceInfo: {
-        deviceId: String,
-        deviceName: String,
-        deviceType: String,
-        pushToken: String,
-        ip: String,
-        userAgent: String
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: 24 * 60 * 60 // TTL index: automatically remove documents after 24 hours
-    },
-    lastActive: {
-        type: Date,
-        default: Date.now
+class Session {
+    constructor(data = {}) {
+        this.token = data.token || db.generateUuid();
+        this.userUuid = data.userUuid;
+        this.deviceInfo = data.deviceInfo || {};
+        this.createdAt = data.createdAt || DateService.now().date;
+        this.lastActive = data.lastActive || DateService.now().date;
     }
-});
 
-// Update lastActive timestamp on each session access
-sessionSchema.methods.touch = async function() {
-    this.lastActive = new Date();
-    await this.save();
-};
-
-// Static methods for session management
-sessionSchema.statics.createSession = async function(userUuid, deviceInfo = {}) {
-    const session = await this.create({
-        token: database.generateUuid(),
-        userUuid,
-        deviceInfo,
-        createdAt: new Date(),
-        lastActive: new Date()
+    static schema = generateSchema(new Session(), {
+        token: { type: 'string', required: true, unique: true },
+        userUuid: { type: 'string', required: true },
+        deviceInfo: { 
+            type: 'object', 
+            properties: {
+                deviceId: { type: 'string' },
+                deviceName: { type: 'string' },
+                deviceType: { type: 'string' },
+                pushToken: { type: 'string' },
+                ip: { type: 'string' },
+                userAgent: { type: 'string' }
+            }
+        },
+        createdAt: { type: 'date', required: true },
+        lastActive: { type: 'date', required: true }
     });
-    return session;
-};
 
-sessionSchema.statics.findByToken = async function(token) {
-    const session = await this.findOne({ token });
-    if (session) {
-        await session.touch();
+    async touch() {
+        this.lastActive = DateService.now().date;
+        await SessionDB.update({ token: this.token }, { lastActive: this.lastActive });
     }
-    return session;
-};
+}
 
-sessionSchema.statics.terminateSession = async function(token) {
-    return this.deleteOne({ token });
-};
+export const SessionDB = {
+    collection: 'session',
 
-sessionSchema.statics.terminateUserSessions = async function(userUuid, exceptToken = null) {
-    const query = { userUuid };
-    if (exceptToken) {
-        query.token = { $ne: exceptToken };
+    async init() {
+        await db.createCollection(this.collection);
+        await db.createIndex(this.collection, { token: 1 }, { unique: true });
+        await db.createIndex(this.collection, { userUuid: 1 });
+        await db.createIndex(this.collection, { createdAt: 1 }, { 
+            expireAfterSeconds: 24 * 60 * 60 
+        });
+        logger.info('Session collection initialized');
+    },
+
+    async createSession(userUuid, deviceInfo = {}) {
+        const session = new Session({ userUuid, deviceInfo });
+        return await db.create(this.collection, session);
+    },
+
+    async findByToken(token) {
+        const sessionData = await db.findOne(this.collection, { token });
+        if (sessionData) {
+            const session = new Session(sessionData);
+            await session.touch();
+            return session;
+        }
+        return null;
+    },
+
+    async terminateSession(token) {
+        return await db.delete(this.collection, { token });
+    },
+
+    async terminateUserSessions(userUuid, exceptToken = null) {
+        const query = { userUuid };
+        if (exceptToken) {
+            query.token = { $ne: exceptToken };
+        }
+        return await db.deleteMany(this.collection, query);
+    },
+
+    async getUserSessions(userUuid) {
+        return await db.find(this.collection, 
+            { userUuid }, 
+            { sort: { lastActive: -1 } }
+        );
     }
-    return this.deleteMany(query);
 };
 
-sessionSchema.statics.getUserSessions = async function(userUuid) {
-    return this.find({ userUuid }).sort({ lastActive: -1 });
-};
-
-// Create TTL index for automatic session cleanup
-sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 24 * 60 * 60 });
-
-export const Session = database.model('Session', sessionSchema);
+export default Session;
