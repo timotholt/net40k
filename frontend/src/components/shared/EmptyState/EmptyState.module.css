@@ -5,6 +5,8 @@
   padding: 1rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+  position: absolute;
+  inset: 0;
 }
 
 .keyHint {
