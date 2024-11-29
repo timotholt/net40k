@@ -57,6 +57,9 @@ class GameService {
         userUuid 
       });
 
+      // Debug: Log the call stack to see where this is being called from
+      console.trace('LIST GAMES - Call Stack');
+
       // Find games based on initial filters
       const games = await GameDB.find(filters);
       console.log('LIST GAMES - Initial Games Found:', games.map(g => ({

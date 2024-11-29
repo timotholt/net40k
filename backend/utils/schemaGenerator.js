@@ -1,64 +1,67 @@
-import mongoose from 'mongoose';
+// Utility functions for schema generation and validation
 
 /**
- * Infers MongoDB schema type from a JavaScript value
+ * Infers JavaScript type from a value
  * @param {any} value - The value to infer type from
- * @returns {Object} MongoDB schema type definition
+ * @returns {string} Type of the value
  */
-function inferSchemaType(value) {
-    switch (typeof value) {
+function getType(value) {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'array';
+    return typeof value;
+}
+
+/**
+ * Validates a value against a simple type check
+ * @param {any} value - The value to validate
+ * @param {string} expectedType - The expected type
+ * @returns {boolean} Whether the value matches the expected type
+ */
+function validateType(value, expectedType) {
+    const actualType = getType(value);
+    
+    switch (expectedType) {
         case 'string':
-            return { type: String };
+            return actualType === 'string';
         case 'number':
-            return { type: Number };
+            return actualType === 'number';
         case 'boolean':
-            return { type: Boolean };
+            return actualType === 'boolean';
+        case 'date':
+            return value instanceof Date;
+        case 'array':
+            return actualType === 'array';
         case 'object':
-            if (value instanceof Date) {
-                return { type: Date };
-            } else if (Array.isArray(value)) {
-                return { type: [inferSchemaType(value[0])] };
-            } else if (value === null) {
-                return { type: mongoose.Schema.Types.Mixed };
-            } else {
-                return { type: Object };
-            }
+            return actualType === 'object' && value !== null;
         default:
-            return { type: mongoose.Schema.Types.Mixed };
+            return false;
     }
 }
 
 /**
- * Generates a MongoDB schema from a class instance
+ * Generates a basic schema definition from a class instance
  * @param {Object} instance - Instance of a class
  * @param {Object} options - Additional schema options for each field
- * @returns {Object} MongoDB schema definition
+ * @returns {Object} Schema definition
  */
-export function generateSchema(instance, options = {}) {
+function generateSchema(instance, options = {}) {
     const schema = {};
-    const defaultValues = {};
-
-    // Create a temporary instance to get default values
-    const tempInstance = new instance.constructor();
-
-    // Get all properties from the instance
+    
     for (const [key, value] of Object.entries(instance)) {
-        const schemaType = inferSchemaType(value);
-        const fieldOptions = options[key] || {};
+        // Skip methods and undefined values
+        if (typeof value === 'function' || value === undefined) continue;
         
-        // Get default value from the temporary instance
-        const defaultValue = tempInstance[key];
-        if (defaultValue !== undefined) {
-            defaultValues[key] = defaultValue;
-        }
-
+        // Determine type
+        const type = getType(value);
+        
+        // Create schema entry
         schema[key] = {
-            ...schemaType,
-            ...fieldOptions,
-            ...(defaultValue !== undefined && { default: defaultValue })
+            type,
+            required: options[key]?.required || false,
+            default: options[key]?.default || value
         };
     }
-
+    
     return schema;
 }
 
@@ -67,12 +70,34 @@ export function generateSchema(instance, options = {}) {
  * @param {Object} options - Additional schema options for each field
  * @returns {Function} Class decorator
  */
-export function GenerateSchema(options = {}) {
-    return function(target) {
-        target.generateSchema = function() {
-            const instance = new target();
-            return generateSchema(instance, options);
+function GenerateSchema(options = {}) {
+    return function(constructor) {
+        constructor.prototype.generateSchema = function() {
+            return generateSchema(this, options);
         };
-        return target;
+        
+        constructor.prototype.validate = function() {
+            const schema = this.generateSchema();
+            
+            for (const [key, schemaEntry] of Object.entries(schema)) {
+                const value = this[key];
+                
+                // Check required fields
+                if (schemaEntry.required && (value === null || value === undefined)) {
+                    throw new Error(`Validation Error: ${key} is required`);
+                }
+                
+                // Type validation
+                if (value !== null && value !== undefined) {
+                    if (!validateType(value, schemaEntry.type)) {
+                        throw new Error(`Validation Error: ${key} must be of type ${schemaEntry.type}`);
+                    }
+                }
+            }
+            
+            return true;
+        };
     };
 }
+
+export { generateSchema, GenerateSchema, validateType, getType };

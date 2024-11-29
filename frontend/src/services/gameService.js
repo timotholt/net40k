@@ -156,7 +156,7 @@ const gameService = {
    */
   getVictories: async ({ limit = 50 } = {}) => {
     try {
-      const response = await axiosInstance.get('/games/victories', {
+      const response = await axiosInstance.get('/victory', {
         params: { limit }
       });
       

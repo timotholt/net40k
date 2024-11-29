@@ -163,7 +163,10 @@ export const VictoryDB = {
     },
 
     async find(query = {}, options = {}) {
+        logger.info('VictoryDB.find - Query:', query);
+        logger.info('VictoryDB.find - Options:', options);
         const results = await db.find(this.collection, query, options);
+        logger.info('VictoryDB.find - Results count:', results.length);
         return results.map(result => this._toVictoryInstance(result));
     },
 
