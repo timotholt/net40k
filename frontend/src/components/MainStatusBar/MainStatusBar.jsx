@@ -17,7 +17,7 @@ export default function MainStatusBar() {
     // Hide status bar after 1 second
     const timer = setTimeout(() => {
       onMouseLeave();
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [onMouseLeave]);
