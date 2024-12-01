@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socket.IO Object Sharing</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 5px;
+            background: #2d2d2d;
+            color: #d4d4d4;
+            border: 1px solid #3d3d3d;
+        }
+        button {
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3d3d3d;
+        }
+        pre {
+            white-space: pre-wrap;
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: #569cd6;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Socket.IO Object Sharing</h2>
+        
+        <!-- Menu Section -->
+        <div class="section">
+            <h3>[CLIENT] --- Menu ---</h3>
+            <div class="input-section">
+                <button id="sendObject">a) Send object</button>
+                <button id="displayObjects">b) Display objects</button>
+                <button id="quit">c) Quit</button>
+            </div>
+        </div>
+
+        <!-- Input Form (initially hidden) -->
+        <div id="inputForm" class="section" style="display: none;">
+            <input type="text" id="objectName" placeholder="Enter object name">
+            <input type="text" id="objectValue" placeholder="Enter object value">
+            <button id="submitObject">Submit</button>
+            <button id="cancelInput">Cancel</button>
+        </div>
+
+        <!-- Display Section -->
+        <div class="section">
+            <h3>Objects:</h3>
+            <pre id="objectList"></pre>
+        </div>
+
+        <!-- Console Output -->
+        <div class="section">
+            <h3>Console:</h3>
+            <pre id="console"></pre>
+        </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

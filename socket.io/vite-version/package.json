@@ -1,0 +1,16 @@
+{
+  "name": "socket-io-vite-version",
+  "version": "1.0.0",
+  "description": "Socket.IO object sharing demo - Vite version",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.7.2"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
