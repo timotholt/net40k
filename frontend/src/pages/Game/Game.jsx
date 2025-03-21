@@ -43,7 +43,11 @@ export default function Game() {
     >
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <button onClick={handleLeaveGame} className={styles.backButton}>
+          <button 
+            onClick={handleLeaveGame} 
+            className={styles.backButton}
+            style={{ pointerEvents: 'auto' }}
+          >
             ← Back to Lobby
           </button>
           <h2>Game #{gameId}</h2>
@@ -53,6 +57,7 @@ export default function Game() {
             isCreator ? (
               <button
                 className={styles.startButton}
+                style={{ pointerEvents: 'auto' }}
               >
                 Start Game
               </button>
@@ -62,7 +67,11 @@ export default function Game() {
               </span>
             )
           )}
-          <button onClick={handleLeaveGame} className={styles.leaveButton}>
+          <button 
+            onClick={handleLeaveGame} 
+            className={styles.leaveButton}
+            style={{ pointerEvents: 'auto' }}
+          >
             Leave Game
           </button>
         </div>
