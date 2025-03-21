@@ -93,11 +93,12 @@
 }
 
 .tooltip[data-position="bottom"]::after {
-  top: -4px;
+  top: -5px;
   left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  transform: translateX(-50%) rotate(45deg) translateY(-0.5px);
   border-bottom: none;
   border-right: none;
+  background: linear-gradient(315deg, transparent 50%, var(--color-green) 50%);
 }
 
 .tooltip[data-position="left"]::after {
