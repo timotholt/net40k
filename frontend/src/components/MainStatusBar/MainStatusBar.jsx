@@ -10,6 +10,7 @@ import { MODAL_TYPES } from '../../context/ModalContext';
 import FPSCounter from '../FPSCounter/FPSCounter';
 import { GearIcon } from '../Icons/GearIcon';
 import { ArrowLeftIcon, LogoutIcon } from '../Icons/NavigationIcons';
+import Tooltip from '../Tooltip/Tooltip';
 import styles from './MainStatusBar.module.css';
 
 export default function MainStatusBar() {
@@ -63,24 +64,30 @@ export default function MainStatusBar() {
       <div className={styles.content}>
         <div className={styles.leftSection}>
           {/* Dynamic Leave Button with context-aware functionality */}
-          <button
-            className={styles.settingsButton}
-            onClick={handleLeaveClick}
-            onMouseEnter={() => soundManager.play('hover')}
-            aria-label={isGameScreen ? "Return to Lobby" : "Log Out"}
+          <Tooltip 
+            text={isGameScreen ? "Return to Lobby" : "Log Out"} 
             disabled={isLoginScreen}
-            style={{ 
-              opacity: isLoginScreen ? 0.4 : 0.8,
-              cursor: isLoginScreen ? 'default' : 'pointer',
-              pointerEvents: isLoginScreen ? 'none' : 'auto'
-            }}
+            position="bottom"
           >
-            {isGameScreen ? (
-              <ArrowLeftIcon className={styles.settingsIcon} />
-            ) : (
-              <LogoutIcon className={styles.settingsIcon} />
-            )}
-          </button>
+            <button
+              className={styles.settingsButton}
+              onClick={handleLeaveClick}
+              onMouseEnter={() => soundManager.play('hover')}
+              aria-label={isGameScreen ? "Return to Lobby" : "Log Out"}
+              disabled={isLoginScreen}
+              style={{ 
+                opacity: isLoginScreen ? 0.4 : 0.8,
+                cursor: isLoginScreen ? 'default' : 'pointer',
+                pointerEvents: isLoginScreen ? 'none' : 'auto'
+              }}
+            >
+              {isGameScreen ? (
+                <ArrowLeftIcon className={styles.settingsIcon} />
+              ) : (
+                <LogoutIcon className={styles.settingsIcon} />
+              )}
+            </button>
+          </Tooltip>
           <FPSCounter className={styles.fpsCounter} />
         </div>
         
@@ -90,16 +97,18 @@ export default function MainStatusBar() {
 
         <div className={styles.rightSection}>
           {/* Settings icon moved to the right */}
-          <button
-            className={styles.settingsButton}
-            onClick={handleSettingsClick}
-            onMouseEnter={() => soundManager.play('hover')}
-            aria-label="Settings"
-          >
-            <GearIcon 
-              className={styles.settingsIcon} 
-            />
-          </button>
+          <Tooltip text="Settings" position="bottom">
+            <button
+              className={styles.settingsButton}
+              onClick={handleSettingsClick}
+              onMouseEnter={() => soundManager.play('hover')}
+              aria-label="Settings"
+            >
+              <GearIcon 
+                className={styles.settingsIcon} 
+              />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
