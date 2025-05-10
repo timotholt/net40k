@@ -82,7 +82,7 @@ class UserService {
             });
 
             // Return private user info since this is their own profile
-            const userJson = user.toPrivateUser();
+            const userJson = user.toSelfUser();
 
             logger.info('✅ User created successfully:', userJson);
             return userJson;
@@ -112,7 +112,7 @@ class UserService {
 
             // Return user data
             return {
-                user: user.toPrivateUser(),
+                user: user.toSelfUser(),
                 sessionToken
             };
         } catch (error) {
@@ -172,7 +172,7 @@ class UserService {
         if (!user) {
             throw new NotFoundError('User not found');
         }
-        return user.toPrivateUser();
+        return user.toSelfUser();
     }
 
     async updateProfile(userUuid, updates) {
@@ -197,7 +197,7 @@ class UserService {
             throw new NotFoundError('User not found');
         }
 
-        return user.toPrivateUser();
+        return user.toSelfUser();
     }
 
     async getUsers(query = {}, options = {}) {
@@ -627,7 +627,7 @@ class UserService {
             }
         );
 
-        return user.toPrivateUser();
+        return user.toPublicUser();
         */
         return true;
     }

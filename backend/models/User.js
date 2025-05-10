@@ -89,76 +89,78 @@ class User {
         return this.toLargeUserJSON();
     }
 
-    // NOT sent to clients. This is server side only
-    toLargeUserJSON() {
-        const data = {
-            userUuid: this.userUuid,
-            username: this.username,
-            nickname: this.nickname,
-            email: this.email,
-            password: this.password,
-            createdAt: this.createdAt,
-            lastLoginAt: this.lastLoginAt,
-            isAdmin: this.isAdmin,
-            isActive: this.isActive,
-            isDeleted: this.isDeleted,
-            isBanned: this.isBanned,
-            isVerified: this.isVerified,
-            verificationToken: this.verificationToken,
-            verificationExpires: this.verificationExpires,
-            banReason: this.banReason,
-            banExpiresAt: this.banExpiresAt,
-            preferences: this.preferences,
-            lastModified: this.lastModified,
-            mutedUserUuids: this.mutedUserUuids,
-            blockedUserUuids: this.blockedUserUuids,
-        };
+    // Convert properties with undefined to null
+    convertUndefinedToNull(input) {
 
-        // Remove undefined values
-        Object.keys(data).forEach(key => {
-            if (data[key] === undefined) {
-                data[key] = null;
-            }
-        });
+        // If input is undefined, convert to null
+        if (input === undefined) {
+            return null;
+        }
 
-        return data;
+        // If input is an array, convert each undefined property within it to null
+        if (Array.isArray(input)) {
+            return input.map(item => this.convertUndefinedToNull(item));
+        }
+
+        // If input is an object, convert each undefined property to null
+        if (typeof input === 'object' && input !== null) {
+            Object.keys(input).forEach(key => {
+                input[key] = this.convertUndefinedToNull(input[key]);
+            });
+            return input;
+        }
+
+        return input;
     }
 
+    // This is a bare minimum user object sent to clients and is considered 'safe' from stalkers etc.
     toPublicUser() {
-        return {
+        return this.convertUndefinedToNull({
             userUuid: this.userUuid,
             nickname: this.nickname,
             isAdmin: this.isAdmin || false,
             profilePicture: this.profilePicture,
             bio: this.bio,
             connectionStatus: SessionManager.getConnectionStatus(this.userUuid)
-        };
+        });
     }
-
-    toPrivateUser() {
-        return {
-            userUuid: this.userUuid,
+    
+    // Returns the private user info for the logged-in user
+    toSelfUser() {
+        return this.convertUndefinedToNull({
+            // Get the public user profile
+            ...this.toPublicUser(),
+            // Then add the private user details
             username: this.username,
-            nickname: this.nickname,
             email: this.email,
-            isAdmin: this.isAdmin,
             isActive: this.isActive,
             isVerified: this.isVerified,
             preferences: this.preferences || {},
             createdAt: this.createdAt,
             lastLoginAt: this.lastLoginAt,
-            profilePicture: this.profilePicture,
-            bio: this.bio,
-            mutedUserUuids: this.mutedUserUuids,
-            blockedUserUuids: this.blockedUserUuids
-        };
+            mutedUserUuids: this.mutedUserUuids,                // TBD: Maybe not sent to clients, IDK
+            blockedUserUuids: this.blockedUserUuids             // TBD: Maybe not sent to clients, IDK
+        });
     }
 
-    toFullUser() {
-        return this.toLargeUserJSON();
-    }
+    // NOT sent to clients. This is server side only
+    toLargeUserJSON() {
+        return this.convertUndefinedToNull({
 
-    // Database Layer
+            // Get the private user profile
+            ...this.toSelfUser(),
+
+            // Then add the large user details
+            password: this.password,
+            isDeleted: this.isDeleted,
+            isBanned: this.isBanned,
+            verificationToken: this.verificationToken,
+            verificationExpires: this.verificationExpires,
+            banReason: this.banReason,
+            banExpiresAt: this.banExpiresAt,
+            lastModified: this.lastModified,
+        });
+    }
 }
 
 export const UserDB = {

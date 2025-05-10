@@ -10,7 +10,9 @@ function DungeonRenderer({
   dungeonMap, 
   scrollDirection = null, 
   scrollSpeed = 0.5,
-  isAttractMode = false,
+  //isAttractMode = false,
+  isAttractMode = true,
+
   calculateLighting
 }) {
   const { zoom, setZoom } = useZoom();

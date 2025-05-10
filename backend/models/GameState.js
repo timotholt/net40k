@@ -3,43 +3,208 @@ import { createGameUuid } from '@net40k/shared';
 import DateService from '../services/DateService.js';
 import { Lock } from './Lock.js';
 
-// Valid game phases
+// Game phases - core states only
 export const GAME_PHASES = {
-    PHASE_WAITING_FOR_PLAYERS: 'PHASE_WAITING_FOR_PLAYERS',
-    PHASE_CHARACTER_CREATION: 'PHASE_CHARACTER_CREATION',
-    PHASE_WAITING_FOR_SYNC_START: 'PHASE_WAITING_FOR_SYNC_START',
-    PHASE_GAME_PAUSED: 'PHASE_GAME_PAUSED',
-    PHASE_WAITING_FOR_RECONNECT: 'PHASE_WAITING_FOR_RECONNECT',
-    PHASE_WAITING_FOR_VOTE: 'PHASE_WAITING_FOR_VOTE',
-    PHASE_WAITING_FOR_PLAYER_INPUT: 'PHASE_WAITING_FOR_PLAYER_INPUT',
-    PHASE_WAITING_FOR_PLAYER_COMPLEX_ACTION: 'PHASE_WAITING_FOR_PLAYER_COMPLEX_ACTION',
-    PHASE_PROCESSING_ACTIONS: 'PHASE_PROCESSING_ACTIONS',
-    PHASE_UPDATING_GAME_STATE: 'PHASE_UPDATING_GAME_STATE',
-    PHASE_WAITING_FOR_CLIENT_ANIMATION: 'PHASE_WAITING_FOR_CLIENT_ANIMATION',
-    PHASE_CHECK_VICTORY_CONDITIONS: 'PHASE_CHECK_VICTORY_CONDITIONS',
-    PHASE_GAME_ENDED: 'PHASE_GAME_ENDED'
+    LOBBY: 'LOBBY',                 // Initial state, waiting for players
+    SETUP: 'SETUP',                // Character creation and loadout selection
+    PLAYING: 'PLAYING',            // Active gameplay
+    PAUSED: 'PAUSED',              // Game temporarily stopped
+    ENDED: 'ENDED'                 // Game completed
 };
 
-// Valid phase transitions
+// Player Game States - Required progression states that affect game flow
+// These represent the core setup and play states each player must go through
+export const PLAYER_STATES = {
+    NOT_READY: 'NOT_READY',           // Initial state when joining
+    SELECTING_CHARACTER: 'SELECTING_CHARACTER', // Must pick character first
+    SELECTING_LOADOUT: 'SELECTING_LOADOUT',     // Must pick loadout second
+    READY: 'READY',                   // Ready to begin game
+    PLAYING: 'PLAYING',               // In active gameplay
+    DISCONNECTED: 'DISCONNECTED',     // Temporarily disconnected
+    DEAD: 'DEAD',                     // Player has died - permanent state change
+    ABANDONED: 'ABANDONED',           // Disconnected and vote passed to remove
+    
+    // Voting states - when player is participating in a vote
+    // Admin actions (game creator only)
+    ADMIN_KICKING: 'ADMIN_KICKING',             // Creator is removing player
+    BEING_ADMIN_KICKED: 'BEING_ADMIN_KICKED',   // Player is being removed by creator
+    
+    // Kick vote states (for regular players)
+    KICK_VOTE_INITIATOR: 'KICK_VOTE_INITIATOR',   // Player started kick vote
+    KICK_VOTE_PENDING: 'KICK_VOTE_PENDING',       // Player needs to vote on kick
+    KICK_VOTE_COMPLETE: 'KICK_VOTE_COMPLETE',     // Player has voted on kick
+    BEING_KICKED: 'BEING_KICKED',                 // Player might get kicked by vote
+    KICK_VOTE_ABANDONED: 'KICK_VOTE_ABANDONED',   // Vote cancelled due to disconnects
+    
+    // Quit vote states (available in-game only)
+    QUIT_VOTE_INITIATOR: 'QUIT_VOTE_INITIATOR',   // Player who started quit vote
+    QUIT_VOTE_PENDING: 'QUIT_VOTE_PENDING',       // Player needs to vote on quit
+    QUIT_VOTE_COMPLETE: 'QUIT_VOTE_COMPLETE',     // Player has voted on quit
+    QUIT_VOTE_ABANDONED: 'QUIT_VOTE_ABANDONED',   // Vote cancelled due to disconnects
+    
+    // Time extension vote states (with autosave)
+    TIME_VOTE_INITIATOR: 'TIME_VOTE_INITIATOR',   // Player asking for more time
+    TIME_VOTE_PENDING: 'TIME_VOTE_PENDING',       // Player needs to vote on time
+    TIME_VOTE_COMPLETE: 'TIME_VOTE_COMPLETE',     // Player has voted on time
+    TIME_VOTE_ABANDONED: 'TIME_VOTE_ABANDONED',   // Time vote cancelled
+    
+    // Vote interruption states
+    VOTE_TARGET_DISCONNECTED: 'VOTE_TARGET_DISCONNECTED',   // Being kicked & disconnected
+    VOTE_INITIATOR_DISCONNECTED: 'VOTE_INITIATOR_DISCONNECTED', // Started vote & left
+    VOTE_INVALIDATED: 'VOTE_INVALIDATED'          // Too many voters disconnected
+};
+
+// Player UI States - Optional interaction states during gameplay
+// States marked [BLOCKING] halt gameplay until resolved
+// States marked [NON-BLOCKING] allow gameplay to continue
+// States marked [MODAL] show a popup but others can still play
+export const PLAYER_UI_STATES = {
+    IDLE: 'IDLE',                     // Not doing anything [NON-BLOCKING]
+    // Equipment management - All [MODAL] for this player only
+    SELECTING_EQUIP: 'SELECTING_EQUIP',       // Choosing gear to equip
+    SELECTING_UNEQUIP: 'SELECTING_UNEQUIP',   // Choosing gear to unequip
+    
+    // Combat actions - All [MODAL] for this player only
+    SELECTING_WEAPON: 'SELECTING_WEAPON',     // Choosing weapon to attack with
+    SELECTING_SKILL: 'SELECTING_SKILL',       // Choosing skill to use
+    SELECTING_POWER: 'SELECTING_POWER',       // Choosing power to activate
+    
+    // Level up choices - All [MODAL] with pending notification
+    LEVEL_UP_SELECT_POWER: 'LEVEL_UP_SELECT_POWER',   // New power unlocked
+    LEVEL_UP_SELECT_SKILL: 'LEVEL_UP_SELECT_SKILL',   // New skill point
+    LEVEL_UP_SELECT_SPELL: 'LEVEL_UP_SELECT_SPELL',   // New spell slot
+    LEVEL_UP_SELECT_TRAIT: 'LEVEL_UP_SELECT_TRAIT',   // New character trait
+    
+    // Consumables and items - All [MODAL] for this player only
+    SELECTING_FOOD: 'SELECTING_FOOD',           // Choosing food to eat
+    SELECTING_POTION: 'SELECTING_POTION',       // Choosing potion to drink/quaff
+    SELECTING_SCROLL: 'SELECTING_SCROLL',       // Choosing scroll to read
+    SELECTING_WAND: 'SELECTING_WAND',           // Choosing wand to zap/wave
+    SELECTING_RING: 'SELECTING_RING',           // Choosing ring to put on/remove
+    SELECTING_AMULET: 'SELECTING_AMULET',       // Choosing amulet to put on/remove
+    SELECTING_TOOL: 'SELECTING_TOOL',           // Choosing tool to apply/use
+    SELECTING_SPELLBOOK: 'SELECTING_SPELLBOOK', // Choosing spellbook to read
+    
+    // Death handling - [BLOCKING] for all players (team coordination required)
+    VIEWING_DEATH_RECAP: 'VIEWING_DEATH_RECAP',   // Team sees how character died
+    SELECTING_REVIVAL: 'SELECTING_REVIVAL',       // Team decides on resurrection
+    SELECTING_REINFORCEMENT: 'SELECTING_REINFORCEMENT', // Team plans replacement strategy
+    
+    // Vote UI - Mostly blocking (votes need immediate team attention)
+    INITIATING_VOTE: 'INITIATING_VOTE',         // Opening vote menu [BLOCKING]
+    SELECTING_VOTE_TYPE: 'SELECTING_VOTE_TYPE',  // Choosing vote type [BLOCKING]
+    SELECTING_KICK_TARGET: 'SELECTING_KICK_TARGET', // Target selection [BLOCKING]
+    ADMIN_SELECTING_KICK: 'ADMIN_SELECTING_KICK',   // Admin kick [BLOCKING]
+    ENTERING_QUIT_REASON: 'ENTERING_QUIT_REASON',  // Quit reason [BLOCKING]
+    SELECTING_TIME: 'SELECTING_TIME',            // Time extension [BLOCKING]
+    CASTING_VOTE: 'CASTING_VOTE',                // Yes/No choice [BLOCKING]
+    VIEWING_VOTE_RESULTS: 'VIEWING_VOTE_RESULTS',  // Vote outcome [BLOCKING]
+    AUTOSAVING: 'AUTOSAVING',                    // Quick save [NON-BLOCKING]
+    VIEWING_VOTE_HISTORY: 'VIEWING_VOTE_HISTORY',  // Past votes [NON-BLOCKING]
+    
+    // Game over states - All [NON-BLOCKING], can view in any order
+    VIEWING_MISSION_REPORT: 'VIEWING_MISSION_REPORT',   // Overall mission outcome
+    VIEWING_ACHIEVEMENTS: 'VIEWING_ACHIEVEMENTS',       // What the team accomplished
+    VIEWING_FINAL_SCORE: 'VIEWING_FINAL_SCORE',        // Team's final score
+    VIEWING_CASUALTIES: 'VIEWING_CASUALTIES',           // List of fallen warriors
+    VIEWING_LOOT_RECOVERED: 'VIEWING_LOOT_RECOVERED',   // Equipment and items found
+    VIEWING_OBJECTIVES: 'VIEWING_OBJECTIVES',           // Primary/secondary goals completed
+    VIEWING_BATTLE_REPLAY: 'VIEWING_BATTLE_REPLAY',     // Replay key moments
+    VIEWING_KILL_COUNT: 'VIEWING_KILL_COUNT',           // Enemies defeated by type
+    VIEWING_BATTLE_HONORS: 'VIEWING_BATTLE_HONORS',      // Special achievements/medals
+    
+    // Status checking - All [NON-BLOCKING]
+    VIEWING_STATS: 'VIEWING_STATS',           // Looking at character stats
+    VIEWING_INVENTORY: 'VIEWING_INVENTORY',    // Looking at inventory
+    VIEWING_NOTIFICATIONS: 'VIEWING_NOTIFICATIONS',  // Checking pending choices
+    
+    // Notification actions - All [MODAL] with persistent queue
+    ROLLING_FOR_LOOT: 'ROLLING_FOR_LOOT',      // Need/Greed/Pass on item
+    ACCEPTING_REVIVE: 'ACCEPTING_REVIVE',       // Someone trying to res you
+    ACCEPTING_BUFF: 'ACCEPTING_BUFF',          // Someone casting buff on you
+    ACCEPTING_TELEPORT: 'ACCEPTING_TELEPORT',   // Someone portaling you
+    PENDING_LEVEL_UP: 'PENDING_LEVEL_UP',        // Level up choices waiting
+    
+    // Notifications (non-modal, informative)
+    SHOWING_ADMIN_ACTION: 'SHOWING_ADMIN_ACTION',   // Creator did something important
+    SHOWING_PLAYER_LEFT: 'SHOWING_PLAYER_LEFT',     // Player was removed/quit
+    SHOWING_TEAM_CHANGE: 'SHOWING_TEAM_CHANGE'      // Team composition changed
+};
+
+// Game phase transitions
+// Any phase can transition to ENDED (mission abort, team wipe, victory, etc)
+// except ENDED itself which is final
+// Game phase transitions - Overall game state flow
 const VALID_PHASE_TRANSITIONS = {
-    [GAME_PHASES.PHASE_WAITING_FOR_PLAYERS]: [GAME_PHASES.PHASE_CHARACTER_CREATION],
-    [GAME_PHASES.PHASE_CHARACTER_CREATION]: [GAME_PHASES.PHASE_WAITING_FOR_SYNC_START, GAME_PHASES.PHASE_GAME_PAUSED],
-    [GAME_PHASES.PHASE_WAITING_FOR_SYNC_START]: [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT, GAME_PHASES.PHASE_GAME_PAUSED],
-    [GAME_PHASES.PHASE_GAME_PAUSED]: [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT],
-    [GAME_PHASES.PHASE_WAITING_FOR_RECONNECT]: [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT, GAME_PHASES.PHASE_GAME_ENDED],
-    [GAME_PHASES.PHASE_WAITING_FOR_VOTE]: [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT, GAME_PHASES.PHASE_PROCESSING_ACTIONS],
-    [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT]: [
-        GAME_PHASES.PHASE_PROCESSING_ACTIONS,
-        GAME_PHASES.PHASE_WAITING_FOR_PLAYER_COMPLEX_ACTION,
-        GAME_PHASES.PHASE_GAME_PAUSED,
-        GAME_PHASES.PHASE_WAITING_FOR_RECONNECT
+    [GAME_PHASES.LOBBY]: [
+        GAME_PHASES.SETUP,    // Normal flow: team is ready
+        GAME_PHASES.ENDED     // Abort: team disbanded
     ],
-    [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_COMPLEX_ACTION]: [GAME_PHASES.PHASE_PROCESSING_ACTIONS, GAME_PHASES.PHASE_GAME_PAUSED],
-    [GAME_PHASES.PHASE_PROCESSING_ACTIONS]: [GAME_PHASES.PHASE_UPDATING_GAME_STATE],
-    [GAME_PHASES.PHASE_UPDATING_GAME_STATE]: [GAME_PHASES.PHASE_WAITING_FOR_CLIENT_ANIMATION],
-    [GAME_PHASES.PHASE_WAITING_FOR_CLIENT_ANIMATION]: [GAME_PHASES.PHASE_CHECK_VICTORY_CONDITIONS],
-    [GAME_PHASES.PHASE_CHECK_VICTORY_CONDITIONS]: [GAME_PHASES.PHASE_WAITING_FOR_PLAYER_INPUT, GAME_PHASES.PHASE_GAME_ENDED],
-    [GAME_PHASES.PHASE_GAME_ENDED]: []
+    [GAME_PHASES.SETUP]: [
+        GAME_PHASES.PLAYING,  // Normal flow: start mission
+        GAME_PHASES.PAUSED,   // Pause: team needs break
+        GAME_PHASES.ENDED     // Abort: team not viable
+    ],
+    [GAME_PHASES.PLAYING]: [
+        GAME_PHASES.PAUSED,   // Tactical pause
+        GAME_PHASES.ENDED     // Mission complete/failed
+    ],
+    [GAME_PHASES.PAUSED]: [
+        GAME_PHASES.PLAYING,  // Resume mission
+        GAME_PHASES.ENDED     // Abort mission
+    ],
+    [GAME_PHASES.ENDED]: []   // No transitions out of end state
+};
+
+// Vote flow transitions - How players move through different vote types
+const VALID_VOTE_TRANSITIONS = {
+    // Kick vote flow (available in all phases)
+    [PLAYER_STATES.PLAYING]: [
+        PLAYER_STATES.KICK_VOTE_INITIATOR,
+        PLAYER_STATES.KICK_VOTE_PENDING,
+        PLAYER_STATES.BEING_KICKED
+    ],
+    [PLAYER_STATES.KICK_VOTE_INITIATOR]: [
+        PLAYER_STATES.KICK_VOTE_COMPLETE,
+        PLAYER_STATES.VOTE_INITIATOR_DISCONNECTED
+    ],
+    [PLAYER_STATES.KICK_VOTE_PENDING]: [
+        PLAYER_STATES.KICK_VOTE_COMPLETE,
+        PLAYER_STATES.VOTE_INVALIDATED
+    ],
+    [PLAYER_STATES.BEING_KICKED]: [
+        PLAYER_STATES.ABANDONED,
+        PLAYER_STATES.PLAYING,  // If vote fails
+        PLAYER_STATES.VOTE_TARGET_DISCONNECTED
+    ],
+
+    // Time extension flow (in-game only)
+    [PLAYER_STATES.TIME_VOTE_INITIATOR]: [
+        PLAYER_STATES.TIME_VOTE_COMPLETE,
+        PLAYER_STATES.TIME_VOTE_ABANDONED
+    ],
+    [PLAYER_STATES.TIME_VOTE_PENDING]: [
+        PLAYER_STATES.TIME_VOTE_COMPLETE,
+        PLAYER_STATES.TIME_VOTE_ABANDONED
+    ],
+
+    // Quit vote flow (in-game only)
+    [PLAYER_STATES.QUIT_VOTE_INITIATOR]: [
+        PLAYER_STATES.QUIT_VOTE_COMPLETE,
+        PLAYER_STATES.QUIT_VOTE_ABANDONED
+    ],
+    [PLAYER_STATES.QUIT_VOTE_PENDING]: [
+        PLAYER_STATES.QUIT_VOTE_COMPLETE,
+        PLAYER_STATES.QUIT_VOTE_ABANDONED
+    ],
+
+    // Admin actions (available in all phases)
+    [PLAYER_STATES.ADMIN_KICKING]: [
+        PLAYER_STATES.PLAYING  // After kick is done
+    ],
+    [PLAYER_STATES.BEING_ADMIN_KICKED]: [
+        PLAYER_STATES.ABANDONED
+    ]
 };
 
 class GameState {
@@ -74,7 +239,15 @@ class GameState {
         // Game state
         this.currentTurn = Math.max(data.currentTurn || 0, 0);
         this.nextPlayerUuid = data.nextPlayerUuid || null;
-        this.phase = data.phase || GAME_PHASES.PHASE_WAITING_FOR_PLAYERS;
+        this.phase = data.phase || GAME_PHASES.LOBBY;
+        
+        // Initialize player states
+        this.playerStates = {};
+        this.playerUiStates = {};
+        this.playersUuid.forEach(uuid => {
+            this.playerStates[uuid] = data.playerStates?.[uuid] || PLAYER_STATES.NOT_READY;
+            this.playerUiStates[uuid] = data.playerUiStates?.[uuid] || PLAYER_UI_STATES.IDLE;
+        });
     }
 
     static schema = {
@@ -90,7 +263,9 @@ class GameState {
         spectatorsUuid: { type: 'array', required: true },
         currentTurn: { type: 'number', required: true },
         nextPlayerUuid: { type: 'string', required: false },
-        phase: { type: 'string', required: true }
+        phase: { type: 'string', required: true },
+        playerStates: { type: 'object', required: true },
+        playerUiStates: { type: 'object', required: true }
     };
 
     getCurrentPlayerCount() {
