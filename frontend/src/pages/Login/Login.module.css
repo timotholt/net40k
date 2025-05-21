@@ -35,7 +35,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(0deg, transparent 45%, rgba(0, 255, 0, 0.8) 50%, transparent 55%);
+  background: linear-gradient(0deg, transparent 48%, rgba(0, 255, 0, 0.2) 50%, transparent 52%);
   pointer-events: none;
   animation: scanline 8s linear infinite;
 }
