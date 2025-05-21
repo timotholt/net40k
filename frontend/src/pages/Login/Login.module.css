@@ -35,16 +35,16 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(0deg, transparent 95%, rgba(0, 255, 0, 0.1) 50%, transparent 55%);
+  background: linear-gradient(0deg, transparent 45%, rgba(0, 255, 0, 0.8) 50%, transparent 55%);
   pointer-events: none;
   animation: scanline 8s linear infinite;
 }
 
 @keyframes scanline {
-  0% {
+  0%, 100% {
     transform: translateY(-100%);
   }
-  100% {
+  50% {
     transform: translateY(100%);
   }
 }
