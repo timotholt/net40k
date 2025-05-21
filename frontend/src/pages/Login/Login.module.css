@@ -50,17 +50,11 @@
 }
 
 .oauthButtons {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.oauthButtons {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  margin-bottom: 0;
+  width: 100%;
 }
 
 .oauthButtons .loginButton {

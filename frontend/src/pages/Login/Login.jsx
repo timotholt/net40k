@@ -201,6 +201,18 @@ export default function Login() {
             </span>
             Discord
           </button>
+          <button
+            className={styles.loginButton}
+            type="button"
+            onClick={() => window.location.href = '/auth/steam'}
+          >
+            <span className={styles.oauthIcon}>
+              <svg viewBox="0 0 24 24">
+                <path d="M12 0C5.6 0 0.4 4.8 0 10.8L6.4 13.2C6.8 12.8 7.6 12.4 8.4 12.4L11.6 8.4C11.6 6 13.6 4 16 4C18.4 4 20.4 6 20.4 8.4C20.4 10.8 18.4 12.8 16 12.8L12 16C12 16.8 11.6 17.2 11.2 17.6L13.6 24C19.6 23.6 24 18.4 24 12C24 5.2 18.8 0 12 0ZM7.6 20L5.2 19.2C5.6 20 6.4 20.4 7.2 20.4C8.4 20.4 9.6 19.6 9.6 18C9.6 16.4 8.4 15.6 7.2 15.6C6.8 15.6 6.4 15.6 6 16L8.4 16.8C9.2 17.2 9.6 18 9.2 19.2C9.2 19.6 8.4 20 7.6 20Z"/>
+              </svg>
+            </span>
+            Steam
+          </button>
         </div>
 
         <div className={styles.registerPrompt}>
