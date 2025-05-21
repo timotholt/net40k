@@ -54,28 +54,6 @@
   color: var(--color-green);
   position: relative;
   overflow: hidden;
-
-}
-
-
-
-.loginForm {
-  animation: glitch 8s steps(1) infinite;
-}
-
-.loginForm::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-green);
-  opacity: 0.8;
-  box-shadow: 0 0 8px var(--color-green);
-  animation: crtLine 8s linear infinite;
-  pointer-events: none;
-  z-index: 1;
 }
 
 .loginForm h2 {

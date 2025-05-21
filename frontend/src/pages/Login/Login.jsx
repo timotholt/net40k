@@ -119,9 +119,10 @@ export default function Login() {
       {/* All login UI is now inside a single retro-styled form */}
       <form 
         onSubmit={handleSubmit} 
-        className={styles.loginForm}
+        className={`${styles.loginForm} shake-glitch`}
         method="post"
       >
+        <div className="crt-line" />
         <h2>Login to Game Server</h2>
 
         {/* Username/Password Fields */}
