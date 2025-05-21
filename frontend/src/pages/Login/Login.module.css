@@ -176,7 +176,9 @@
 .registerLink {
   color: var(--color-green);
   text-decoration: underline;
-  background: none;
+  background: none;:root {
+    font-size: 16px;
+  }
   border: none;
   cursor: pointer;
   padding: 0;
