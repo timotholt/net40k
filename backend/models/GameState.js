@@ -376,6 +376,7 @@ export const GameStateDB = {
         }
     },
 
+    
     async addSpectator(gameUuid, spectatorUuid) {
         const releaseLock = await Lock.acquire(`game:${gameUuid}`);
         try {

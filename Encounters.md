@@ -16,3 +16,8 @@ Gravis Mark X armor - +1 toughness, +1 wounds
 You may encounter a previous corpse from a previous game run
 You can pickup the equipment and recover his gene seed
 
+# Armory / Weapons Cache
+
+You encounter a Space Marine armory, where you get to pick weapons and equipment to use in the game.
+
+# 
