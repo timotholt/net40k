@@ -9,6 +9,14 @@
   }
 }
 
+@keyframes glitch {
+  0%, 98.75%, 100% { transform: translate(0, 0) rotate(0deg); }
+  98.8% { transform: translate(-8px, 4px) rotate(-1deg); }
+  98.85% { transform: translate(8px, -6px) rotate(1deg); }
+  98.9% { transform: translate(-6px, 8px) rotate(-1deg); }
+  98.95% { transform: translate(6px, -4px) rotate(1deg); }
+}
+
 .loginContainer {
   display: flex;
   justify-content: center;
@@ -46,6 +54,13 @@
   color: var(--color-green);
   position: relative;
   overflow: hidden;
+
+}
+
+
+
+.loginForm {
+  animation: glitch 8s steps(1) infinite;
 }
 
 .loginForm::after {
@@ -58,8 +73,9 @@
   background: var(--color-green);
   opacity: 0.8;
   box-shadow: 0 0 8px var(--color-green);
-  animation: crtLine 4s linear infinite;
+  animation: crtLine 8s linear infinite;
   pointer-events: none;
+  z-index: 1;
 }
 
 .loginForm h2 {
