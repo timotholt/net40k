@@ -4,50 +4,175 @@
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
+  pointer-events: none;
+  user-select: none;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: var(--z-content);
-  background: rgba(0, 0, 0, 0.7);
-  background-image: radial-gradient(circle at center, rgba(0, 255, 0, 0.1) 0%, transparent 70%);
+  background: transparent;
+  transition: background var(--transition-speed) ease;
 }
 
 .loginForm {
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid #0f0;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3),
-              inset 0 0 20px rgba(0, 255, 0, 0.1);
+  background: var(--gradient-screen);
+  border: var(--border-width) solid var(--color-green);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--glow-hover);
+  backdrop-filter: blur(10px);
   text-align: center;
-  position: relative;
-  overflow: hidden;
+  transition: box-shadow var(--transition-speed) ease;
+  pointer-events: auto;
+  line-height: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--color-green);
 }
 
-.loginForm::before {
+.loginForm h2 {
+  margin: 0;
+  color: var(--color-green);
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px var(--color-green);
+}
+
+.credentialsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.oauthButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.oauthButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.oauthButtons .loginButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.oauthIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.oauthIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oauthIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.oauthIcon svg path,
+.oauthIcon svg rect {
+  fill: var(--color-green);
+  transition: fill var(--transition-speed) ease;
+  stroke: none;
+}
+
+.loginButton:hover .oauthIcon svg path,
+.loginButton:hover .oauthIcon svg rect {
+  fill: black;
+}
+
+.oauthDivider {
+  position: relative;
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.oauthDivider::before,
+.oauthDivider::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(0deg, transparent 48%, rgba(0, 255, 0, 0.2) 50%, transparent 52%);
-  pointer-events: none;
-  animation: scanline 8s linear infinite;
+  top: 50%;
+  width: 30%;
+  height: 1px;
+  background: var(--color-green);
 }
 
-@keyframes scanline {
-  0%, 100% {
-    transform: translateY(-100%);
-  }
-  50% {
-    transform: translateY(100%);
-  }
+.oauthDivider::before {
+  left: 0;
 }
+
+.oauthDivider::after {
+  right: 0;
+}
+
+.oauthDivider span {
+  padding: 0 1rem;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.registerPrompt {
+  margin-top: auto;
+  font-size: 0.9rem;
+}
+
+.registerLink {
+  color: var(--color-green);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.registerLink:hover {
+  text-shadow: 0 0 10px var(--color-green);
+}
+
+.loginButton {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--color-green);
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  color: var(--color-green);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  letter-spacing: 1px;
+}
+
+.loginButton:hover:not(:disabled) {
+  background: var(--color-green);
+  color: black;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.loginButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
 
 .loginForm h2 {
   color: #fff;

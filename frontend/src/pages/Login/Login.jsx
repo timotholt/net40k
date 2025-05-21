@@ -122,108 +122,99 @@ export default function Login() {
         className={styles.loginForm}
         method="post"
       >
-        {/* OAuth Login Buttons - retro-styled */}
+        <h2>Login to Game Server</h2>
+
+        {/* Username/Password Fields */}
+        <div className={styles.credentialsSection}>
+          <InputField
+            type="text"
+            name="username"
+            label="Username"
+            value={formData.username}
+            onChange={handleChange}
+            error={errors.username}
+            required
+            leftIcon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            }
+          />
+          <PasswordField
+            name="password"
+            label="Password"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+            required
+          />
+          <button 
+            type="submit" 
+            className={styles.loginButton}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className={styles.oauthDivider}>
+          <span>or sign in with</span>
+        </div>
+
+        {/* OAuth Login Buttons */}
         <div className={styles.oauthButtons}>
           <button
             type="button"
-            className={styles.oauthButton + ' ' + styles.google}
+            className={styles.loginButton}
             onClick={() => window.location.href = '/auth/google'}
           >
             <span className={styles.oauthIcon}>
-              <svg width="24" height="24" viewBox="0 0 48 48">
-                <g>
-                  <path fill="#4285F4" d="M43.6 20.5h-18v7.1h10.4c-1.1 3-4.2 5.2-10.4 5.2-6.2 0-11.2-5-11.2-11.2s5-11.2 11.2-11.2c2.8 0 5.3 1 7.3 2.7l5.5-5.5C35.4 5.6 31.5 4 27 4 15.8 4 7 12.8 7 24s8.8 20 20 20c11.2 0 19.6-7.9 19.6-19.1 0-1.3-.1-2.3-.3-3.4z"/>
-                  <path fill="#34A853" d="M6.9 14.7l5.8 4.3C14.7 15.2 20.3 11 27 11c2.8 0 5.3 1 7.3 2.7l5.5-5.5C35.4 5.6 31.5 4 27 4c-8.1 0-15 5.5-17.9 13.1z"/>
-                  <path fill="#FBBC05" d="M27 44c4.3 0 8.2-1.4 11.2-3.8l-5.2-4.3c-1.6 1.1-3.7 1.8-6 1.8-6.2 0-11.4-5-11.4-11.2 0-1.7.4-3.3 1.1-4.7l-5.7-4.4C8.2 23.2 7 26.5 7 30c0 8.2 6.7 14 15 14z"/>
-                  <path fill="#EA4335" d="M43.6 20.5h-18v7.1h10.4c-1.1 3-4.2 5.2-10.4 5.2-2.6 0-5-.8-6.8-2.2l-5.5 4.3C15.6 40.3 21 44 27 44c8.3 0 15-5.8 15-14 0-1.3-.1-2.3-.3-3.5z"/>
-                </g>
+              <svg viewBox="0 0 24 24">
+                <path d="M21.35 11.1h-9.17v2.73h6.51c-0.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-0.15-1.81-0.15-1.81z"/>
               </svg>
             </span>
-            Sign in with Google
+            Google
           </button>
           <button
             type="button"
-            className={styles.oauthButton + ' ' + styles.facebook}
+            className={styles.loginButton}
             onClick={() => window.location.href = '/auth/facebook'}
           >
             <span className={styles.oauthIcon}>
-              <svg width="24" height="24" viewBox="0 0 48 48">
-                <g>
-                  <rect fill="#1877F3" width="48" height="48" rx="8"/>
-                  <path fill="#fff" d="M34 24h-5v14h-6V24h-4v-5h4v-3c0-3.3 2-5 5-5 1.4 0 2.6.1 3 .2v5h-2c-1.2 0-1.5.6-1.5 1.5v2.3h4.7l-.7 5z"/>
-                </g>
+              <svg viewBox="0 0 24 24">
+                <path d="M20.9 2H3.1A1.1 1.1 0 0 0 2 3.1v17.8A1.1 1.1 0 0 0 3.1 22h9.58v-7.75h-2.6v-3h2.6V9a3.64 3.64 0 0 1 3.88-4 20.26 20.26 0 0 1 2.33.12v2.7H17.3c-1.26 0-1.5.6-1.5 1.47v1.93h3l-.39 3H15.8V22h5.1a1.1 1.1 0 0 0 1.1-1.1V3.1A1.1 1.1 0 0 0 20.9 2z"/>
               </svg>
             </span>
-            Sign in with Facebook
+            Facebook
           </button>
           <button
             type="button"
-            className={styles.oauthButton + ' ' + styles.discord}
+            className={styles.loginButton}
             onClick={() => window.location.href = '/auth/discord'}
           >
             <span className={styles.oauthIcon}>
-              <svg width="24" height="24" viewBox="0 0 245 240">
-                <g>
-                  <path fill="#5865F2" d="M104.4 104.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zm36.2 0c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1s-4.5-11.1-10.2-11.1z"/>
-                  <path fill="#5865F2" d="M222.6 0H22.4C10 0 0 10.1 0 22.6v194.9c0 12.5 10 22.6 22.4 22.6h167.3l-7.8-27.3 18.8 17.5 17.8 16.4V22.6C245 10.1 235 0 222.6 0zM81.1 163.4s-2.3-2.7-4.2-5.1c8.3-2.4 16.2-5.4 23.7-9.1 1.1-.6 2.1-1.2 3.1-1.8-22.8-6.5-31.4-20.7-31.4-20.7.6.4 1.2.8 1.8 1.2 13.2 9.1 25.7 13.1 38.5 13.1s25.3-4 38.5-13.1c.6-.4 1.2-.8 1.8-1.2 0 0-8.6 14.2-31.4 20.7 1 .6 2 1.2 3.1 1.8 7.5 3.7 15.4 6.7 23.7 9.1-1.9 2.4-4.2 5.1-4.2 5.1-13.1 4.1-26.9 4.1-40 0z"/>
-                </g>
+              <svg viewBox="0 0 24 24">
+                <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026 13.83 13.83 0 0 0 1.226-1.963.074.074 0 0 0-.041-.104 13.175 13.175 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
               </svg>
             </span>
-            Sign in with Discord
+            Discord
           </button>
         </div>
-        {/* Divider */}
-        <div className={styles.oauthDivider}>
-          <span>or sign in with username/password</span>
-        </div>
-        {/* Username/Password Fields and Rest of Form */}
-        <>
-          <>
-            <h2>Login To Game Server</h2>
-            <InputField
-              type="text"
-              name="username"
-              label="Username"
-              value={formData.username}
-              onChange={handleChange}
-              error={errors.username}
-              required
-              leftIcon={
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              }
-            />
-            <PasswordField
-              name="password"
-              label="Password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-            />
+
+        <div className={styles.registerPrompt}>
+          <p>
+            Don't have an account?{' '}
             <button 
-              type="submit" 
-              className={styles.loginButton}
-              disabled={isLoading}
+              type="button" 
+              onClick={handleRegisterClick} 
+              className={styles.registerLink}
             >
-              {isLoading ? 'Logging in...' : 'Login'}
+              Register
             </button>
-            <div className={styles.registerPrompt}>
-              <p>
-                Don't have an account?{' '}
-                <button 
-                  type="button" 
-                  onClick={handleRegisterClick} 
-                  className={styles.registerLink}
-                >
-                  Register
-                </button>
-              </p>
-            </div>
-          </>
-        </>
+          </p>
+        </div>
       </form>
     </div>
   );
