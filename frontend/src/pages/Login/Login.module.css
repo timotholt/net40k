@@ -50,19 +50,20 @@
 }
 
 .oauthButtons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 0;
   width: 100%;
 }
 
 .oauthButtons .loginButton {
+  flex: 1 1 calc(50% - 0.5rem);
+  min-width: 120px;
+  max-width: calc(50% - 0.5rem);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-width: 120px;
 }
 
 .oauthIcon svg {
@@ -176,12 +177,7 @@
   letter-spacing: 1px;
 }
 
-.oauthButtons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
+/* Removed duplicate .oauthButtons */
 
 .oauthButton {
   display: flex;
