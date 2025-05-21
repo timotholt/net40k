@@ -4,48 +4,106 @@
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
-  pointer-events: none;
-  user-select: none;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: var(--z-content);
-  background: rgba(0, 0, 0, 0);
-  transition: background var(--transition-speed) ease;
-}
-
-.loginContainer:has(.loginForm:hover),
-.loginContainer:has(.loginForm:focus-within) {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  background-image: radial-gradient(circle at center, rgba(0, 255, 0, 0.1) 0%, transparent 70%);
 }
 
 .loginForm {
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  background: var(--gradient-screen);
-  border: var(--border-width) solid var(--color-green);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--glow-hover);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #0f0;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3),
+              inset 0 0 20px rgba(0, 255, 0, 0.1);
   text-align: center;
-  transition: box-shadow var(--transition-speed) ease;
-  pointer-events: auto;
-  line-height: 1.5rem;
+  position: relative;
+  overflow: hidden;
 }
 
-.loginForm:hover,
-.loginForm:focus-within {
-  box-shadow: var(--glow-intense);
+.loginForm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(0deg, transparent 95%, rgba(0, 255, 0, 0.1) 50%, transparent 55%);
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
 }
 
 .loginForm h2 {
-  color: var(--color-soft-white);
+  color: #fff;
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
-  text-shadow: var(--glow-text);
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  letter-spacing: 1px;
+}
+
+.oauthButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.oauthButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.oauthButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.google {
+  background: rgba(66, 133, 244, 0.9);
+}
+
+.facebook {
+  background: rgba(24, 119, 242, 0.9);
+}
+
+.discord {
+  background: rgba(88, 101, 242, 0.9);
+}
+
+.oauthIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .messageContainer {
