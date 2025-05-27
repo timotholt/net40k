@@ -55,12 +55,8 @@ export default function MainStatusBar() {
       return;
     }
     
-    if (location.pathname !== '/profile') {
-      console.log('Navigating to /profile');
-      navigate('/profile');
-    } else {
-      console.log('Already on profile page');
-    }
+    console.log('Opening settings modal');
+    openModal(MODAL_TYPES.SETTINGS);
   };
   
   // Handle leave button actions based on current screen

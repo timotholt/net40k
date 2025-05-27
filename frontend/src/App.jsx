@@ -7,6 +7,7 @@ import { useSound } from './context/SoundContext';
 import { ZoomProvider } from './context/ZoomContext';
 import { ModalProvider, useModal, MODAL_TYPES } from './context/ModalContext';
 import Modal from './components/Modal/Modal';
+import SettingsModal from './components/SettingsModal/SettingsModal';
 import ProtectedRoute from './components/ProtectedRoute';
 import ServerStatus from './components/ServerStatus/ServerStatus';
 import AttractScreen from './components/AttractScreen/AttractScreen';
@@ -71,6 +72,18 @@ function ModalRenderer() {
             >
               <p>{modal.props.message}</p>
             </Modal>
+          );
+        case MODAL_TYPES.SETTINGS:
+          return (
+            <SettingsModal 
+              key={modal.id}
+              isOpen={true}
+              onClose={() => {
+                console.log('MODAL: Closing Settings with ID', modal.id);
+                closeModal(modal.id);
+              }}
+              {...modal.props}
+            />
           );
         default:
           console.log('Unhandled Modal Type:', modal.type);

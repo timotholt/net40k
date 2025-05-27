@@ -6,13 +6,15 @@ import GameCreateModal from './GameCreateModal';
 import PasswordPromptModal from './PasswordPromptModal';
 import AlertModal from './AlertModal';
 import ConfirmModal from './ConfirmModal';
+import SettingsModal from '../SettingsModal/SettingsModal';
 import styles from './Modal.module.css';
 
 const MODAL_COMPONENTS = {
   [MODAL_TYPES.GAME_CREATE]: GameCreateModal,
   [MODAL_TYPES.PASSWORD_PROMPT]: PasswordPromptModal,
   [MODAL_TYPES.ALERT]: AlertModal,
-  [MODAL_TYPES.CONFIRM]: ConfirmModal
+  [MODAL_TYPES.CONFIRM]: ConfirmModal,
+  [MODAL_TYPES.SETTINGS]: SettingsModal
 };
 
 export default function ModalContainer() {

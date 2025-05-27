@@ -5,7 +5,8 @@ import PropTypes from 'prop-types';
 export const MODAL_TYPES = {
   CUSTOM: 'CUSTOM',
   ALERT: 'ALERT',
-  CONFIRM: 'CONFIRM'
+  CONFIRM: 'CONFIRM',
+  SETTINGS: 'SETTINGS'
 };
 
 const ACTIONS = {
@@ -28,7 +29,21 @@ function modalReducer(state, action) {
 
   switch (action.type) {
     case ACTIONS.OPEN:
-      // Prevent duplicate modals by checking type and props
+      // For SETTINGS modal, always allow opening a new one
+      if (action.payload.type === MODAL_TYPES.SETTINGS) {
+        // Close any existing SETTINGS modal
+        const otherModals = state.modals.filter(modal => modal.type !== MODAL_TYPES.SETTINGS);
+        return {
+          ...state,
+          modals: [...otherModals, {
+            id: action.payload.id || `${Date.now()}`,
+            type: action.payload.type,
+            props: action.payload.props || {}
+          }]
+        };
+      }
+      
+      // For other modals, prevent exact duplicates
       const isDuplicate = state.modals.some(
         modal => modal.type === action.payload.type && 
                  JSON.stringify(modal.props) === JSON.stringify(action.payload.props)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   updateProfile, 
   selectCurrentUser, 
@@ -12,6 +12,8 @@ import {
 import InputField from '../../components/FormFields/InputField';
 import PasswordField from '../../components/FormFields/PasswordField';
 import { NicknameField } from '../../components/FormFields/NicknameField';
+import PrimaryButton from '../../components/Buttons/PrimaryButton';
+import SecondaryButton from '../../components/Buttons/SecondaryButton';
 import styles from './Profile.module.css';
 
 // Validation functions
@@ -74,14 +76,15 @@ export default function Profile() {
     }
   }, [searchParams]);
 
-  // Handle form input changes
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Input changed: ${name}`, value);
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-
+    
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({
@@ -90,16 +93,33 @@ export default function Profile() {
       }));
     }
   };
-
-  // Handle tab change
+  
+  // Handle tab changes
   const handleTabChange = (tab) => {
+    console.log('Changing tab to:', tab);
     setActiveTab(tab);
     navigate(`/profile?tab=${tab}`, { replace: true });
   };
 
+  // Handle back to lobby
+  const handleBackToLobby = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Navigating back to lobby');
+    navigate('/lobby');
+  };
+  
+  // Handle form submission with proper event handling
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Form submission initiated');
+    handleSubmit(e);
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    console.log('Form submission started');
     
     // Validate form
     const newErrors = {};
@@ -125,6 +145,7 @@ export default function Profile() {
     }
     
     if (Object.keys(newErrors).length > 0) {
+      console.log('Validation errors:', newErrors);
       setErrors(newErrors);
       return;
     }
@@ -145,11 +166,15 @@ export default function Profile() {
         updateData.newPassword = formData.newPassword;
       }
       
+      console.log('Update data:', updateData);
+      
       // Only dispatch if there are changes
       if (Object.keys(updateData).length > 0) {
+        console.log('Dispatching updateProfile with:', updateData);
         const resultAction = await dispatch(updateProfile(updateData));
         
         if (updateProfile.fulfilled.match(resultAction)) {
+          console.log('Profile update successful');
           setSuccessMessage('Profile updated successfully!');
           
           // Clear success message after 3 seconds
@@ -167,6 +192,10 @@ export default function Profile() {
             }
           }, 3000);
         }
+      } else {
+        console.log('No changes detected, skipping update');
+        setSuccessMessage('No changes to save');
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       console.error('Profile update error:', error);
@@ -282,90 +311,85 @@ export default function Profile() {
   );
 
   return (
-    <div className={styles.container}>
+    <AnimatePresence>
       <motion.div 
-        className={styles.card}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
+        className={styles.overlay}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => !isIncomplete && navigate('/lobby')}
       >
-        <h1 className={styles.title}>
-          {isIncomplete ? 'Complete Your Profile' : 'Profile Settings'}
-        </h1>
-        
-        {isIncomplete && (
-          <div className={styles.alert}>
-            Please complete your profile to access all features
+        <motion.div 
+          className={styles.modal}
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={styles.header}>
+            <h2>{isIncomplete ? 'Complete Your Profile' : 'Profile Settings'}</h2>
           </div>
-        )}
-        
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
-        
-        {successMessage && (
-          <div className={styles.success}>
-            {successMessage}
-          </div>
-        )}
-        
-        <div className={styles.tabs}>
-          <button
-            type="button"
-            className={`${styles.tab} ${activeTab === TABS.PROFILE ? styles.activeTab : ''}`}
-            onClick={() => handleTabChange(TABS.PROFILE)}
-          >
-            Profile
-          </button>
-          <button
-            type="button"
-            className={`${styles.tab} ${activeTab === TABS.SECURITY ? styles.activeTab : ''}`}
-            onClick={() => handleTabChange(TABS.SECURITY)}
-            disabled={isIncomplete}
-            title={isIncomplete ? 'Complete your profile first' : ''}
-          >
-            Security
-          </button>
-          <button
-            type="button"
-            className={`${styles.tab} ${activeTab === TABS.PREFERENCES ? styles.activeTab : ''}`}
-            onClick={() => handleTabChange(TABS.PREFERENCES)}
-            disabled={isIncomplete}
-            title={isIncomplete ? 'Complete your profile first' : ''}
-          >
-            Preferences
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {activeTab === TABS.PROFILE && renderProfileTab()}
-          {activeTab === TABS.SECURITY && renderSecurityTab()}
-          {activeTab === TABS.PREFERENCES && renderPreferencesTab()}
           
-          <div className={styles.buttonGroup}>
-            {!isIncomplete && (
-              <button 
-                type="button" 
-                className={styles.secondaryButton}
-                onClick={() => navigate('/lobby')}
-              >
-                Back to Lobby
-              </button>
-            )}
-            
-            <button 
-              type="submit" 
-              className={styles.primaryButton}
-              disabled={status === 'loading'}
+          {isIncomplete && (
+            <div className={styles.alert}>
+              Please complete your profile to access all features
+            </div>
+          )}
+          
+          {error && (
+            <div className={styles.error}>
+              {error}
+            </div>
+          )}
+          
+          {successMessage && (
+            <div className={styles.success}>
+              {successMessage}
+            </div>
+          )}
+          
+          <div className={styles.tabs}>
+            <button
+              type="button"
+              className={`${styles.tab} ${activeTab === TABS.PROFILE ? styles.activeTab : ''}`}
+              onClick={() => handleTabChange(TABS.PROFILE)}
             >
-              {status === 'loading' ? 'Saving...' : 'Save Changes'}
+              Profile
+            </button>
+            <button
+              type="button"
+              className={`${styles.tab} ${activeTab === TABS.SECURITY ? styles.activeTab : ''}`}
+              onClick={() => handleTabChange(TABS.SECURITY)}
+              disabled={isIncomplete}
+              title={isIncomplete ? 'Complete your profile first' : ''}
+            >
+              Security
             </button>
           </div>
-        </form>
+          
+          <form onSubmit={handleFormSubmit} className={styles.form}>
+            {activeTab === TABS.PROFILE && renderProfileTab()}
+            {activeTab === TABS.SECURITY && renderSecurityTab()}
+            
+            <div className={styles.buttonGroup}>
+              {!isIncomplete && (
+                <SecondaryButton 
+                  onClick={handleBackToLobby}
+                >
+                  Back to Lobby
+                </SecondaryButton>
+              )}
+              
+              <PrimaryButton 
+                type="submit"
+                disabled={status === 'loading'}
+              >
+                {status === 'loading' ? 'Saving...' : 'Save Changes'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </motion.div>
       </motion.div>
-    </div>
+    </AnimatePresence>
   );
 }
