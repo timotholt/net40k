@@ -45,8 +45,18 @@ axiosInstance.interceptors.response.use(
     // Log the actual error response
     console.log('API Error Response:', error.response?.data);
     
-    // For 4xx and 5xx errors, return the server's error message
+    // For 4xx and 5xx errors
     if (error.response) {
+      // Handle PROFILE_INCOMPLETE error by redirecting to profile page
+      if (error.response.data.error === 'PROFILE_INCOMPLETE') {
+        // Use window.location instead of navigate to ensure full page reload
+        // This ensures all components reinitialize with the correct auth state
+        window.location.href = '/profile?incomplete=true';
+        // Return a resolved promise to prevent further error handling
+        return Promise.resolve();
+      }
+      
+      // For other errors, return the server's error message
       return Promise.reject(
         error.response.data.message || 
         error.response.data.error || 

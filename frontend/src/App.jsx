@@ -1,6 +1,8 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo } from 'react';
+import { useDispatch } from 'react-redux';
+import { rehydrateAuth } from './store/authSlice';
 import { useSound } from './context/SoundContext';
 import { ZoomProvider } from './context/ZoomContext';
 import { ModalProvider, useModal, MODAL_TYPES } from './context/ModalContext';
@@ -15,6 +17,7 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Lobby from './pages/Lobby/Lobby';
 import Game from './pages/Game/Game';
+import Profile from './pages/Profile/Profile';
 import styles from './styles/App.module.css';
 import './styles/portal.css';
 
@@ -100,14 +103,50 @@ const SettingsIcon = () => (
 function App() {
   const location = useLocation();
   const soundManager = useSound();
+  const dispatch = useDispatch();
 
+  // Rehydrate auth state on initial load and when auth state changes
+  useEffect(() => {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+    
+    console.log('App: Initial auth state rehydration');
+    
+    // Wrap in try-catch to prevent uncaught errors
+    try {
+      const tabId = window.name || 'default';
+      const storedUser = localStorage.getItem(`user_${tabId}`);
+      console.log('App: Checking for stored user with tabId:', tabId);
+      
+      if (storedUser) {
+        console.log('App: Found stored user, dispatching rehydrate');
+        dispatch(rehydrateAuth());
+      } else {
+        console.log('App: No stored user found');
+        // Explicitly set unauthenticated state
+        dispatch({ type: 'auth/setUser', payload: null });
+      }
+    } catch (error) {
+      console.error('App: Error during auth rehydration:', error);
+      // Ensure we have a clean state even if there's an error
+      dispatch({ type: 'auth/setUser', payload: null });
+    }
+  }, [dispatch]);
+
+  // Initialize sound effects
   useEffect(() => {
     soundManager.startBackgroundMusic();
+    
+    // Play transition sound on route change
+    const unlisten = () => {
+      soundManager.play('transition');
+    };
+    
+    // Cleanup function
+    return () => {
+      // Any sound cleanup if needed
+    };
   }, [soundManager]);
-
-  useEffect(() => {
-    soundManager.play('transition');
-  }, [location.pathname, soundManager]);
 
   // Disable browser context menu globally
   useEffect(() => {
@@ -135,6 +174,7 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                   <Route path="/lobby" element={<Lobby />} />
                   <Route path="/game/:gameId" element={<Game />} />
+                  <Route path="/profile" element={<Profile />} />
                 </Route>
               </Routes>
             </AnimatePresence>

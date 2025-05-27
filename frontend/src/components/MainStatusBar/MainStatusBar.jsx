@@ -27,6 +27,13 @@ export default function MainStatusBar() {
                         location.pathname === '/register';
   const isGameScreen = location.pathname.includes('/game/');
   
+  // Debug log current location and states
+  useEffect(() => {
+    console.log('Current path:', location.pathname);
+    console.log('isLoginScreen:', isLoginScreen);
+    console.log('isGameScreen:', isGameScreen);
+  }, [location.pathname, isLoginScreen, isGameScreen]);
+  
   useEffect(() => {
     // Hide status bar after 1 second
     const timer = setTimeout(() => {
@@ -36,9 +43,24 @@ export default function MainStatusBar() {
     return () => clearTimeout(timer);
   }, [onMouseLeave]);
 
-  const handleSettingsClick = () => {
+  const handleSettingsClick = (e) => {
+    e.preventDefault();
     soundManager.play('click');
-    openModal(MODAL_TYPES.SETTINGS);
+    
+    console.log('Settings clicked. Current path:', location.pathname);
+    console.log('isLoginScreen:', isLoginScreen);
+    
+    if (isLoginScreen) {
+      console.log('On login screen, doing nothing');
+      return;
+    }
+    
+    if (location.pathname !== '/profile') {
+      console.log('Navigating to /profile');
+      navigate('/profile');
+    } else {
+      console.log('Already on profile page');
+    }
   };
   
   // Handle leave button actions based on current screen
@@ -97,18 +119,21 @@ export default function MainStatusBar() {
 
         <div className={styles.rightSection}>
           {/* Settings icon moved to the right */}
-          <Tooltip text="Settings" position="bottom">
-            <button
-              className={styles.settingsButton}
-              onClick={handleSettingsClick}
-              onMouseEnter={() => soundManager.play('hover')}
-              aria-label="Settings"
-            >
-              <GearIcon 
-                className={styles.settingsIcon} 
-              />
-            </button>
-          </Tooltip>
+          {!isLoginScreen && (
+            <Tooltip text="Profile" position="bottom">
+              <button
+                className={styles.settingsButton}
+                onClick={handleSettingsClick}
+                onMouseEnter={() => soundManager.play('hover')}
+                aria-label="Profile"
+                disabled={isLoginScreen}
+              >
+                <GearIcon 
+                  className={`${styles.settingsIcon} ${isLoginScreen ? styles.disabled : ''}`} 
+                />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>
     </div>

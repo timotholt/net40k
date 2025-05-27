@@ -134,37 +134,107 @@ router.get('/profile', authenticateUser, async (req, res) => {
 });
 
 /**
- * Update Profile Endpoint
- * 
- * @description
- * Updates the profile information of the authenticated user.
- * 
- * Security Considerations:
- * - Requires user authentication to prevent unauthorized updates
- * - Only allows updates to the authenticated user's profile
- * - Prevents exposure of profile information to unauthorized parties
- * 
- * Request Body:
- * @param {object} profileData - Updated profile information
- * 
- * Response:
- * - 200 OK: Profile updated successfully
- * - 400 Bad Request: Update failed (e.g., invalid data)
- * 
- * Workflow:
- * 1. Authenticate the requesting user
- * 2. Validate the updated profile information
- * 3. Update the profile information for the authenticated user
- * 4. Return success or error response
+ * @swagger
+ * /users/me:
+ *   patch:
+ *     summary: Update current user's profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 30
+ *               avatar:
+ *                 type: string
+ *                 format: uri
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Current password is incorrect
+ *       500:
+ *         description: Server error
  */
-router.put('/profile', authenticateUser, async (req, res) => {
+
+// Handle both PUT and PATCH for profile updates
+const updateProfileHandler = async (req, res) => {
     try {
-        const user = await userService.updateProfile(req.user.userUuid, req.body);
+        const updates = {};
+        
+        // Only include fields that are provided and not empty
+        if (req.body.nickname !== undefined) {
+            updates.nickname = req.body.nickname;
+        }
+        
+        if (req.body.avatar !== undefined) {
+            updates.avatar = req.body.avatar;
+        }
+        
+        // Handle password change if new password is provided
+        if (req.body.newPassword) {
+            updates.currentPassword = req.body.currentPassword;
+            updates.newPassword = req.body.newPassword;
+        }
+        
+        const user = await userService.updateProfile(req.user.userUuid, updates);
         res.json({ success: true, user });
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        logger.error('Update profile error:', error);
+        
+        if (error.name === 'ValidationError' || error.name === 'BadRequestError') {
+            return res.status(400).json({ 
+                success: false, 
+                message: error.message 
+            });
+        }
+        
+        if (error.name === 'AuthError') {
+            return res.status(403).json({ 
+                success: false, 
+                message: error.message 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update profile' 
+        });
     }
-});
+};
+
+// Support both PUT and PATCH for backward compatibility
+router.put('/profile', authenticateUser, updateProfileHandler);
+router.patch('/profile', authenticateUser, updateProfileHandler);
+// Also support /me path for better REST conventions
+router.put('/me', authenticateUser, updateProfileHandler);
+router.patch('/me', authenticateUser, updateProfileHandler);
 
 // Password management
 /**

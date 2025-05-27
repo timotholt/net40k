@@ -74,29 +74,35 @@ export default function GamesList({
     }
   }, [activeTab]);
 
-  // Polling effect
+  // Polling effect - only run when on the lobby page and user is authenticated
   useEffect(() => {
-    // Initial fetch
-    fetchGames();
-    if (activeTab === 'victories') {
-      fetchVictories();
-    }
-
-    // Setup polling interval
-    pollingRef.current = setInterval(() => {
+    // Only fetch if we're on the lobby page and have a user
+    const isLobbyPage = window.location.pathname === '/lobby';
+    
+    if (isLobbyPage && user?.userUuid) {
+      // Initial fetch
       fetchGames();
       if (activeTab === 'victories') {
         fetchVictories();
       }
-    }, 5000);
+
+      // Setup polling interval
+      pollingRef.current = setInterval(() => {
+        fetchGames();
+        if (activeTab === 'victories') {
+          fetchVictories();
+        }
+      }, 5000);
+    }
 
     // Cleanup function
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
     };
-  }, [fetchGames, fetchVictories, activeTab]);
+  }, [fetchGames, fetchVictories, activeTab, user?.userUuid]);
 
   // Filter games based on criteria
   const filteredGames = games.filter(game => {

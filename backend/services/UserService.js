@@ -200,6 +200,105 @@ class UserService {
         return user.toSelfUser();
     }
 
+    async verifyProfile(userUuid) {
+        const user = await UserDB.findOne({ userUuid });
+        const requiredFields = {
+            displayName: 'Display name is required',
+        };
+
+        const errors = [];
+        let isValid = true;
+
+        for (const [field, message] of Object.entries(requiredFields)) {
+            if (!user[field]) {
+                errors.push(message);
+                isValid = false;
+            }
+        }
+
+        return { isValid, errors };
+    }
+
+    /**
+     * Updates a user's profile information
+     * @param {string} userUuid - The UUID of the user to update
+     * @param {Object} updates - The fields to update
+     * @param {string} [updates.nickname] - The new nickname
+     * @param {string} [updates.avatar] - The new avatar URL
+     * @param {string} [updates.currentPassword] - The current password (required for password changes)
+     * @param {string} [updates.newPassword] - The new password (required for password changes)
+     * @returns {Promise<Object>} The updated user object
+     */
+    async updateProfile(userUuid, updates) {
+        const user = await UserDB.findOne({ userUuid });
+        if (!user) {
+            throw new NotFoundError('User not found');
+        }
+
+        const updateData = {};
+        
+        // Handle nickname update
+        if (updates.nickname !== undefined) {
+            if (updates.nickname.length < 2 || updates.nickname.length > 30) {
+                throw new ValidationError('Nickname must be between 2 and 30 characters');
+            }
+            updateData.nickname = updates.nickname;
+            logger.info(`Updating nickname for user ${userUuid}`, { nickname: updates.nickname });
+        }
+        
+        // Handle avatar update
+        if (updates.avatar !== undefined) {
+            // Basic URL validation - you might want to enhance this
+            try {
+                new URL(updates.avatar);
+                updateData.avatar = updates.avatar;
+                logger.info(`Updating avatar for user ${userUuid}`);
+            } catch (e) {
+                throw new ValidationError('Invalid avatar URL');
+            }
+        }
+        
+        // Handle password change if new password is provided
+        if (updates.newPassword) {
+            if (!updates.currentPassword) {
+                throw new ValidationError('Current password is required to change password');
+            }
+            
+            // Verify current password
+            const isMatch = await bcrypt.compare(updates.currentPassword, user.password);
+            if (!isMatch) {
+                throw new AuthError('Current password is incorrect');
+            }
+            
+            // Validate new password
+            if (updates.newPassword.length < 8) {
+                throw new ValidationError('New password must be at least 8 characters long');
+            }
+            
+            // Hash and update the new password
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(updates.newPassword, salt);
+            logger.info(`Updating password for user ${userUuid}`);
+        }
+        
+        // If there are updates to apply
+        if (Object.keys(updateData).length > 0) {
+            const updatedUser = await UserDB.findOneAndUpdate(
+                { userUuid },
+                { $set: updateData },
+                { new: true, runValidators: true }
+            );
+            
+            // Remove sensitive data before returning
+            const { password, ...userWithoutPassword } = updatedUser.toObject();
+            return userWithoutPassword;
+        }
+        
+        // If no updates were made, return the current user
+        const { password, ...userWithoutPassword } = user.toObject();
+        return userWithoutPassword;
+    }
+
     async getUsers(query = {}, options = {}) {
         try {
             const { page = 1, limit = 50 } = options;
