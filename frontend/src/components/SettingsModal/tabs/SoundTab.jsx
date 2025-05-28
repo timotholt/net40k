@@ -16,14 +16,14 @@ export default function SoundTab() {
     serverNewsMessage: true,
     
     // Center column
-    playerJoinServer: true,
-    playerJoinGame: true,
-    playerEmoteSounds: true,
+    playersJoinServer: true,
+    playersJoinGame: true,
+    playersEmoteSounds: true,
     
     // Right column
-    friendJoinServer: true,
-    friendJoinGame: true,
-    friendEmoteSounds: true,
+    friendsJoinServer: true,
+    friendsJoinGame: true,
+    friendsEmoteSounds: true,
     
     // Future use placeholders
     futureUse1: false,
@@ -194,28 +194,28 @@ export default function SoundTab() {
 
             {/* Center Column */}
             <div className={styles.notificationColumn}>
-              <h4>Player ...</h4>
+              <h4>Players ...</h4>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.playerJoinServer}
-                  onChange={() => handleNotificationChange('playerJoinServer')}
+                  checked={notifications.playersJoinServer}
+                  onChange={() => handleNotificationChange('playersJoinServer')}
                 />
                 Join / leave server
               </label>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.playerJoinGame}
-                  onChange={() => handleNotificationChange('playerJoinGame')}
+                  checked={notifications.playersJoinGame}
+                  onChange={() => handleNotificationChange('playersJoinGame')}
                 />
                 Join / leave game
               </label>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.playerEmoteSounds}
-                  onChange={() => handleNotificationChange('playerEmoteSounds')}
+                  checked={notifications.playersEmoteSounds}
+                  onChange={() => handleNotificationChange('playersEmoteSounds')}
                 />
                 Emote Sounds
               </label>
@@ -224,28 +224,28 @@ export default function SoundTab() {
 
             {/* Right Column */}
             <div className={styles.notificationColumn}>
-              <h4>Friend ...</h4>
+              <h4>Friends ...</h4>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.friendJoinServer}
-                  onChange={() => handleNotificationChange('friendJoinServer')}
+                  checked={notifications.friendsJoinServer}
+                  onChange={() => handleNotificationChange('friendsJoinServer')}
                 />
                 Join / leave server
               </label>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.friendJoinGame}
-                  onChange={() => handleNotificationChange('friendJoinGame')}
+                  checked={notifications.friendsJoinGame}
+                  onChange={() => handleNotificationChange('friendsJoinGame')}
                 />
                 Join / leave game
               </label>
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={notifications.friendEmoteSounds}
-                  onChange={() => handleNotificationChange('friendEmoteSounds')}
+                  checked={notifications.friendsEmoteSounds}
+                  onChange={() => handleNotificationChange('friendsEmoteSounds')}
                 />
                 Emote Sounds
               </label>
