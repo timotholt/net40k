@@ -198,11 +198,41 @@
   text-align: right;
 }
 
-.notificationSettings {
+/* Notification Grid Layout */
+.notificationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.notificationColumn {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 136, 0, 0.2);
+}
+
+.notificationColumn h4 {
+  color: var(--color-green);
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 136, 0, 0.3);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.futureUse {
+  color: var(--color-gray);
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  padding: 0.25rem 0;
 }
 
 .checkbox {
@@ -210,8 +240,13 @@
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
-  /* padding: 0.25rem 0; */
+  /* padding: 0.25rem 0.5rem; */
   transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.checkbox:hover {
+  background: rgba(0, 136, 0, 0.1);
 }
 
 .checkbox:hover {
@@ -229,11 +264,11 @@
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .checkbox input[type="checkbox"]:checked {
   background: var(--color-green);
-  border-color: var(--color-green);
 }
 
 .checkbox input[type="checkbox"]:checked::after {
