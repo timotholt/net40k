@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, AnimateSharedLayout } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/authSlice';
 import { GearIcon } from '../Icons/GearIcon';
@@ -14,7 +14,27 @@ import styles from './SettingsModal.module.css';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('account');
+  const [tabPositions, setTabPositions] = useState({});
+  const tabsRef = useRef({});
   const user = useSelector(selectUser);
+
+  useEffect(() => {
+    // Update tab positions when active tab changes
+    const positions = {};
+    Object.entries(tabsRef.current).forEach(([id, element]) => {
+      if (element) {
+        positions[id] = {
+          width: element.offsetWidth,
+          left: element.offsetLeft
+        };
+      }
+    });
+    setTabPositions(positions);
+  }, [activeTab]);
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+  };
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
@@ -79,16 +99,32 @@ export default function SettingsModal({ isOpen, onClose }) {
 
           <div className={styles.content}>
             <div className={styles.tabs}>
-              {tabs.map(tab => (
+            {tabs.map(tab => (
+              <div key={tab.id} className={styles.tabContainer}>
                 <button
-                  key={tab.id}
+                  ref={el => tabsRef.current[tab.id] = el}
                   className={`${styles.tab} ${activeTab === tab.id ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                 >
                   {tab.label}
+                  {activeTab === tab.id && (
+                    <motion.div 
+                      className={styles.activeIndicator}
+                      layoutId="activeTab"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 500,  // Increased for faster movement
+                        damping: 50,     // Balanced for quick stop
+                        mass: 0.5,       // Kept light
+                        restDelta: 0.01,  // More precise animation end
+                        restSpeed: 10     // Faster settling
+                      }}
+                    />
+                  )}
                 </button>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
             <div className={styles.tabContent}>
               {renderTabContent()}
