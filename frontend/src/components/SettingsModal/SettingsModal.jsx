@@ -37,13 +37,14 @@ export default function SettingsModal({ isOpen, onClose }) {
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profile' },
-    { id: 'account', label: 'Account' },
-    { id: 'password', label: 'Password' },
-    { id: 'security', label: 'Security' },
-    { id: 'graphics', label: 'Graphics' },
-    { id: 'sound', label: 'Sound' },
-    { id: 'effects', label: 'Effects' }
+    { id: 'profile', label: 'Profile', group: 'left' },
+    { id: 'account', label: 'Account', group: 'left' },
+    { id: 'password', label: 'Password', group: 'left' },
+    { id: 'security', label: 'Security', group: 'left' },
+    { id: 'spacer', label: '', group: 'spacer' },
+    { id: 'graphics', label: 'Graphics', group: 'right' },
+    { id: 'sound', label: 'Sound', group: 'right' },
+    { id: 'effects', label: 'Effects', group: 'right' }
   ];
 
   const renderTabContent = () => {
@@ -99,31 +100,64 @@ export default function SettingsModal({ isOpen, onClose }) {
 
           <div className={styles.content}>
             <div className={styles.tabs}>
-            {tabs.map(tab => (
-              <div key={tab.id} className={styles.tabContainer}>
-                <button
-                  ref={el => tabsRef.current[tab.id] = el}
-                  className={`${styles.tab} ${activeTab === tab.id ? styles.activeTab : ''}`}
-                  onClick={() => handleTabClick(tab.id)}
-                >
-                  {tab.label}
-                  {activeTab === tab.id && (
-                    <motion.div 
-                      className={styles.activeIndicator}
-                      layoutId="activeTab"
-                      transition={{
-                        type: 'spring',
-                        stiffness: 500,  // Increased for faster movement
-                        damping: 50,     // Balanced for quick stop
-                        mass: 0.5,       // Kept light
-                        restDelta: 0.01,  // More precise animation end
-                        restSpeed: 10     // Faster settling
-                      }}
-                    />
-                  )}
-                </button>
-              </div>
-            ))}
+            <div className={styles.tabsLeft}>
+              {tabs
+                .filter(tab => tab.group === 'left')
+                .map(tab => (
+                  <div key={tab.id} className={styles.tabContainer}>
+                    <button
+                      ref={el => tabsRef.current[tab.id] = el}
+                      className={`${styles.tab} ${activeTab === tab.id ? styles.activeTab : ''}`}
+                      onClick={() => handleTabClick(tab.id)}
+                    >
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <motion.div 
+                          className={styles.activeIndicator}
+                          layoutId="activeTab"
+                          transition={{
+                            type: 'spring',
+                            stiffness: 500,
+                            damping: 50,
+                            mass: 0.5,
+                            restDelta: 0.01,
+                            restSpeed: 10
+                          }}
+                        />
+                      )}
+                    </button>
+                  </div>
+                ))}
+            </div>
+            <div className={styles.tabsRight}>
+              {tabs
+                .filter(tab => tab.group === 'right')
+                .map(tab => (
+                  <div key={tab.id} className={styles.tabContainer}>
+                    <button
+                      ref={el => tabsRef.current[tab.id] = el}
+                      className={`${styles.tab} ${activeTab === tab.id ? styles.activeTab : ''}`}
+                      onClick={() => handleTabClick(tab.id)}
+                    >
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <motion.div 
+                          className={styles.activeIndicator}
+                          layoutId="activeTab"
+                          transition={{
+                            type: 'spring',
+                            stiffness: 500,
+                            damping: 50,
+                            mass: 0.5,
+                            restDelta: 0.01,
+                            restSpeed: 10
+                          }}
+                        />
+                      )}
+                    </button>
+                  </div>
+                ))}
+            </div>
           </div>
 
             <div className={styles.tabContent}>
