@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './Tabs.module.css';
 
-export default function AccountTab({ userId }) {
+export default function PasswordTab({ userId }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,76 +37,56 @@ export default function AccountTab({ userId }) {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/user/${userId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) throw new Error('Failed to delete account');
-      
-      // Handle logout and redirect
-    } catch (err) {
-      setError('Failed to delete account');
-    }
-  };
-
   return (
     <div className={styles.tabPanel}>
-      <section className={styles.section}>
-        <h3>Change Password</h3>
-        <form onSubmit={handleChangePassword}>
-          <div className={styles.formGroup}>
-            <label>Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-            />
-          </div>
+      <div className={styles.content}>
+        <section className={styles.section}>
+          <h3>Change Password</h3>
+          <form id="passwordForm" onSubmit={handleChangePassword}>
+            <div className={styles.formGroup}>
+              <label>Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className={styles.formGroup}>
-            <label>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-          </div>
+            <div className={styles.formGroup}>
+              <label>New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className={styles.formGroup}>
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-          
-          <button type="submit" className={styles.button}>
-            Change Password
+            <div className={styles.formGroup}>
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <div className={styles.error}>{error}</div>}
+          </form>
+        </section>
+      </div>
+      
+      <div className={styles.footer}>
+        <div className={styles.footerContent}>
+          <button type="submit" form="passwordForm" className={styles.button}>
+            Save Changes
           </button>
-        </form>
-      </section>
-
-      <section className={styles.section}>
-        <h3>Danger Zone</h3>
-        <button
-          onClick={handleDeleteAccount}
-          className={styles.deleteButton}
-        >
-          Delete Account
-        </button>
-      </section>
+          <p className={styles.note}>
+            Note: Passwords are saved on the server
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

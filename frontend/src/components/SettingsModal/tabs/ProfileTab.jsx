@@ -29,26 +29,34 @@ export default function ProfileTab({ userId }) {
 
   return (
     <div className={styles.tabPanel}>
-      <section className={styles.section}>
-        <h3>Personalization</h3>
-        <form onSubmit={handleUpdateNickname}>
-          <div className={styles.formGroup}>
-            <label>Nickname</label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-          
-          <button type="submit" className={styles.button}>
-            Update Nickname
+      <div className={styles.content}>
+        <section className={styles.section}>
+          <h3>Personalization</h3>
+          <form id="profileForm" onSubmit={handleUpdateNickname}>
+            <div className={styles.formGroup}>
+              <label>Nickname</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                required
+              />
+            </div>
+            {error && <div className={styles.error}>{error}</div>}
+          </form>
+        </section>
+      </div>
+      
+      <div className={styles.footer}>
+        <div className={styles.footerContent}>
+          <button type="submit" form="profileForm" className={styles.button}>
+            Save Changes
           </button>
-        </form>
-      </section>
+          <p className={styles.note}>
+            Note: Profile settings are saved on the server
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -15,10 +15,10 @@ export default function SettingsModal({ isOpen, onClose }) {
   const user = useSelector(selectUser);
 
   const tabs = [
+    { id: 'profile', label: 'Profile' },
     { id: 'account', label: 'Account' },
     { id: 'password', label: 'Password' },
     { id: 'security', label: 'Security' },
-    { id: 'profile', label: 'Profile' },
     { id: 'graphics', label: 'Graphics' },
     { id: 'sound', label: 'Sound' }
   ];
