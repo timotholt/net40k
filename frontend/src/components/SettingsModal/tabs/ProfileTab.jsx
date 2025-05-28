@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import styles from './Tabs.module.css';
+import { NicknameField } from '../../FormFields/NicknameField';
 
 export default function ProfileTab({ userId }) {
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNicknameChange = (e) => {
+    setNickname(e.target.value);
+    // Clear any previous errors when user starts typing
+    if (error) setError('');
+  };
 
   const handleUpdateNickname = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('/api/user/nickname', {
@@ -19,11 +28,17 @@ export default function ProfileTab({ userId }) {
         })
       });
 
-      if (!response.ok) throw new Error('Failed to update nickname');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update nickname');
+      }
       
-      // Handle success
+      // Handle success - could show a success message here
     } catch (err) {
-      setError('Failed to update nickname');
+      console.error('Update nickname error:', err);
+      setError(err.message || 'Failed to update nickname');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -34,23 +49,26 @@ export default function ProfileTab({ userId }) {
           <h3>Personalization</h3>
           <form id="profileForm" onSubmit={handleUpdateNickname}>
             <div className={styles.formGroup}>
-              <label>Nickname</label>
-              <input
-                type="text"
+              <NicknameField
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={handleNicknameChange}
                 required
               />
+              {error && <div className={styles.error} style={{ marginTop: '0.5rem' }}>{error}</div>}
             </div>
-            {error && <div className={styles.error}>{error}</div>}
           </form>
         </section>
       </div>
       
       <div className={styles.footer}>
         <div className={styles.footerContent}>
-          <button type="submit" form="profileForm" className={styles.button}>
-            Save Changes
+          <button 
+            type="submit" 
+            form="profileForm" 
+            className={styles.button}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>
           <p className={styles.note}>
             Note: Profile settings are saved on the server
