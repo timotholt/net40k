@@ -5,7 +5,8 @@ export default function SoundTab() {
   const [volumes, setVolumes] = useState({
     master: 75,
     music: 75,
-    sfx: 75
+    sfx: 75,
+    voice: 75
   });
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function SoundTab() {
   
   // Initialize slider fill on mount and when volumes change
   useEffect(() => {
-    ['master', 'music', 'sfx'].forEach(type => {
+    ['master', 'music', 'sfx', 'voice'].forEach(type => {
       const slider = document.querySelector(`input[type="range"][data-type="${type}"]`);
       if (slider) {
         const fillPercent = (volumes[type] / slider.max) * 100;
@@ -116,6 +117,28 @@ export default function SoundTab() {
               <span>{volumes.sfx}%</span>
               <button 
                 onClick={() => handleVolumeChange('sfx', 75)} 
+                className={styles.button}
+                style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                title="Reset to default volume"
+              >
+                Reset
+              </button>
+            </div>
+
+            <div className={styles.volumeSlider}>
+              <label>Voice Volume</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volumes.voice}
+                data-type="voice"
+                onChange={(e) => handleVolumeChange('voice', e.target.value)}
+                className={styles.volumeSliderInput}
+              />
+              <span>{volumes.voice}%</span>
+              <button 
+                onClick={() => handleVolumeChange('voice', 75)} 
                 className={styles.button}
                 style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
                 title="Reset to default volume"
