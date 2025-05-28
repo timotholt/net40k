@@ -13,10 +13,10 @@ const ResolutionIcon = () => (
 );
 
 const ScaleIcon = () => (
-  <svg width="20" height="24" viewBox="0 0 28 40" fill="currentColor" stroke="none" style={{ overflow: 'visible' }}>
-    <g transform="translate(0, 8)">
-      <text x="2" y="26" fontSize="20" fontWeight="bold" fontFamily="sans-serif" textAnchor="start" dominantBaseline="alphabetic">A</text>
-      <text x="13" y="26" fontSize="30" fontWeight="bold" fontFamily="sans-serif" textAnchor="start" dominantBaseline="alphabetic">A</text>
+  <svg width="18" height="24" viewBox="0 0 25 40" fill="currentColor" stroke="none" style={{ overflow: 'visible' }}>
+    <g transform="translate(-4, 8)">
+      <text x="0" y="26" fontSize="20" fontWeight="bold" fontFamily="sans-serif" textAnchor="start" dominantBaseline="alphabetic">A</text>
+      <text x="14" y="26" fontSize="30" fontWeight="bold" fontFamily="sans-serif" textAnchor="start" dominantBaseline="alphabetic">A</text>
     </g>
   </svg>
 );
