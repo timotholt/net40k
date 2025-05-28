@@ -80,186 +80,191 @@ export default function SoundTab() {
 
   return (
     <div className={styles.tabPanel}>
-      <section className={styles.section}>
-        <h3>Volume Controls</h3>
-        <div className={styles.volumeControls}>
-          <div className={styles.volumeSlider}>
-            <label>Master Volume</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volumes.master}
-              data-type="master"
-              onChange={(e) => handleVolumeChange('master', e.target.value)}
-              className={styles.volumeSliderInput}
-            />
-            <span>{volumes.master}%</span>
-            <button 
-              onClick={() => handleVolumeChange('master', 75)} 
-              className={styles.button}
-              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
-              title="Reset to default volume"
-            >
-              Reset
-            </button>
-          </div>
+      <div className={styles.content}>
+        <section className={styles.section}>
+          <h3>Volume Controls</h3>
+          <div className={styles.volumeControls}>
+            <div className={styles.volumeSlider}>
+              <label>Master Volume</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volumes.master}
+                data-type="master"
+                onChange={(e) => handleVolumeChange('master', e.target.value)}
+                className={styles.volumeSliderInput}
+              />
+              <span>{volumes.master}%</span>
+              <button 
+                onClick={() => handleVolumeChange('master', 75)} 
+                className={styles.button}
+                style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                title="Reset to default volume"
+              >
+                Reset
+              </button>
+            </div>
 
-          <div className={styles.volumeSlider}>
-            <label>Music Volume</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volumes.music}
-              data-type="music"
-              onChange={(e) => handleVolumeChange('music', e.target.value)}
-              className={styles.volumeSliderInput}
-            />
-            <span>{volumes.music}%</span>
-            <button 
-              onClick={() => handleVolumeChange('music', 75)} 
-              className={styles.button}
-              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
-              title="Reset to default volume"
-            >
-              Reset
-            </button>
-          </div>
+            <div className={styles.volumeSlider}>
+              <label>Music Volume</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volumes.music}
+                data-type="music"
+                onChange={(e) => handleVolumeChange('music', e.target.value)}
+                className={styles.volumeSliderInput}
+              />
+              <span>{volumes.music}%</span>
+              <button 
+                onClick={() => handleVolumeChange('music', 75)} 
+                className={styles.button}
+                style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                title="Reset to default volume"
+              >
+                Reset
+              </button>
+            </div>
 
-          <div className={styles.volumeSlider}>
-            <label>SFX Volume</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volumes.sfx}
-              data-type="sfx"
-              onChange={(e) => handleVolumeChange('sfx', e.target.value)}
-              className={styles.volumeSliderInput}
-            />
-            <span>{volumes.sfx}%</span>
-            <button 
-              onClick={() => handleVolumeChange('sfx', 75)} 
-              className={styles.button}
-              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
-              title="Reset to default volume"
-            >
-              Reset
-            </button>
+            <div className={styles.volumeSlider}>
+              <label>SFX Volume</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volumes.sfx}
+                data-type="sfx"
+                onChange={(e) => handleVolumeChange('sfx', e.target.value)}
+                className={styles.volumeSliderInput}
+              />
+              <span>{volumes.sfx}%</span>
+              <button 
+                onClick={() => handleVolumeChange('sfx', 75)} 
+                className={styles.button}
+                style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                title="Reset to default volume"
+              >
+                Reset
+              </button>
+            </div>
           </div>
+        </section>
+
+        <section className={styles.section}>
+          <h3>Notification Sounds</h3>
+          <div className={styles.notificationGrid}>
+            {/* Left Column */}
+            <div className={styles.notificationColumn}>
+              <h4>New Messages</h4>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.lobbyMessage}
+                  onChange={() => handleNotificationChange('lobbyMessage')}
+                />
+                Lobby
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.whisperMessage}
+                  onChange={() => handleNotificationChange('whisperMessage')}
+                />
+                Whisper
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.gameMasterMessage}
+                  onChange={() => handleNotificationChange('gameMasterMessage')}
+                />
+                Game master
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.serverNewsMessage}
+                  onChange={() => handleNotificationChange('serverNewsMessage')}
+                />
+                Server / News
+              </label>
+            </div>
+
+            {/* Center Column */}
+            <div className={styles.notificationColumn}>
+              <h4>Player ...</h4>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.playerJoinServer}
+                  onChange={() => handleNotificationChange('playerJoinServer')}
+                />
+                Join / leave server
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.playerJoinGame}
+                  onChange={() => handleNotificationChange('playerJoinGame')}
+                />
+                Join / leave game
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.playerEmoteSounds}
+                  onChange={() => handleNotificationChange('playerEmoteSounds')}
+                />
+                Emote Sounds
+              </label>
+              <div className={styles.futureUse}>(future use)</div>
+            </div>
+
+            {/* Right Column */}
+            <div className={styles.notificationColumn}>
+              <h4>Friend ...</h4>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.friendJoinServer}
+                  onChange={() => handleNotificationChange('friendJoinServer')}
+                />
+                Join / leave server
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.friendJoinGame}
+                  onChange={() => handleNotificationChange('friendJoinGame')}
+                />
+                Join / leave game
+              </label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={notifications.friendEmoteSounds}
+                  onChange={() => handleNotificationChange('friendEmoteSounds')}
+                />
+                Emote Sounds
+              </label>
+              <div className={styles.futureUse}>(future use)</div>
+            </div>
+          </div>
+        </section>
+      </div>
+      
+      <div className={styles.footer}>
+        <div className={styles.footerContent}>
+          <button onClick={handleSaveSettings} className={styles.button}>
+            Save Changes
+          </button>
+          <p className={styles.note}>
+            Note: Sound settings are saved in your browser
+          </p>
         </div>
-      </section>
-
-      <section className={styles.section}>
-        <h3>Notification Sounds</h3>
-        <div className={styles.notificationGrid}>
-          {/* Left Column */}
-          <div className={styles.notificationColumn}>
-            <h3>New Messages</h3>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.lobbyMessage}
-                onChange={() => handleNotificationChange('lobbyMessage')}
-              />
-              Lobby
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.whisperMessage}
-                onChange={() => handleNotificationChange('whisperMessage')}
-              />
-              Whisper
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.gameMasterMessage}
-                onChange={() => handleNotificationChange('gameMasterMessage')}
-              />
-              Game master
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.serverNewsMessage}
-                onChange={() => handleNotificationChange('serverNewsMessage')}
-              />
-              Server / News
-            </label>
-          </div>
-
-          {/* Center Column */}
-          <div className={styles.notificationColumn}>
-            <h3>Player ...</h3>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.playerJoinServer}
-                onChange={() => handleNotificationChange('playerJoinServer')}
-              />
-              Join / leave server
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.playerJoinGame}
-                onChange={() => handleNotificationChange('playerJoinGame')}
-              />
-              Join / leave game
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.playerEmoteSounds}
-                onChange={() => handleNotificationChange('playerEmoteSounds')}
-              />
-              Emote Sounds
-            </label>
-            <div className={styles.futureUse}>(future use)</div>
-          </div>
-
-          {/* Right Column */}
-          <div className={styles.notificationColumn}>
-            <h3>Friend ...</h3>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.friendJoinServer}
-                onChange={() => handleNotificationChange('friendJoinServer')}
-              />
-              Join / leave server
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.friendJoinGame}
-                onChange={() => handleNotificationChange('friendJoinGame')}
-              />
-              Join / leave game
-            </label>
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={notifications.friendEmoteSounds}
-                onChange={() => handleNotificationChange('friendEmoteSounds')}
-              />
-              Emote Sounds
-            </label>
-            <div className={styles.futureUse}>(future use)</div>
-          </div>
-        </div>
-
-        <button onClick={handleSaveSettings} className={styles.button}>
-          Save Changes
-        </button>
-
-        <p className={styles.note}>
-          Note: Sound settings are saved in your browser
-        </p>
-      </section>
+      </div>
     </div>
   );
 }
