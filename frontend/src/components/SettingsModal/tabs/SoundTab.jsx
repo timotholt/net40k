@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './Tabs.module.css';
 
 export default function SoundTab() {
@@ -29,7 +29,25 @@ export default function SoundTab() {
       ...prev,
       [type]: value
     }));
+    
+    // Update the fill percentage for the slider
+    const slider = document.querySelector(`input[type="range"][data-type="${type}"]`);
+    if (slider) {
+      const fillPercent = (value / slider.max) * 100;
+      slider.style.setProperty('--fill-percent', `${fillPercent}%`);
+    }
   };
+  
+  // Initialize slider fill on mount and when volumes change
+  useEffect(() => {
+    ['master', 'music', 'sfx'].forEach(type => {
+      const slider = document.querySelector(`input[type="range"][data-type="${type}"]`);
+      if (slider) {
+        const fillPercent = (volumes[type] / slider.max) * 100;
+        slider.style.setProperty('--fill-percent', `${fillPercent}%`);
+      }
+    });
+  }, [volumes]);
 
   const handleNotificationChange = (type) => {
     setNotifications(prev => ({
@@ -57,7 +75,9 @@ export default function SoundTab() {
               min="0"
               max="100"
               value={volumes.master}
+              data-type="master"
               onChange={(e) => handleVolumeChange('master', e.target.value)}
+              className={styles.volumeSliderInput}
             />
             <span>{volumes.master}%</span>
             <button 
@@ -77,7 +97,9 @@ export default function SoundTab() {
               min="0"
               max="100"
               value={volumes.music}
+              data-type="music"
               onChange={(e) => handleVolumeChange('music', e.target.value)}
+              className={styles.volumeSliderInput}
             />
             <span>{volumes.music}%</span>
             <button 
@@ -97,7 +119,9 @@ export default function SoundTab() {
               min="0"
               max="100"
               value={volumes.sfx}
+              data-type="sfx"
               onChange={(e) => handleVolumeChange('sfx', e.target.value)}
+              className={styles.volumeSliderInput}
             />
             <span>{volumes.sfx}%</span>
             <button 
