@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/authSlice';
+import { GearIcon } from '../Icons/GearIcon';
 import PasswordTab from './tabs/PasswordTab';
 import AccountTab from './tabs/AccountTab';
 import SecurityTab from './tabs/SecurityTab';
@@ -61,7 +62,14 @@ export default function SettingsModal({ isOpen, onClose }) {
           onClick={e => e.stopPropagation()}
         >
           <div className={styles.header}>
-            <h2>Settings</h2>
+            <h2>
+              <GearIcon 
+                className={styles.gearIcon}
+                width={20}
+                height={20}
+              />
+              Settings
+            </h2>
             <button onClick={onClose} className={styles.closeButton}>×</button>
           </div>
 
