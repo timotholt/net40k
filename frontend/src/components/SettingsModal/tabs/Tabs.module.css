@@ -1,5 +1,16 @@
 .tabPanel {
   color: var(--color-soft-white);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px; /* Ensure minimum height */
+}
+
+.tabPanel .content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .section {
@@ -198,6 +209,45 @@
   text-align: right;
 }
 
+/* Notification Grid Layout */
+.notificationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.notificationColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 136, 0, 0.2);
+}
+
+.notificationColumn h4 {
+  color: var(--color-soft-white);
+  opacity: 0.8;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 136, 0, 0.3);
+  font-size: 0.9rem;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.futureUse {
+  color: var(--color-gray);
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
 .notificationSettings {
   display: flex;
   flex-direction: column;
@@ -262,6 +312,29 @@
 .checkbox input[type="checkbox"]:focus {
   outline: none;
   box-shadow: none;
+}
+
+/* Footer with save button and note */
+.footer {
+  margin-top: auto; /* Push footer to bottom */
+  padding-top: 1.5rem;
+}
+
+.footerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.footer .note {
+  color: var(--color-gray);
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  line-height: 1.3;
 }
 
 .note {
