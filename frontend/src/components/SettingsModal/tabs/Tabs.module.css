@@ -14,7 +14,7 @@
 }
 
 .section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .section h3 {
@@ -317,7 +317,7 @@
 /* Footer with save button and note */
 .footer {
   margin-top: auto; /* Push footer to bottom */
-  padding-top: 1.5rem;
+  /* padding-top: 1.5rem; */
 }
 
 .footerContent {
