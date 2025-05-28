@@ -86,3 +86,127 @@
 .tabContent {
   min-height: 300px;
 }
+
+/* Account Tab Styles */
+.accountTab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  color: var(--color-soft-white);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.readOnlyInput {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--color-green);
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: var(--color-soft-white);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: not-allowed;
+}
+
+.formActions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.deleteButton {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 59, 48, 0.2);
+}
+
+/* Security Tab Styles */
+.securityTab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.securityTab h3 {
+  color: var(--color-green);
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.securityLogs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.securityLogEntry {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 255, 0, 0.1);
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.securityLogHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.securityLogEvent {
+  font-weight: 500;
+  color: var(--color-soft-white);
+}
+
+.securityLogDate {
+  color: var(--color-soft-white);
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.securityLogDetails {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-soft-white);
+  opacity: 0.8;
+}
+
+/* Scrollbar styling */
+.securityLogs::-webkit-scrollbar {
+  width: 6px;
+}
+
+.securityLogs::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.securityLogs::-webkit-scrollbar-thumb {
+  background: var(--color-green);
+  border-radius: 3px;
+}
+
+.securityLogs::-webkit-scrollbar-thumb:hover {
+  background: #00cc00;
+}

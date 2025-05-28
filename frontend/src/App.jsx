@@ -18,7 +18,6 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Lobby from './pages/Lobby/Lobby';
 import Game from './pages/Game/Game';
-import Profile from './pages/Profile/Profile';
 import styles from './styles/App.module.css';
 import './styles/portal.css';
 
@@ -187,7 +186,6 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                   <Route path="/lobby" element={<Lobby />} />
                   <Route path="/game/:gameId" element={<Game />} />
-                  <Route path="/profile" element={<Profile />} />
                 </Route>
               </Routes>
             </AnimatePresence>

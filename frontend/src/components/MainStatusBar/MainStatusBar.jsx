@@ -116,12 +116,12 @@ export default function MainStatusBar() {
         <div className={styles.rightSection}>
           {/* Settings icon moved to the right */}
           {!isLoginScreen && (
-            <Tooltip text="Profile" position="bottom">
+            <Tooltip text="Settings" position="bottom">
               <button
                 className={styles.settingsButton}
                 onClick={handleSettingsClick}
                 onMouseEnter={() => soundManager.play('hover')}
-                aria-label="Profile"
+                aria-label="Settings"
                 disabled={isLoginScreen}
               >
                 <GearIcon 

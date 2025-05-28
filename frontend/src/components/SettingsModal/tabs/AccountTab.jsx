@@ -1,112 +1,72 @@
-import { useState } from 'react';
-import styles from './Tabs.module.css';
+import React from 'react';
+import styles from '../SettingsModal.module.css';
 
 export default function AccountTab({ userId }) {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/user/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          currentPassword,
-          newPassword
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to change password');
-      
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      setError('Failed to change password');
-    }
+  // In a real app, this would come from an API
+  const accountInfo = {
+    facebookId: 'Not connected',
+    googleId: 'Not connected',
+    discordId: 'Not connected',
+    steamId: 'Not connected',
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/user/${userId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) throw new Error('Failed to delete account');
-      
-      // Handle logout and redirect
-    } catch (err) {
-      setError('Failed to delete account');
+  const handleDeleteAccount = () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      // TODO: Implement account deletion
+      console.log('Deleting account:', userId);
     }
   };
 
   return (
-    <div className={styles.tabPanel}>
-      <section className={styles.section}>
-        <h3>Change Password</h3>
-        <form onSubmit={handleChangePassword}>
-          <div className={styles.formGroup}>
-            <label>Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-          
-          <button type="submit" className={styles.button}>
-            Change Password
-          </button>
-        </form>
-      </section>
-
-      <section className={styles.section}>
-        <h3>Danger Zone</h3>
-        <button
+    <div className={styles.accountTab}>
+      <div className={styles.formGroup}>
+        <label>Facebook ID</label>
+        <input 
+          type="text" 
+          value={accountInfo.facebookId} 
+          readOnly 
+          className={styles.readOnlyInput}
+        />
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label>Google ID</label>
+        <input 
+          type="text" 
+          value={accountInfo.googleId} 
+          readOnly 
+          className={styles.readOnlyInput}
+        />
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label>Discord ID</label>
+        <input 
+          type="text" 
+          value={accountInfo.discordId} 
+          readOnly 
+          className={styles.readOnlyInput}
+        />
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label>Steam ID</label>
+        <input 
+          type="text" 
+          value={accountInfo.steamId} 
+          readOnly 
+          className={styles.readOnlyInput}
+        />
+      </div>
+      
+      <div className={styles.formActions}>
+        <button 
           onClick={handleDeleteAccount}
           className={styles.deleteButton}
         >
           Delete Account
         </button>
-      </section>
+      </div>
     </div>
   );
 }

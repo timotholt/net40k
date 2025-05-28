@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/authSlice';
+import PasswordTab from './tabs/PasswordTab';
 import AccountTab from './tabs/AccountTab';
+import SecurityTab from './tabs/SecurityTab';
 import ProfileTab from './tabs/ProfileTab';
 import GraphicsTab from './tabs/GraphicsTab';
 import SoundTab from './tabs/SoundTab';
@@ -14,6 +16,8 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const tabs = [
     { id: 'account', label: 'Account' },
+    { id: 'password', label: 'Password' },
+    { id: 'security', label: 'Security' },
     { id: 'profile', label: 'Profile' },
     { id: 'graphics', label: 'Graphics' },
     { id: 'sound', label: 'Sound' }
@@ -23,6 +27,10 @@ export default function SettingsModal({ isOpen, onClose }) {
     switch (activeTab) {
       case 'account':
         return <AccountTab userId={user.id} />;
+      case 'password':
+        return <PasswordTab userId={user.id} />;
+      case 'security':
+        return <SecurityTab userId={user.id} />;
       case 'profile':
         return <ProfileTab userId={user.id} />;
       case 'graphics':

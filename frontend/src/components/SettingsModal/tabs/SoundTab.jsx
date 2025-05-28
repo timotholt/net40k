@@ -60,6 +60,14 @@ export default function SoundTab() {
               onChange={(e) => handleVolumeChange('master', e.target.value)}
             />
             <span>{volumes.master}%</span>
+            <button 
+              onClick={() => handleVolumeChange('master', 75)} 
+              className={styles.button}
+              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+              title="Reset to default volume"
+            >
+              Reset
+            </button>
           </div>
 
           <div className={styles.volumeSlider}>
@@ -72,6 +80,14 @@ export default function SoundTab() {
               onChange={(e) => handleVolumeChange('music', e.target.value)}
             />
             <span>{volumes.music}%</span>
+            <button 
+              onClick={() => handleVolumeChange('music', 75)} 
+              className={styles.button}
+              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+              title="Reset to default volume"
+            >
+              Reset
+            </button>
           </div>
 
           <div className={styles.volumeSlider}>
@@ -84,6 +100,14 @@ export default function SoundTab() {
               onChange={(e) => handleVolumeChange('sfx', e.target.value)}
             />
             <span>{volumes.sfx}%</span>
+            <button 
+              onClick={() => handleVolumeChange('sfx', 75)} 
+              className={styles.button}
+              style={{ marginLeft: '10px', padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+              title="Reset to default volume"
+            >
+              Reset
+            </button>
           </div>
         </div>
       </section>
