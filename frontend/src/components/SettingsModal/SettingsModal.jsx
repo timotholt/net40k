@@ -9,6 +9,7 @@ import SecurityTab from './tabs/SecurityTab';
 import ProfileTab from './tabs/ProfileTab';
 import GraphicsTab from './tabs/GraphicsTab';
 import SoundTab from './tabs/SoundTab';
+import EffectsTab from './tabs/EffectsTab';
 import styles from './SettingsModal.module.css';
 
 export default function SettingsModal({ isOpen, onClose }) {
@@ -21,7 +22,8 @@ export default function SettingsModal({ isOpen, onClose }) {
     { id: 'password', label: 'Password' },
     { id: 'security', label: 'Security' },
     { id: 'graphics', label: 'Graphics' },
-    { id: 'sound', label: 'Sound' }
+    { id: 'sound', label: 'Sound' },
+    { id: 'effects', label: 'Effects' }
   ];
 
   const renderTabContent = () => {
@@ -38,6 +40,8 @@ export default function SettingsModal({ isOpen, onClose }) {
         return <GraphicsTab />;
       case 'sound':
         return <SoundTab />;
+      case 'effects':
+        return <EffectsTab />;
       default:
         return null;
     }

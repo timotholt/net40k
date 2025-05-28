@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Tabs.module.css';
 
 export default function SoundTab() {
@@ -8,34 +8,16 @@ export default function SoundTab() {
     sfx: 75
   });
 
-  const [notifications, setNotifications] = useState({
-    // Left column
-    lobbyMessage: true,
-    whisperMessage: true,
-    gameMasterMessage: true,
-    serverNewsMessage: true,
-    
-    // Center column
-    playersJoinServer: true,
-    playersJoinGame: true,
-    playersEmoteSounds: true,
-    
-    // Right column
-    friendsJoinServer: true,
-    friendsJoinGame: true,
-    friendsEmoteSounds: true,
-    
-    // Future use placeholders
-    futureUse1: false,
-    futureUse2: false
-  });
-
   useEffect(() => {
     const savedSettings = localStorage.getItem('sound');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
-      setVolumes(settings.volumes);
-      setNotifications(settings.notifications);
+      if (settings.volumes) {
+        setVolumes(settings.volumes);
+      } else {
+        // Handle old format where volumes were at the root level
+        setVolumes(settings);
+      }
     }
   }, []);
 
@@ -64,17 +46,9 @@ export default function SoundTab() {
     });
   }, [volumes]);
 
-  const handleNotificationChange = (type) => {
-    setNotifications(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
-  };
-
   const handleSaveSettings = () => {
     localStorage.setItem('sound', JSON.stringify({
-      volumes,
-      notifications
+      volumes
     }));
   };
 
@@ -148,108 +122,6 @@ export default function SoundTab() {
               >
                 Reset
               </button>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.section}>
-          <h3>Notification Sounds</h3>
-          <div className={styles.notificationGrid}>
-            {/* Left Column */}
-            <div className={styles.notificationColumn}>
-              <h4>New Messages</h4>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.lobbyMessage}
-                  onChange={() => handleNotificationChange('lobbyMessage')}
-                />
-                Lobby
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.whisperMessage}
-                  onChange={() => handleNotificationChange('whisperMessage')}
-                />
-                Whisper
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.gameMasterMessage}
-                  onChange={() => handleNotificationChange('gameMasterMessage')}
-                />
-                Game master
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.serverNewsMessage}
-                  onChange={() => handleNotificationChange('serverNewsMessage')}
-                />
-                Server / News
-              </label>
-            </div>
-
-            {/* Center Column */}
-            <div className={styles.notificationColumn}>
-              <h4>Players ...</h4>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.playersJoinServer}
-                  onChange={() => handleNotificationChange('playersJoinServer')}
-                />
-                Join / leave server
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.playersJoinGame}
-                  onChange={() => handleNotificationChange('playersJoinGame')}
-                />
-                Join / leave game
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.playersEmoteSounds}
-                  onChange={() => handleNotificationChange('playersEmoteSounds')}
-                />
-                Emote Sounds
-              </label>
-              <div className={styles.futureUse}>(future use)</div>
-            </div>
-
-            {/* Right Column */}
-            <div className={styles.notificationColumn}>
-              <h4>Friends ...</h4>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.friendsJoinServer}
-                  onChange={() => handleNotificationChange('friendsJoinServer')}
-                />
-                Join / leave server
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.friendsJoinGame}
-                  onChange={() => handleNotificationChange('friendsJoinGame')}
-                />
-                Join / leave game
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={notifications.friendsEmoteSounds}
-                  onChange={() => handleNotificationChange('friendsEmoteSounds')}
-                />
-                Emote Sounds
-              </label>
-              <div className={styles.futureUse}>(future use)</div>
             </div>
           </div>
         </section>
