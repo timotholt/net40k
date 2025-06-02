@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from './FormFields.module.css';
+import CustomSelect from './CustomSelect';
 import ChapterIcon from './ChapterIcon';
 
 /**
@@ -40,71 +40,26 @@ const IconDropdownField = ({
     if (onBlur) onBlur(e);
   };
 
+  // Process options to ensure they have the right format for CustomSelect
+  const processedOptions = options.map(option => ({
+    ...option,
+    // Ensure icon is properly formatted
+    icon: option.icon || null
+  }));
+
   return (
-    <div className={styles.fieldContainer}>
-      {label && (
-        <label className={styles.label}>
-          {label}
-          {required && <span className={styles.required}>*</span>}
-        </label>
-      )}
-      <div className={styles.inputWrapper}>
-        <select
-          name={name}
-          value={value}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          required={required}
-          disabled={disabled}
-          className={`${styles.input} ${styles.dropdown} ${className}`}
-          style={{ 
-            paddingLeft: '2.75rem', // Adjusted for better balance
-            textIndent: '0' // Reset any inherited text indent
-          }}
-        >
-          <option value="" disabled>
-            {placeholder}
-          </option>
-          {options.map((option, index) => (
-            <option 
-              key={index} 
-              value={option.value}
-              disabled={option.disabled}
-              data-icon={option.icon}
-            >
-              {option.label}
-            </option>
-          ))}
-        </select>
-        
-        {/* Display icon for the selected option */}
-        {value && (
-          <div className={styles.dropdownSelectedIcon}>
-            {(() => {
-              const selectedOption = options.find(opt => opt.value === value);
-              if (!selectedOption || !selectedOption.icon) return null;
-              
-              if (selectedOption.icon.type === 'chapter') {
-                return (
-                  <ChapterIcon 
-                    chapter={selectedOption.icon.value} 
-                    size={selectedOption.icon.size} 
-                    style={selectedOption.icon.style} 
-                    alt=""
-                  />
-                );
-              }
-              
-              return selectedOption.icon;
-            })()}
-          </div>
-        )}
-        
-        <div className={styles.dropdownIcon}>
-          ▼
-        </div>
-      </div>
-    </div>
+    <CustomSelect
+      label={label}
+      name={name}
+      value={value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      options={processedOptions}
+      placeholder={placeholder}
+      required={required}
+      className={className}
+      disabled={disabled}
+    />
   );
 };
 
