@@ -20,7 +20,7 @@ const SpaceMarineIcons = {
   apothecary: (
     <div style={{ marginRight: '1rem' }}>
       <img 
-        src="/icons/imperium/apothecarium-01.svg" 
+        src="/icons/imperium/apothecarium-02.svg" 
         alt="Apothecary" 
         style={{ ...getSpaceMarineClassIconStyle('apothecary'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
       />
@@ -38,7 +38,7 @@ const SpaceMarineIcons = {
   librarian: (
     <div style={{ marginRight: '1rem' }}>
       <img 
-        src="/icons/imperium/librarian-epistolary.svg" 
+        src="/icons/imperium/librarius-01.svg" 
         alt="Librarian" 
         style={{ ...getSpaceMarineClassIconStyle('librarian'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
       />
@@ -158,7 +158,7 @@ export default function ProfileTab({ userId }) {
             </div>
             
             <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
-              <label className={styles.label} htmlFor="chapter">Chapter</label>
+              <label className={styles.label} htmlFor="chapter">Favorite Chapter</label>
               <IconDropdownField
                 name="chapter"
                 value={formData.chapter}
@@ -169,7 +169,7 @@ export default function ProfileTab({ userId }) {
             </div>
             
             <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
-              <label className={styles.label} htmlFor="spaceMarineClass">Space Marine Class</label>
+              <label className={styles.label} htmlFor="spaceMarineClass">Favorite Class</label>
               <IconDropdownField
                 name="spaceMarineClass"
                 value={formData.spaceMarineClass}
