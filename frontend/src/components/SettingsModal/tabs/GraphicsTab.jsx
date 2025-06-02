@@ -25,8 +25,33 @@ const ScaleIcon = () => (
 
 const RESOLUTION_OPTIONS = [
   { 
+    value: '1280x720', 
+    label: '1280 x 720 (HD)',
+    icon: <ResolutionIcon />
+  },
+  { 
+    value: '1366x768', 
+    label: '1366 x 768 (HD)',
+    icon: <ResolutionIcon />
+  },
+  { 
+    value: '1600x900', 
+    label: '1600 x 900 (HD+)',
+    icon: <ResolutionIcon />
+  },
+  { 
     value: '1920x1080', 
     label: '1920 x 1080 (Full HD)',
+    icon: <ResolutionIcon />
+  },
+  { 
+    value: '2048x1080', 
+    label: '2048 x 1080 (2K)',
+    icon: <ResolutionIcon />
+  },
+  { 
+    value: '2560x1080', 
+    label: '2560 x 1080 (UltraWide Full HD)',
     icon: <ResolutionIcon />
   },
   { 
@@ -35,18 +60,38 @@ const RESOLUTION_OPTIONS = [
     icon: <ResolutionIcon />
   },
   { 
-    value: '3840x2160', 
-    label: '3840 x 2160 (4K)',
+    value: '3440x1440', 
+    label: '3440 x 1440 (UltraWide QHD)',
     icon: <ResolutionIcon />
   },
   { 
-    value: 'custom', 
-    label: 'Custom...',
+    value: '3840x2160', 
+    label: '3840 x 2160 (4K UHD)',
     icon: <ResolutionIcon />
   },
+  { 
+    value: '5120x2880', 
+    label: '5120 x 2880 (5K)',
+    icon: <ResolutionIcon />
+  },
+  { 
+    value: '7680x4320', 
+    label: '7680 x 4320 (8K UHD)',
+    icon: <ResolutionIcon />
+  }
 ];
 
 const SCALE_OPTIONS = [
+  { 
+    value: '50', 
+    label: '50%',
+    icon: <ScaleIcon />
+  },
+  { 
+    value: '75', 
+    label: '75%',
+    icon: <ScaleIcon />
+  },
   { 
     value: '100', 
     label: '100%',
