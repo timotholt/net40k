@@ -2,7 +2,7 @@ import { CHAPTER } from 'shared/constants/GameConstants';
 
 // Define scaling adjustments for Space Marine class icons
 const SPACE_MARINE_CLASS_ICON_STYLES = {
-  command: { scale: 1.1 },
+  commander: { scale: 1.1 },
   apothecary: { scale: 0.8 },
   chaplain: { scale: 0.9 },
   librarian: { scale: 0.9 },

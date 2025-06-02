@@ -8,12 +8,12 @@ import { getSpaceMarineClassIconStyle } from '../../../utils/svgUtils';
 
 // Space Marine class icons with consistent styling
 const SpaceMarineIcons = {
-  command: (
+  commander: (
     <div style={{ marginRight: '1rem' }}>
       <img 
         src="/icons/imperium/Adeptus Astartes [Imperium, Space Marines].svg" 
-        alt="Command" 
-        style={{ ...getSpaceMarineClassIconStyle('command'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+        alt="Commander" 
+        style={{ ...getSpaceMarineClassIconStyle('commander'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
       />
     </div>
   ),
@@ -59,7 +59,7 @@ export default function ProfileTab({ userId }) {
   const [formData, setFormData] = useState({
     nickname: '',
     chapter: DEFAULT_CHAPTER,
-    spaceMarineClass: 'command' // Default to Command
+    spaceMarineClass: 'commander' // Default to Command
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -176,9 +176,9 @@ export default function ProfileTab({ userId }) {
                 onChange={handleSpaceMarineClassChange}
                 options={[
                   { 
-                    value: 'command', 
-                    label: 'Command', 
-                    icon: SpaceMarineIcons.command
+                    value: 'commander', 
+                    label: 'Commander', 
+                    icon: SpaceMarineIcons.commander
                   },
                   { 
                     value: 'apothecary', 

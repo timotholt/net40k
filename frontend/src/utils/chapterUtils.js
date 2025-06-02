@@ -20,7 +20,17 @@ export const getChapterOptions = () => {
     [CHAPTER.BLACK_TEMPLARS]: 'Black Templars',
   };
 
-  return Object.entries(chapterMap).map(([value, label]) => ({
+  // Sort chapters alphabetically, but keep Ultramarines first
+  const sortedChapters = Object.entries(chapterMap)
+    .sort((a, b) => {
+      // Keep Ultramarines at the top
+      if (a[0] === CHAPTER.ULTRAMARINES) return -1;
+      if (b[0] === CHAPTER.ULTRAMARINES) return 1;
+      // Sort the rest alphabetically
+      return a[1].localeCompare(b[1]);
+    });
+
+  return sortedChapters.map(([value, label]) => ({
     value,
     label: `  ${label}`, // Reduced spaces before label
     icon: {
