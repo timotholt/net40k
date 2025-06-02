@@ -57,7 +57,10 @@ const IconDropdownField = ({
           required={required}
           disabled={disabled}
           className={`${styles.input} ${styles.dropdown} ${className}`}
-          style={{ paddingLeft: '2rem' }} // Make room for the icon
+          style={{ 
+            paddingLeft: '2.75rem', // Adjusted for better balance
+            textIndent: '0' // Reset any inherited text indent
+          }}
         >
           <option value="" disabled>
             {placeholder}

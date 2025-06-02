@@ -23,12 +23,15 @@ export const getChapterOptions = () => {
 
   return Object.entries(chapterMap).map(([value, label]) => ({
     value,
-    label,
+    label: `  ${label}`, // Reduced spaces before label
     icon: {
       type: 'chapter',
       value,
       size: 'sm',
-      style: { marginRight: '8px' }
+      style: { 
+        marginRight: '0.75rem', // Reduced from 1rem
+        marginLeft: '0.25rem'   // Reduced left margin
+      }
     }
   }));
 };
