@@ -2,10 +2,8 @@
 
 import React, { useState } from 'react';
 import InputField from './InputField';
-import ChapterIcon from './ChapterIcon';
 import Tooltip from '../Tooltip/Tooltip';
 import styles from './FormFields.module.css';
-import { CHAPTER } from 'shared/constants/GameConstants'; // Import any default chapter you want to use
 
 export function NicknameField({ 
   label = 'Nickname', 
@@ -101,33 +99,14 @@ export function NicknameField({
   return (
     <div className={styles.nicknameFieldContainer}>
       <InputField
-        label={
-          <div className={styles.labelWithIcon}>
-            {label}
-            <ChapterIcon 
-              chapter={CHAPTER.SPACE_WOLVES} 
-              size="sm" 
-              className={styles.labelIcon}
-              alt=""
-            />
-          </div>
-        }
+        label={label}
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
         required={required}
         disabled={disabled || isLoading}
-        leftIcon={
-          leftIcon || (
-            <ChapterIcon 
-              chapter={CHAPTER.SPACE_WOLVES} 
-              size="sm" 
-              className={styles.inputIcon}
-              alt=""
-            />
-          )
-        }
+        leftIcon={leftIcon}
         rightIcon={
           <Tooltip text="Generate random nickname">
             <button 

@@ -89,12 +89,12 @@ export default function ProfileTab({ userId }) {
           <h3>Personalization</h3>
           <form id="profileForm" onSubmit={handleSubmit}>
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="nickname">Nickname</label>
               <NicknameField
                 name="nickname"
                 value={formData.nickname}
                 onChange={handleInputChange}
                 required
+                label="Nickname"
               />
             </div>
             
