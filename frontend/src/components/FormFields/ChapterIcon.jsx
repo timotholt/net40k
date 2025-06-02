@@ -25,13 +25,24 @@ const ChapterIcon = ({
   const altText = alt || `${chapter} Chapter`;
 
   return (
-    <img
-      src={iconPath}
-      alt={altText}
-      className={`${styles.chapterIcon || ''} ${styles[`icon-${size}`] || ''} ${className}`}
-      style={style}
-      {...rest}
-    />
+    <div 
+      className={`${styles.chapterIconContainer} ${className}`}
+      style={{
+        display: 'inline-flex',
+        ...style
+      }}
+    >
+      <img
+        src={iconPath}
+        alt={altText}
+        className={`${styles.chapterIcon} ${styles[`icon-${size}`]}`}
+        style={{
+          objectFit: 'contain',
+          ...style
+        }}
+        {...rest}
+      />
+    </div>
   );
 };
 

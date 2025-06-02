@@ -25,9 +25,24 @@
   display: inline-block;
   vertical-align: middle;
   object-fit: contain;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: transparent;
   border-radius: 4px;
   padding: 2px;
+  transition: filter 0.2s ease-in-out;
+  /* Apply color using filter - this will make black parts of the SVG use the primary color */
+  filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(75%) contrast(119%);
+}
+
+.chapterIcon:hover {
+  filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(90%) contrast(119%);
+}
+
+/* Ensure the container doesn't add extra space */
+.chapterIconContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* Prevents extra space below the image */
 }
 
 /* Icon Sizes */
