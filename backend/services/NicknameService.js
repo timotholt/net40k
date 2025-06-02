@@ -2,8 +2,9 @@ import logger from '../utils/logger.js';
 
 class NicknameService {
     constructor() {
+        // Import shared constants
         this.chapters = {
-            ULTRAMARINE: 'ULTRAMARINE',
+            ULTRAMARINES: 'ULTRAMARINES',
             BLOOD_ANGELS: 'BLOOD_ANGELS',
             DARK_ANGELS: 'DARK_ANGELS',
             SPACE_WOLVES: 'SPACE_WOLVES',
@@ -106,10 +107,10 @@ class NicknameService {
             // Convert to uppercase to match our keys
             type = type.toUpperCase();
 
-            // If type is invalid, default to ULTRAMARINE
+            // If type is invalid, default to ULTRAMARINES
             if (!this.chapters[type]) {
-                logger.warn(`Invalid chapter type: ${type}, defaulting to ULTRAMARINE`);
-                type = 'ULTRAMARINE';
+                logger.warn(`Invalid chapter type: ${type}, defaulting to ULTRAMARINES`);
+                type = 'ULTRAMARINES';
             }
 
             // // 30% chance to return a famous name

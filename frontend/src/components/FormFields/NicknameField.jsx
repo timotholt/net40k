@@ -1,9 +1,11 @@
-// This is an input contorl that can generate a random nickname using the Fantasy Name API
+// This is an input control that can generate a random nickname using the Fantasy Name API
 
 import React, { useState } from 'react';
 import InputField from './InputField';
+import ChapterIcon from './ChapterIcon';
 import Tooltip from '../Tooltip/Tooltip';
 import styles from './FormFields.module.css';
+import { SPACE_WOLVES } from '@shared/constants/GameConstants'; // Import any default chapter you want to use
 
 export function NicknameField({ 
   label = 'Nickname', 
@@ -99,30 +101,46 @@ export function NicknameField({
   return (
     <div className={styles.nicknameFieldContainer}>
       <InputField
-        label={label}
+        label={
+          <div className={styles.labelWithIcon}>
+            {label}
+            <ChapterIcon 
+              chapter={SPACE_WOLVES} 
+              size="sm" 
+              className={styles.labelIcon}
+              alt=""
+            />
+          </div>
+        }
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        leftIcon={nicknameIcon}
-        // Render dice icon with click handler and loading state
-        rightIcon={
-          <Tooltip text="Generate random nickname">
-            <div 
-              onClick={generateNickname} 
-              className={`${styles.icon} ${styles.rightIcon}`}
-              style={{ 
-                opacity: isLoading ? 0.5 : 1, 
-                pointerEvents: isLoading ? 'none' : 'auto',
-                cursor: 'pointer'
-              }}
-            >
-              {diceIcon}
-            </div>
-          </Tooltip>
-        }
         required={required}
         disabled={disabled || isLoading}
+        leftIcon={
+          leftIcon || (
+            <ChapterIcon 
+              chapter={SPACE_WOLVES} 
+              size="sm" 
+              className={styles.inputIcon}
+              alt=""
+            />
+          )
+        }
+        rightIcon={
+          <Tooltip content="Generate random nickname">
+            <button 
+              type="button" 
+              onClick={generateNickname}
+              disabled={isLoading}
+              className={styles.iconButton}
+              aria-label="Generate random nickname"
+            >
+              {isLoading ? '...' : '🎲'}
+            </button>
+          </Tooltip>
+        }
       />
     </div>
   );

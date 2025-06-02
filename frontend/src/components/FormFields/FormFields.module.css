@@ -20,6 +20,77 @@
   margin-left: 0.25rem;
 }
 
+/* Chapter Icon Styles */
+.chapterIcon {
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+/* Icon Sizes */
+.icon-sm {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-md {
+  width: 32px;
+  height: 32px;
+}
+
+.icon-lg {
+  width: 48px;
+  height: 48px;
+}
+
+.icon-xl {
+  width: 64px;
+  height: 64px;
+}
+
+/* Nickname Field Styles */
+.nicknameFieldContainer {
+  width: 100%;
+}
+
+.labelWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.labelIcon {
+  margin-left: 0.25rem;
+}
+
+.inputIcon {
+  margin-right: 0.5rem;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.iconButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .inputWrapper {
   display: flex;
   align-items: center;
