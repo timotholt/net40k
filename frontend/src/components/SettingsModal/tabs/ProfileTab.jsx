@@ -1,42 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Tabs.module.css';
 import { NicknameField } from '../../FormFields/NicknameField';
+import IconDropdownField from '../../FormFields/IconDropdownField';
+import { getChapterOptions } from '../../../utils/chapterUtils';
+import { DEFAULT_CHAPTER } from 'shared/constants/GameConstants';
 
 export default function ProfileTab({ userId }) {
-  const [nickname, setNickname] = useState('');
+  const [formData, setFormData] = useState({
+    nickname: '',
+    chapter: DEFAULT_CHAPTER,
+  });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [chapterOptions, setChapterOptions] = useState([]);
 
-  const handleNicknameChange = (e) => {
-    setNickname(e.target.value);
+  // Load chapter options
+  useEffect(() => {
+    setChapterOptions(getChapterOptions());
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     // Clear any previous errors when user starts typing
     if (error) setError('');
   };
 
-  const handleUpdateNickname = async (e) => {
+  const handleChapterChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      chapter: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/user/nickname', {
+      // Update nickname
+      const nicknameResponse = await fetch('/api/user/nickname', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          nickname
+          nickname: formData.nickname
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update nickname');
+      if (!nicknameResponse.ok) {
+        const errorData = await nicknameResponse.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      // Update chapter preference
+      const chapterResponse = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          preferences: { chapter: formData.chapter }
+        })
+      });
+
+      if (!chapterResponse.ok) {
+        const errorData = await chapterResponse.json();
+        throw new Error(errorData.message || 'Failed to update chapter preference');
       }
       
       // Handle success - could show a success message here
     } catch (err) {
-      console.error('Update nickname error:', err);
-      setError(err.message || 'Failed to update nickname');
+      console.error('Update error:', err);
+      setError(err.message || 'Failed to update profile');
     } finally {
       setIsSubmitting(false);
     }
@@ -47,15 +87,33 @@ export default function ProfileTab({ userId }) {
       <div className={styles.content}>
         <section className={styles.section}>
           <h3>Personalization</h3>
-          <form id="profileForm" onSubmit={handleUpdateNickname}>
+          <form id="profileForm" onSubmit={handleSubmit}>
             <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="nickname">Nickname</label>
               <NicknameField
-                value={nickname}
-                onChange={handleNicknameChange}
+                name="nickname"
+                value={formData.nickname}
+                onChange={handleInputChange}
                 required
               />
-              {error && <div className={styles.error} style={{ marginTop: '0.5rem' }}>{error}</div>}
             </div>
+            
+            <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
+              <label className={styles.label} htmlFor="chapter">Chapter</label>
+              <IconDropdownField
+                name="chapter"
+                value={formData.chapter}
+                onChange={handleChapterChange}
+                options={chapterOptions}
+                placeholder="Select your Chapter"
+              />
+            </div>
+            
+            {error && (
+              <div className={styles.error} style={{ marginTop: '1rem' }}>
+                {error}
+              </div>
+            )}
           </form>
         </section>
       </div>

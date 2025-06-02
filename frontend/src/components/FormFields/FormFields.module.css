@@ -289,6 +289,30 @@
   font-size: 0.75rem;
 }
 
+/* Icon Dropdown Styles */
+.dropdownSelectedIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--color-green);
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Style the dropdown options to show icons */
+select option {
+  padding-left: 2rem;
+  position: relative;
+}
+
+/* This is a workaround since we can't directly style option elements in all browsers */
+/* The actual icon display is handled in the component using a separate div */
+
 .nicknameFieldContainer {
   position: relative;
   width: 100%;
