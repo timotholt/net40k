@@ -318,13 +318,28 @@
 select option {
   padding-left: 2rem;
   position: relative;
-  text-indent: 2.5rem; /* Add space for the icon in dropdown options */
-  background-position: 0.5rem center; /* Position the icon */
+  text-indent: 2.5rem;
+  background-position: 0.5rem center;
   background-repeat: no-repeat;
   background-size: 1.25rem;
   min-height: 1.5rem;
   display: flex;
   align-items: center;
+  color: #000; /* Dark text for dropdown options */
+  background-color: #fff; /* White background */
+  font-size: 1rem;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+}
+
+/* Style for when dropdown is open */
+select:focus option:checked {
+  background-color: #f0f0f0; /* Slightly darker background for selected option */
+  color: #000;
+}
+
+/* Hover state for dropdown options */
+select option:hover {
+  background-color: #e0e0e0;
 }
 
 /* This is a workaround since we can't directly style option elements in all browsers */
