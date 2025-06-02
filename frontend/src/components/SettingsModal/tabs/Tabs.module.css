@@ -343,3 +343,37 @@
   opacity: 0.7;
   font-style: italic;
 }
+
+/* Dropdown with icon styles */
+.settingItem {
+  margin-bottom: 1.5rem;
+}
+
+.settingLabel {
+  display: block;
+  color: var(--color-soft-white);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.dropdownWithIcon {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.dropdownIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-green);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dropdownWithIcon .dropdownField {
+  width: 100%;
+  padding-left: 40px; /* Make room for the icon */
+}
