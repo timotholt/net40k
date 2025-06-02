@@ -18,7 +18,6 @@ export const getChapterOptions = () => {
     [CHAPTER.DEATHWATCH]: 'Deathwatch',
     [CHAPTER.GREY_KNIGHTS]: 'Grey Knights',
     [CHAPTER.BLACK_TEMPLARS]: 'Black Templars',
-    [CHAPTER.CRIMSON_FISTS]: 'Crimson Fists',
   };
 
   return Object.entries(chapterMap).map(([value, label]) => ({

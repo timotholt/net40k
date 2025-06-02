@@ -14,7 +14,6 @@ export const CHAPTER = {
   
   // Second Founding and Later Chapters
   BLACK_TEMPLARS: 'BLACK_TEMPLARS',  // Second Founding (Imperial Fists)
-  CRIMSON_FISTS: 'CRIMSON_FISTS',    // Second Founding (Imperial Fists)
   
   // Special Organizations
   GREY_KNIGHTS: 'GREY_KNIGHTS',     // Ordo Malleus
@@ -35,7 +34,6 @@ export const CHAPTER_ICON_PATHS = {
   [CHAPTER.DEATHWATCH]: '/icons/imperium/Deathwatch [Imperium, Inquisition, Ordo Xenos, Adeptus Astartes, Space Marines, Chapter].svg',
   [CHAPTER.GREY_KNIGHTS]: '/icons/imperium/Grey Knights [Imperium, Inquisition, Ordo Malleus, Adeptus Astartes, Space Marines, Chapter].svg',
   [CHAPTER.BLACK_TEMPLARS]: '/icons/imperium/Black Templars [Imperium, Adeptus Astartes, Space Marines, Imperial Fists, Chapter].svg',
-  [CHAPTER.CRIMSON_FISTS]: '/icons/imperium/Crimson Fists [Imperium, Adeptus Astartes, Space Marines, Imperial Fists, Chapter].svg',
 };
 
 // Default chapter to use as fallback
