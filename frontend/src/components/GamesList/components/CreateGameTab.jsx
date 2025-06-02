@@ -66,7 +66,7 @@ export default function CreateGameTab() {
   }, []);
 
   const descriptionIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '1rem' }}>
       <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
       <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
       <path d="M2 2l7.586 7.586"></path>
@@ -74,8 +74,19 @@ export default function CreateGameTab() {
     </svg>
   );
 
-  const timerIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  const TimerIcon = () => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="var(--color-green)" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      style={{ marginRight: '1rem' }}
+    >
       <circle cx="12" cy="12" r="10"></circle>
       <polyline points="12 6 12 12 16 14"></polyline>
     </svg>
@@ -108,11 +119,23 @@ export default function CreateGameTab() {
               value={formData.maxPlayers}
               onChange={handleChange}
               options={[
-                { value: '2', label: '2' },
-                { value: '3', label: '3' },
-                { value: '4', label: '4' }
+                { 
+                  value: '2', 
+                  label: '2',
+                  icon: <div style={{ marginRight: '1rem', color: 'var(--color-green)' }}><PlayersIcon /></div>
+                },
+                { 
+                  value: '3', 
+                  label: '3',
+                  icon: <div style={{ marginRight: '1rem', color: 'var(--color-green)' }}><PlayersIcon /></div>
+                },
+                { 
+                  value: '4', 
+                  label: '4',
+                  icon: <div style={{ marginRight: '1rem', color: 'var(--color-green)' }}><PlayersIcon /></div>
+                }
               ]}
-              leftIcon={<PlayersIcon />}
+              leftIcon={<div style={{ marginRight: '1rem', color: 'var(--color-green)' }}><PlayersIcon /></div>}
               required
             />
           </div>
@@ -135,12 +158,28 @@ export default function CreateGameTab() {
               value={formData.turnLength}
               onChange={handleChange}
               options={[
-                { value: '0.5', label: '1/2 second' },
-                { value: '1', label: '1 second' },
-                { value: '2', label: '2 seconds' },
-                { value: '3', label: '3 seconds' }
+                { 
+                  value: '0.5', 
+                  label: '1/2 second',
+                  icon: <TimerIcon />
+                },
+                { 
+                  value: '1', 
+                  label: '1 second',
+                  icon: <TimerIcon />
+                },
+                { 
+                  value: '2', 
+                  label: '2 seconds',
+                  icon: <TimerIcon />
+                },
+                { 
+                  value: '3', 
+                  label: '3 seconds',
+                  icon: <TimerIcon />
+                }
               ]}
-              leftIcon={timerIcon}
+              leftIcon={<TimerIcon />}
               required
             />
           </div>
