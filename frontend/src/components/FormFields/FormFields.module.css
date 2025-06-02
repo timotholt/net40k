@@ -314,7 +314,7 @@
 }
 
 .selectedIcon {
-  margin-right: 0.75rem;
+  margin-right: -0.25rem;
   display: flex;
   align-items: center;
 }
