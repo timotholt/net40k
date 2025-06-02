@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { InputField } from '../../FormFields';
+import { InputField, IconDropdownField } from '../../FormFields';
 import SharedPasswordField from '../../FormFields/SharedPasswordField';
 import { GameIcon, PlayersIcon } from '../../Icons/MenuIcons';
 import styles from './CreateGameTab.module.css';
@@ -102,23 +102,19 @@ export default function CreateGameTab() {
           </div>
 
           <div className={styles.playersField}>
-            <div className={styles.formGroup}>
-              <label>Players</label>
-              <div className={styles.inputWrapper}>
-                <PlayersIcon />
-                <select
-                  name="maxPlayers"
-                  value={formData.maxPlayers}
-                  onChange={handleChange}
-                  className={styles.select}
-                  required
-                >
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-            </div>
+            <IconDropdownField
+              label="Players"
+              name="maxPlayers"
+              value={formData.maxPlayers}
+              onChange={handleChange}
+              options={[
+                { value: '2', label: '2' },
+                { value: '3', label: '3' },
+                { value: '4', label: '4' }
+              ]}
+              leftIcon={<PlayersIcon />}
+              required
+            />
           </div>
 
           <div className={styles.descriptionField}>
@@ -133,24 +129,20 @@ export default function CreateGameTab() {
           </div>
 
           <div className={styles.turnLengthField}>
-            <div className={styles.formGroup}>
-              <label>Turn Length</label>
-              <div className={styles.inputWrapper}>
-                {timerIcon}
-                <select
-                  name="turnLength"
-                  value={formData.turnLength}
-                  onChange={handleChange}
-                  className={styles.select}
-                  required
-                >
-                  <option value="0.5">1/2 second</option>
-                  <option value="1">1 second</option>
-                  <option value="2">2 seconds</option>
-                  <option value="3">3 seconds</option>
-                </select>
-              </div>
-            </div>
+            <IconDropdownField
+              label="Turn Length"
+              name="turnLength"
+              value={formData.turnLength}
+              onChange={handleChange}
+              options={[
+                { value: '0.5', label: '1/2 second' },
+                { value: '1', label: '1 second' },
+                { value: '2', label: '2 seconds' },
+                { value: '3', label: '3 seconds' }
+              ]}
+              leftIcon={timerIcon}
+              required
+            />
           </div>
 
           <div className={styles.passwordField}>
