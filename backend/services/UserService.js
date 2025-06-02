@@ -5,6 +5,7 @@ import { EmailService } from './EmailService.js';
 import SessionManager from './SessionManager.js';
 import { UuidService } from './UuidService.js';
 import DateService from './DateService.js';
+import { nicknameService } from './NicknameService.js';
 import logger from '../utils/logger.js';
 
 class UserService {
@@ -72,10 +73,13 @@ class UserService {
                 throw errorObj;
             }
 
+            // Generate a default nickname if none provided
+            const generatedNickname = nickname || nicknameService.getRandomNickname();
+            
             // Create user
             const user = await UserDB.create({
                 username,
-                nickname: nickname || username,
+                nickname: generatedNickname,
                 password,
                 email,
                 createdAt: DateService.now().date
