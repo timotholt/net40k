@@ -1,4 +1,4 @@
-import { createUserUuid } from '../../backend/constants/GameUuids.js';
+import { createUserUuid } from '../constants/GameUuids.js';
 
 /**
  * @typedef {Object} UserBase

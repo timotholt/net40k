@@ -5,7 +5,7 @@ import InputField from './InputField';
 import ChapterIcon from './ChapterIcon';
 import Tooltip from '../Tooltip/Tooltip';
 import styles from './FormFields.module.css';
-import { SPACE_WOLVES } from '@shared/constants/GameConstants'; // Import any default chapter you want to use
+import { CHAPTER } from 'shared/constants/GameConstants'; // Import any default chapter you want to use
 
 export function NicknameField({ 
   label = 'Nickname', 

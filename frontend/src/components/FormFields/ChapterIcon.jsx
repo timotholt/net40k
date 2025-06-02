@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { CHAPTER_ICON_PATHS, DEFAULT_CHAPTER } from '@shared/constants/GameConstants';
+import { CHAPTER_ICON_PATHS, DEFAULT_CHAPTER } from 'shared/constants/GameConstants';
 import styles from './FormFields.module.css';
 
 /**

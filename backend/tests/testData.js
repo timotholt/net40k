@@ -6,7 +6,7 @@ import {
     game_TYPE,
     DATACENTER,
     RESOURCE_TYPE
-} from '../constants/GameUuids.js';
+} from '../../shared/constants/GameUuids.js';
 
 // Test users with proper UUID format
 export const testUsers = [

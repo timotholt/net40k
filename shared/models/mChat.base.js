@@ -1,5 +1,5 @@
-import { DateService } from '../../backend/services/DateService.js';
-import { createMessageUuid } from '../../backend/constants/GameUuids.js';
+import DateService from '../../backend/services/DateService.js';
+import { createMessageUuid } from '../constants/GameUuids.js';
 
 export const MAX_MESSAGE_LENGTH = 2000;
 export const MIN_MESSAGE_LENGTH = 1;

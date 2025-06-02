@@ -2,7 +2,7 @@ import assert from 'assert';
 // import { UserDB } from '../models/User.js';
 // import { GameStateDB } from '../models/GameState.js';
 // import { ChatDB } from '../models/Chat.js';
-import { createUserUuid, createGameUuid, createMessageUuid } from '../constants/GameUuids.js';
+import { createUserUuid, createGameUuid, createMessageUuid } from '../../shared/constants/GameUuids.js';
 // import { GAME_PHASES } from '../models/GameState.js';
 import { db } from '../database/database.js';
 

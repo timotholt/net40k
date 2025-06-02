@@ -1,4 +1,4 @@
-import { createGameUuid, COUNTRY, GAME_TYPE, DATACENTER } from '../constants/GameUuids.js';
+import { createGameUuid, COUNTRY, GAME_TYPE, DATACENTER } from '../../shared/constants/GameUuids.js';
 
 // Create lobby UUIDs for different countries
 const lobbies = {

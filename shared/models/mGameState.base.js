@@ -1,4 +1,4 @@
-import { createGameUuid } from '../../backend/constants/GameUuids.js';
+import { createGameUuid } from '../constants/GameUuids.js';
 import DateService from '../../backend/services/DateService.js';
 
 // Game-specific constants
