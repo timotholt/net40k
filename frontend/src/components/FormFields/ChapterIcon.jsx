@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { CHAPTER_ICON_PATHS, DEFAULT_CHAPTER } from 'shared/constants/GameConstants';
+import { getNormalizedSvgStyle } from '../../utils/svgUtils';
 import styles from './FormFields.module.css';
 
 /**
@@ -24,20 +25,25 @@ const ChapterIcon = ({
   const iconPath = CHAPTER_ICON_PATHS[chapter] || CHAPTER_ICON_PATHS[DEFAULT_CHAPTER];
   const altText = alt || `${chapter} Chapter`;
 
+  const normalizedStyle = getNormalizedSvgStyle(chapter);
+  
   return (
     <div 
-      className={`${styles.chapterIconContainer} ${className}`}
+      className={`${styles.chapterIconContainer} ${styles[`icon-${size}`]} ${className}`}
       style={{
         display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
         ...style
       }}
     >
       <img
         src={iconPath}
         alt={altText}
-        className={`${styles.chapterIcon} ${styles[`icon-${size}`]}`}
+        className={styles.chapterIcon}
         style={{
-          objectFit: 'contain',
+          ...normalizedStyle,
           ...style
         }}
         {...rest}
