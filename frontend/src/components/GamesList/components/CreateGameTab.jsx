@@ -136,7 +136,6 @@ export default function CreateGameTab() {
                 }
               ]}
               leftIcon={<div style={{ marginRight: '1rem', color: 'var(--color-green)' }}><PlayersIcon /></div>}
-              required
             />
           </div>
 
@@ -180,7 +179,6 @@ export default function CreateGameTab() {
                 }
               ]}
               leftIcon={<TimerIcon />}
-              required
             />
           </div>
 
