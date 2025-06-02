@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styles from './Tabs.module.css';
-import DropdownField from '../../FormFields/DropdownField';
-import Icon from '../../FormFields/Icon';
+import IconDropdownField from '../../FormFields/IconDropdownField';
 
 // Placeholder icon components
 const ResolutionIcon = () => (
@@ -21,9 +20,37 @@ const ScaleIcon = () => (
   </svg>
 );
 
+const RESOLUTION_OPTIONS = [
+  { value: '800x600', label: '800 x 600' },
+  { value: '1024x768', label: '1024 x 768' },
+  { value: '1280x720', label: '1280 x 720 (HD)' },
+  { value: '1366x768', label: '1366 x 768' },
+  { value: '1600x900', label: '1600 x 900 (HD+)' },
+  { value: '1920x1080', label: '1920 x 1080 (Full HD)' },
+  { value: '2560x1440', label: '2560 x 1440 (QHD)' },
+  { value: '3840x2160', label: '3840 x 2160 (4K)' },
+];
+
+const SCALE_OPTIONS = [
+  { value: '75', label: '75%' },
+  { value: '100', label: '100%' },
+  { value: '125', label: '125%' },
+  { value: '150', label: '150%' },
+  { value: '175', label: '175%' },
+  { value: '200', label: '200%' },
+];
+
 export default function GraphicsTab() {
-  const [resolution, setResolution] = useState('800x600');
+  const [resolution, setResolution] = useState('1920x1080');
   const [scale, setScale] = useState('100');
+
+  const handleResolutionChange = (e) => {
+    setResolution(e.target.value);
+  };
+
+  const handleScaleChange = (e) => {
+    setScale(e.target.value);
+  };
 
   const handleSaveSettings = () => {
     localStorage.setItem('graphics', JSON.stringify({
@@ -37,38 +64,38 @@ export default function GraphicsTab() {
       <div className={styles.content}>
         <section className={styles.section}>
           <h3>Display Settings</h3>
-          <div className={styles.formGroup}>
-            <DropdownField
-              label="Resolution"
-              name="resolution"
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-              leftIcon={<ResolutionIcon />}
-              options={[
-                { value: '800x600', label: '800 x 600' },
-                { value: '1024x768', label: '1024 x 768' },
-                { value: '1280x720', label: '1280 x 720' },
-                { value: '1920x1080', label: '1920 x 1080' }
-              ]}
-              placeholder="Select resolution"
-            />
-          </div>
+          <div className={styles.settingGroup}>
+            <div className={styles.settingRow}>
+              <div className={styles.settingLabel}>
+                <ResolutionIcon />
+                <span>Resolution</span>
+              </div>
+              <IconDropdownField
+                name="resolution"
+                value={resolution}
+                onChange={handleResolutionChange}
+                options={RESOLUTION_OPTIONS}
+                icon={<ResolutionIcon />}
+                placeholder="Select resolution..."
+                className={styles.dropdownField}
+              />
+            </div>
 
-          <div className={styles.formGroup}>
-            <DropdownField
-              label="UI Scale"
-              name="scale"
-              value={scale}
-              onChange={(e) => setScale(e.target.value)}
-              leftIcon={<ScaleIcon />}
-              options={[
-                { value: '80', label: '80%' },
-                { value: '100', label: '100%' },
-                { value: '120', label: '120%' },
-                { value: '150', label: '150%' }
-              ]}
-              placeholder="Select UI scale"
-            />
+            <div className={styles.settingRow}>
+              <div className={styles.settingLabel}>
+                <ScaleIcon />
+                <span>UI Scale</span>
+              </div>
+              <IconDropdownField
+                name="scale"
+                value={scale}
+                onChange={handleScaleChange}
+                options={SCALE_OPTIONS}
+                icon={<ScaleIcon />}
+                placeholder="Select scale..."
+                className={styles.dropdownField}
+              />
+            </div>
           </div>
         </section>
       </div>
