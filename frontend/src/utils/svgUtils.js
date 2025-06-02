@@ -1,5 +1,33 @@
 import { CHAPTER } from 'shared/constants/GameConstants';
 
+// Define scaling adjustments for Space Marine class icons
+const SPACE_MARINE_CLASS_ICON_STYLES = {
+  command: { scale: 0.7 },
+  apothecary: { scale: 0.8 },
+  chaplain: { scale: 0.8 },
+  librarian: { scale: 0.8 },
+  techmarine: { scale: 0.8 },
+};
+
+/**
+ * Get normalized styles for Space Marine class icons
+ * @param {string} className - The class name (command, apothecary, etc.)
+ * @returns {Object} Style object with scaling and positioning
+ */
+export const getSpaceMarineClassIconStyle = (className) => {
+  const adjustment = SPACE_MARINE_CLASS_ICON_STYLES[className] || { scale: 0.8 };
+  
+  return {
+    transform: `scale(${adjustment.scale})`,
+    transformOrigin: 'center',
+    width: '20px',
+    height: '20px',
+    display: 'block',
+    margin: 'auto',
+    filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.3))',
+  };
+};
+
 // Define scaling adjustments for SVGs that need resizing
 export const getNormalizedSvgStyle = (chapter) => {
   // These values might need fine-tuning based on actual rendering

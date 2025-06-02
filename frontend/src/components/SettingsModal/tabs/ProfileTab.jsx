@@ -4,11 +4,62 @@ import { NicknameField } from '../../FormFields/NicknameField';
 import IconDropdownField from '../../FormFields/IconDropdownField';
 import { getChapterOptions } from '../../../utils/chapterUtils';
 import { DEFAULT_CHAPTER } from 'shared/constants/GameConstants';
+import { getSpaceMarineClassIconStyle } from '../../../utils/svgUtils';
+
+// Space Marine class icons with consistent styling
+const SpaceMarineIcons = {
+  command: (
+    <div style={{ marginRight: '1rem' }}>
+      <img 
+        src="/icons/imperium/Adeptus Astartes [Imperium, Space Marines].svg" 
+        alt="Command" 
+        style={{ ...getSpaceMarineClassIconStyle('command'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+      />
+    </div>
+  ),
+  apothecary: (
+    <div style={{ marginRight: '1rem' }}>
+      <img 
+        src="/icons/imperium/apothecarium-01.svg" 
+        alt="Apothecary" 
+        style={{ ...getSpaceMarineClassIconStyle('apothecary'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+      />
+    </div>
+  ),
+  chaplain: (
+    <div style={{ marginRight: '1rem' }}>
+      <img 
+        src="/icons/imperium/chaplain.svg" 
+        alt="Chaplain" 
+        style={{ ...getSpaceMarineClassIconStyle('chaplain'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+      />
+    </div>
+  ),
+  librarian: (
+    <div style={{ marginRight: '1rem' }}>
+      <img 
+        src="/icons/imperium/librarian-epistolary.svg" 
+        alt="Librarian" 
+        style={{ ...getSpaceMarineClassIconStyle('librarian'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+      />
+    </div>
+  ),
+  techmarine: (
+    <div style={{ marginRight: '1rem' }}>
+      <img 
+        src="/icons/imperium/Adeptus%20Mechanicus%20%5BImperium%5D.svg" 
+        alt="Techmarine" 
+        style={{ ...getSpaceMarineClassIconStyle('techmarine'), filter: 'invert(57%) sepia(90%) saturate(383%) hue-rotate(53deg) brightness(91%) contrast(91%)' }} 
+      />
+    </div>
+  ),
+};
 
 export default function ProfileTab({ userId }) {
   const [formData, setFormData] = useState({
     nickname: '',
     chapter: DEFAULT_CHAPTER,
+    spaceMarineClass: 'command' // Default to Command
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +85,14 @@ export default function ProfileTab({ userId }) {
     setFormData(prev => ({
       ...prev,
       chapter: value
+    }));
+  };
+
+  const handleSpaceMarineClassChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      spaceMarineClass: value
     }));
   };
 
@@ -106,6 +165,43 @@ export default function ProfileTab({ userId }) {
                 onChange={handleChapterChange}
                 options={chapterOptions}
                 placeholder="Select your Chapter"
+              />
+            </div>
+            
+            <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
+              <label className={styles.label} htmlFor="spaceMarineClass">Space Marine Class</label>
+              <IconDropdownField
+                name="spaceMarineClass"
+                value={formData.spaceMarineClass}
+                onChange={handleSpaceMarineClassChange}
+                options={[
+                  { 
+                    value: 'command', 
+                    label: 'Command', 
+                    icon: SpaceMarineIcons.command
+                  },
+                  { 
+                    value: 'apothecary', 
+                    label: 'Apothecary', 
+                    icon: SpaceMarineIcons.apothecary
+                  },
+                  { 
+                    value: 'chaplain', 
+                    label: 'Chaplain', 
+                    icon: SpaceMarineIcons.chaplain
+                  },
+                  { 
+                    value: 'librarian', 
+                    label: 'Librarian', 
+                    icon: SpaceMarineIcons.librarian
+                  },
+                  { 
+                    value: 'techmarine', 
+                    label: 'Techmarine', 
+                    icon: SpaceMarineIcons.techmarine
+                  }
+                ]}
+                leftIcon={SpaceMarineIcons[formData.spaceMarineClass] || SpaceMarineIcons.command}
               />
             </div>
             
